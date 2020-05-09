@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using VMCore.Expressions;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
-using VMCore.VM.Core.Expressions;
 using VMCore.VM.Core.Reg;
 
 namespace VMCore.VM

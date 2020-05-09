@@ -1,8 +1,7 @@
-﻿using System;
+﻿using VMCore.VM;
 
-namespace VMCore.VM.Core.Expressions
+namespace VMCore.Expressions
 {
-    [Serializable]
     public abstract class Node
     {
         public abstract float Evaluate(CPU cpu);

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VMCore.VM.Core.Expressions
+namespace VMCore.Expressions
 {
     public class ParserException : Exception
     {

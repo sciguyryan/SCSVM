@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Text;
 
-namespace VMCore.VM.Core.Expressions
+namespace VMCore.Expressions
 {
     public class Tokenizer
     {

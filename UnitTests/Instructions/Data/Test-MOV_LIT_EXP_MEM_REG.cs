@@ -21,18 +21,18 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestUserAssemblyWriteWithPositiveOffset()
         {
-            var r1 = Registers.R1;
-            var r2 = Registers.R2;
-            var r3 = Registers.R3;
+            const Registers r1 = Registers.R1;
+            const Registers r2 = Registers.R2;
+            const Registers r3 = Registers.R3;
 
             const int expected = 0x12;
 
             var program = new List<QuickInstruction>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),     // mov $12, R1
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),         // mov R1, $15
-                new QuickInstruction(OpCode.MOV_REG_REG, new object[] { r1, r2 }),           // mov R1, R2
-                new QuickInstruction(OpCode.MOV_LIT_EXP_OFF_REG, new object[] { "R1 + $3", r3 }) // mov [R2 + $3], R3
+                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),         // mov $12, R1
+                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),             // mov R1, $15
+                new QuickInstruction(OpCode.MOV_REG_REG, new object[] { r1, r2 }),               // mov R1, R2
+                new QuickInstruction(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "R1 + $3", r3 }) // mov [R2 + $3], R3
             };
 
             _vm.Run(Utils.QuickRawCompile(program));
@@ -47,18 +47,18 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestUserAssemblyWriteWithSignedOffset()
         {
-            var r1 = Registers.R1;
-            var r2 = Registers.R2;
-            var r3 = Registers.R3;
+            const Registers r1 = Registers.R1;
+            const Registers r2 = Registers.R2;
+            const Registers r3 = Registers.R3;
 
             const int expected = 0x12;
 
             var program = new List<QuickInstruction>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),        // mov $12, R1
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),            // mov R1, $15
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { -0x5, r2 }),            // mov -$5, R2
-                new QuickInstruction(OpCode.MOV_LIT_EXP_OFF_REG, new object[] { "R2 + $1A", r3 })   // mov [R2 + $1A], R3
+                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),            // mov $12, R1
+                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),                // mov R1, $15
+                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { -0x5, r2 }),                // mov -$5, R2
+                new QuickInstruction(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "R2 + $1A", r3 })   // mov [R2 + $1A], R3
             };
 
             _vm.Run(Utils.QuickRawCompile(program));
@@ -75,13 +75,13 @@ namespace UnitTests.Instructions
         [ExpectedException(typeof(MemoryOutOfRangeException))]
         public void TestUserAssemblyWriteWithNetSignedOffset()
         {
-            var r1 = Registers.R1;
-            var r2 = Registers.R2;
+            const Registers r1 = Registers.R1;
+            const Registers r2 = Registers.R2;
 
             var program = new List<QuickInstruction>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 0, r1 }),             // mov $0, R1
-                new QuickInstruction(OpCode.MOV_LIT_EXP_OFF_REG, new object[] { "R1 + -$1", r2 }) // mov [R1 + -$1], R2
+                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 0, r1 }),                   // mov $0, R1
+                new QuickInstruction(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "R1 + -$1", r2 })   // mov [R1 + -$1], R2
             };
 
             _vm.Run(Utils.QuickRawCompile(program));

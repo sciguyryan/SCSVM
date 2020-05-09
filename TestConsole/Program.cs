@@ -24,7 +24,7 @@ namespace TestConsole
                 new QuickInstruction(OpCode.MOV_LIT_MEM, new object[] { 3141, 13 }),
                 new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 5, Registers.R1 }),
                 new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 2, Registers.R2 }),
-                new QuickInstruction(OpCode.MOV_LIT_EXP_OFF_REG, new object[] { "(R1 * R2) + $3", Registers.R3 }),
+                new QuickInstruction(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "(R1 * R2) + $3", Registers.R3 }),
                 //new QuickInstruction(OpCode.MOV_LIT_EXP_OFF_REG, new object[] { "(5 * 2) + 3", Registers.R3 }),
                 new QuickInstruction(OpCode.HLT),
                 // Does not execute but should show is the disassembly

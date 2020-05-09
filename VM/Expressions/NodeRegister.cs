@@ -1,6 +1,7 @@
 ﻿using System;
+using VMCore.VM;
 
-namespace VMCore.VM.Core.Expressions
+namespace VMCore.Expressions
 {
     public class NodeRegister : Node
     {

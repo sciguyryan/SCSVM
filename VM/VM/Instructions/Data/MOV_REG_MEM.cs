@@ -19,7 +19,9 @@ namespace VMCore.VM.Instructions
         public override bool Execute(InstructionData data, CPU cpu)
         {
             var bytes = 
-                BitConverter.GetBytes(cpu.Registers[(Registers)data[0]]);
+                BitConverter
+                    .GetBytes(cpu.Registers[(Registers)data[0]]);
+
             cpu.VM.Memory
                 .SetValueRange((int)data[1], bytes,
                                GetSecurityContext());
@@ -32,8 +34,8 @@ namespace VMCore.VM.Instructions
             var fromReg = (Registers)data[0];
             var memoryAddr = (int)data[1];
 
-            // mov R1, $MEMORY ADDR
-            return $"{AsmName} {fromReg}, ${memoryAddr:X}";
+            // mov R1, [$MEMORY ADDR]
+            return $"{AsmName} {fromReg}, [${memoryAddr:X}]";
         }
     }
 }

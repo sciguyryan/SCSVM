@@ -1,6 +1,6 @@
-﻿using System;
+﻿using VMCore.VM;
 
-namespace VMCore.VM.Core.Expressions
+namespace VMCore.Expressions
 {
     class NodeNumber : Node
     {

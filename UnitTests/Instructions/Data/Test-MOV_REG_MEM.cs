@@ -32,7 +32,9 @@ namespace UnitTests.Instructions
             _vm.Run(Utils.QuickRawCompile(program));
 
             // Extract the value type from memory.
-            var intOut = _vm.Memory.GetValueAsType<int>(0x0, SecurityContext.System);
+            var intOut = 
+                _vm.Memory
+                    .GetValueAsType<int>(0x0, SecurityContext.System);
 
             Assert.IsTrue(intOut == expected);
         }

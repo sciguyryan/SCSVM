@@ -20,6 +20,7 @@ namespace VMCore.VM.Instructions
         {
             var bytes =
                 BitConverter.GetBytes((int)data[0]);
+
             cpu.VM.Memory
                 .SetValueRange((int)data[1], bytes,
                                GetSecurityContext());

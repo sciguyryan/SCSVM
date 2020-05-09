@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Authors>sciguyryan</Authors>
+    <Company>PsiCorp</Company>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="VM\IO\InterruptHandler\**" />
+    <EmbeddedResource Remove="VM\IO\InterruptHandler\**" />
+    <None Remove="VM\IO\InterruptHandler\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="VM\Instructions\Branching\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Ref-Runner": {
+      "commandName": "Project",
+      "commandLineArgs": "test.vm"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+﻿Examples of the assembly syntax:
+
+mov $42, R1
+copies the literal 0x42 into R1.
+
+mov R1, R2
+copies the value from R1 to R2.
+
+mov R1, [$0]
+move the value from R1 into memory starting at address literal 0x0.
+
+mov [R1*R2], R3
+move the value from memory into R3.
+The memory address given by the expression:
+	value of R1 multiplied by the value of R2.
+
+(not done yet)
+mov R1, [R2+R3]
+move the value from R1 into memory.
+The memory address given by the expression:
+	value of R1 plus the value of R2.

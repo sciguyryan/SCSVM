@@ -14,7 +14,6 @@ move the value from memory into R3.
 The memory address given by the expression:
 	value of R1 multiplied by the value of R2.
 
-(not done yet)
 mov R1, [R2+R3]
 move the value from R1 into memory.
 The memory address given by the expression:

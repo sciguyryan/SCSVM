@@ -20,18 +20,23 @@
         /// </summary>
         MOV_REG_MEM,
         /// <summary>
+        /// Move Register to Memory via Literal Expression - 
+        /// copy the value of the register into memory starting from the index given by an expression into the register.
+        /// </summary>
+        MOV_REG_LIT_EXP_MEM,
+        /// <summary>
         /// Move Memory to Register - copy a value from memory into the register.
         /// </summary>
         MOV_MEM_REG,
         /// <summary>
-        /// Move Literal Expression Offset to Register - copy a value from memory starting from the index given by an expression into the register.
+        /// Move from Memory via Literal Expression to Register - 
+        /// copy a value from memory starting from the index given by an expression into the register.
         /// </summary>
-        MOV_LIT_EXP_OFF_REG,
+        MOV_LIT_EXP_MEM_REG,
         /// <summary>
         /// Move Literal to Memory - copy a literal into memory.
         /// </summary>
         MOV_LIT_MEM,
-        MOV_LIT_EXP_MEM,
         /// <summary>
         /// Move Register* to Register - copy a value from memory into Register B starting from the index given by the value of register A.
         /// </summary>

@@ -38,9 +38,16 @@
         /// </summary>
         MOV_LIT_MEM,
         /// <summary>
-        /// Move Register* to Register - copy a value from memory into Register B starting from the index given by the value of register A.
+        /// Move Register* to Register - 
+        /// copy a value from memory into Register B starting from the index given by the value of register A.
         /// </summary>
         MOV_REG_PTR_REG,
+        /// <summary>
+        /// Move from Memory via Literal Offset to Register - 
+        /// copy a value from memory starting from the index
+        /// given by a literal plus the value of register A
+        /// into register B.
+        /// </summary>
         MOV_LIT_OFF_REG,
         /// <summary>
         /// Swap - swap the value of registers A and B.

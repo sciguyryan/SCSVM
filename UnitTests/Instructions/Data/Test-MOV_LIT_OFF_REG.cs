@@ -8,9 +8,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_MOV_LIT_EXP_MEM_REG : Test_Instruction_Base
+    public class Test_MOV_LIT_OFF_REG
+        : Test_Instruction_Base
     {
-        public Test_MOV_LIT_EXP_MEM_REG()
+        public Test_MOV_LIT_OFF_REG()
         {
         }
 
@@ -29,10 +30,10 @@ namespace UnitTests.Instructions
 
             var program = new List<QuickInstruction>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),         // mov $12, R1
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),             // mov R1, [$15]
-                new QuickInstruction(OpCode.MOV_REG_REG, new object[] { r1, r2 }),               // mov R1, R2
-                new QuickInstruction(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "R2 + $3", r3 }) // mov [R2 + $3], R3
+                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),    // mov $12, R1
+                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),        // mov R1, [$15]
+                new QuickInstruction(OpCode.MOV_REG_REG, new object[] { r1, r2 }),          // mov R1, R2
+                new QuickInstruction(OpCode.MOV_LIT_OFF_REG, new object[] { 0x3, r2, r3 })  // mov [$3 + R2], R3
             };
 
             _vm.Run(Utils.QuickRawCompile(program));
@@ -55,10 +56,10 @@ namespace UnitTests.Instructions
 
             var program = new List<QuickInstruction>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),            // mov $12, R1
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),                // mov R1, [$15]
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { -0x5, r2 }),                // mov -$5, R2
-                new QuickInstruction(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "R2 + $1A", r3 })   // mov [R2 + $1A], R3
+                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),    // mov $12, R1
+                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),        // mov R1, [$15]
+                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { -0x5, r2 }),        // mov -$5, R2
+                new QuickInstruction(OpCode.MOV_LIT_OFF_REG, new object[] { 0x1A, r2, r3 }) // mov [$1A + R2], R3
             };
 
             _vm.Run(Utils.QuickRawCompile(program));
@@ -80,8 +81,8 @@ namespace UnitTests.Instructions
 
             var program = new List<QuickInstruction>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 0, r1 }),                   // mov $0, R1
-                new QuickInstruction(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "R1 + -$1", r2 })   // mov [R1 + -$1], R2
+                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 0, r1 }),           // mov $0, R1
+                new QuickInstruction(OpCode.MOV_LIT_OFF_REG, new object[] { -0x1, r1, r2 }) // mov [-$1 + R1], R2
             };
 
             _vm.Run(Utils.QuickRawCompile(program));

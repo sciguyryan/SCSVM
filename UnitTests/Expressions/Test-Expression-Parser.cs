@@ -55,7 +55,6 @@ namespace UnitTests.Expressions
                 new ExpressionTestResult("$0A", 10),
                 new ExpressionTestResult("$A0", 160),
                 new ExpressionTestResult("$AA", 170),
-
                 new ExpressionTestResult("$A + $A", 20),
                 new ExpressionTestResult("$A - $A", 0),
                 new ExpressionTestResult("-$A - $A", -20),

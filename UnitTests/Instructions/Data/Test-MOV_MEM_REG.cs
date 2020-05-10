@@ -8,7 +8,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_MOV_MEM_REG : Test_Instruction_Base
+    public class Test_MOV_MEM_REG
+        : Test_Instruction_Base
     {
         public Test_MOV_MEM_REG()
         {

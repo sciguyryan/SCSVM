@@ -1,4 +1,4 @@
-﻿namespace UnitTests.Instructions
+﻿namespace UnitTests
 {
     public enum ResultTestType
     {

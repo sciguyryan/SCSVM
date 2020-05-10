@@ -2,8 +2,21 @@
 {
     public class Parser
     {
+        // TODO - the parser does not handle expressions
+        // in the format of 5(1+2). As it stands I do
+        // not see a use for it. If that changes then
+        // I will add it later.
+
+        /// <summary>
+        /// If the expression has been determined to be simple
+        /// e.g. it can be flattened into a single value
+        /// without requiring external inputs to be resolved.
+        /// </summary>
         public bool IsSimple { get; private set; } = true;
 
+        /// <summary>
+        /// The tokenizer for the parser.
+        /// </summary>
         private Tokenizer _tokenizer;
 
         public Parser(string input)
@@ -11,6 +24,10 @@
             _tokenizer = new Tokenizer(input);
         }
 
+        /// <summary>
+        /// Initiate a full parse of the expression.
+        /// </summary>
+        /// <returns></returns>
         public Node ParseExpression()
         {
             var expr = ParseAddSubtract();
@@ -23,6 +40,10 @@
             return expr;
         }
 
+        /// <summary>
+        /// Parse an add or subtract section of an expression.
+        /// </summary>
+        /// <returns>A node containing the tokenized expression.</returns>
         public Node ParseAddSubtract()
         {
             var lhs = ParseMultiplyDivide();
@@ -49,6 +70,10 @@
             }
         }
 
+        /// <summary>
+        /// Parse an add or subtract section of an expression.
+        /// </summary>
+        /// <returns>A node containing the tokenized expression.</returns>
         public Node ParseMultiplyDivide()
         {
             var lhs = ParseUnary();
@@ -75,6 +100,10 @@
             }
         }
 
+        /// <summary>
+        /// Parse a unary (single operand) section of an expression.
+        /// </summary>
+        /// <returns>A node containing the tokenized expression.</returns>
         public Node ParseUnary()
         {
             while (true)
@@ -96,6 +125,10 @@
             }
         }
 
+        /// <summary>
+        /// Parse a leaf node (non-operand) section of an expression.
+        /// </summary>
+        /// <returns>A node containing the tokenized expression.</returns>
         public Node ParseLeaf()
         {
             if (_tokenizer.Token == Tokens.Number)
@@ -111,13 +144,6 @@
                 _tokenizer.NextToken();
 
                 var node = ParseAddSubtract();
-
-                // Check for the close bracket
-                // throw an exception if not found.
-                if (_tokenizer.Token != Tokens.CloseBracket)
-                {
-                    throw new ParserException("ParseLeaf: missing close parenthesis!");
-                }
 
                 _tokenizer.NextToken();
 

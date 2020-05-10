@@ -13,7 +13,7 @@ namespace VMCore.Expressions
         /// <summary>
         /// A number, if a numeric token type.
         /// </summary>
-        public float Number { get; private set; }
+        public int Number { get; private set; }
 
         /// <summary>
         /// A register identifier, if a register
@@ -38,6 +38,15 @@ namespace VMCore.Expressions
         /// </summary>
         private string _str;
 
+        /// <summary>
+        /// The depth of brackets that have been
+        /// parsed. This number should be zero at
+        /// the end of parsing. If it isn't
+        /// then there was a mismatch and we cannot
+        /// guarantee that the data is parsed
+        /// as intended.
+        /// </summary>
+        private int _bracketDepth = 0;
 
         public Tokenizer(string input)
         {
@@ -64,6 +73,11 @@ namespace VMCore.Expressions
         {
             if (_char == '\0')
             {
+                if (_bracketDepth != 0)
+                {
+                    throw new ParserException("NextToken: bracket mismatch: the number of open and closing brackets did not match.");
+                }
+
                 Token = Tokens.EOF;
                 return;
             }
@@ -78,10 +92,12 @@ namespace VMCore.Expressions
             switch (_char)
             {
                 case '(':
+                    ++_bracketDepth;
                     NextChar();
                     Token = Tokens.OpenBracket;
                     return;
                 case ')':
+                    --_bracketDepth;
                     NextChar();
                     Token = Tokens.CloseBracket;
                     return;
@@ -111,6 +127,8 @@ namespace VMCore.Expressions
                 return;
             }
 
+            // As we are not a hexadecimal number
+            // then we must be a register identifier.
             if (char.IsLetter(_char))
             {
                 HandleRegisterToken();
@@ -128,9 +146,9 @@ namespace VMCore.Expressions
         {
             // A register - must only start with a
             // letter.
-            var sb = new StringBuilder();
+            var sb = new StringBuilder(64);
 
-            // Accept letter or digit.
+            // Accept letters and digits only.
             while (char.IsLetterOrDigit(_char))
             {
                 sb.Append(_char);
@@ -161,54 +179,17 @@ namespace VMCore.Expressions
             // This can be any of the following:
             // a hex number: $EA
             // an integer: 100
-            // a float: 1.0101
-            var sb = new StringBuilder();
-            bool hasDecimalPoint = false;
+            var sb = new StringBuilder(64);
             while (IsNumericLiteral(_char))
             {
-                // If we already have a decimal point,
-                // or if we are working with a hex
-                // number then we have invalid data
-                // and so need to throw an exception here.
-                if (_char == '.')
-                {
-                    if (hasDecimalPoint || isHex)
-                    {
-                        throw new ParserException("HandleNumericToken: failed to parse numerical token from data.");
-                    }
-
-                    hasDecimalPoint = true;
-                }
-
                 sb.Append(_char);
                 NextChar();
             }
 
-            // An indication on whether the parsing
-            // was successful or not.
-            bool success;
-
-            float numf;
-            if (!isHex)
-            {
-                // A value is always parsed as a float,
-                // even if the result is requested to be
-                // an integer. The float is converted
-                // to an integer later as needed.
-                // This simplifies the parsing logic.
-                // If it creates bugs then I will separate
-                // it out.
-                success = TryParseFloat(sb, out numf);
-            }
-            else
-            {
-                // Hex literals can only be parsed
-                // as integers.
-                success =
-                    TryParseHexInt(sb, out int numi);
-
-                numf = (float)numi;
-            }
+            int numi;
+            var success = (!isHex) ?
+                TryParseInt(sb, out numi) :
+                TryParseHexInt(sb, out numi);
 
             // We were not able to successfully
             // parse a numeric value. We cannot
@@ -218,32 +199,16 @@ namespace VMCore.Expressions
                 throw new ParserException("HandleNumericToken: failed to parse numerical token from data. Numeric value was invalid.");
             }
 
-            Number = numf;
+            Number = numi;
             Token = Tokens.Number;
             return;
         }
 
         /// <summary>
-        /// Attempt to parse the string contained in a stringbuilder
-        /// as a float.
-        /// </summary>
-        /// <param name="sb">The stringbuilder containing the input string.</param>
-        /// <param name="numf">A float representing the parsed value.</param>
-        /// <returns>A boolean, true if the parsing yielded a valid float, false otherwise.</returns>
-        private bool TryParseFloat(StringBuilder sb, out float numf)
-        {
-            return 
-                float.TryParse(sb.ToString(),
-                               NumberStyles.Float,
-                               CultureInfo.InvariantCulture,
-                               out numf);
-        }
-
-        /// <summary>
-        /// Attempt to parse the string contained in a stringbuilder
+        /// Attempt to parse the string contained in a string builder
         /// as a hexadecimal integer.
         /// </summary>
-        /// <param name="sb">The stringbuilder containing the input string.</param>
+        /// <param name="sb">The string builder containing the input string.</param>
         /// <param name="numi">An integer representing the parsed value.</param>
         /// <returns>A boolean, true if the parsing yielded a valid integer, false otherwise.</returns>
         private bool TryParseInt(StringBuilder sb, out int numi)
@@ -254,10 +219,10 @@ namespace VMCore.Expressions
         }
 
         /// <summary>
-        /// Attempt to parse the string contained in a stringbuilder
+        /// Attempt to parse the string contained in a string builder
         /// as a integer.
         /// </summary>
-        /// <param name="sb">The stringbuilder containing the input string.</param>
+        /// <param name="sb">The string builder containing the input string.</param>
         /// <param name="numi">An integer representing the parsed value.</param>
         /// <returns>A boolean, true if the parsing yielded a valid integer, false otherwise.</returns>
         private bool TryParseHexInt(StringBuilder sb, out int numi)
@@ -284,7 +249,7 @@ namespace VMCore.Expressions
 
         /// <summary>
         /// If the specified character is a valid numeric literal.
-        /// This can be any decimal digit or a period.
+        /// This can be any decimal or hexadecimal digit.
         /// </summary>
         /// <param name="c">The character to be tested.</param>
         /// <returns>A boolean, true if the character can represent a valid numerical literal, false otherwise.</returns>
@@ -292,8 +257,7 @@ namespace VMCore.Expressions
         {
             return (c >= '0' && c <= '9') ||
                    (c >= 'a' && c <= 'f') ||
-                   (c >= 'A' && c <= 'F') ||
-                   (c == '.');
+                   (c >= 'A' && c <= 'F');
         }
     }
 }

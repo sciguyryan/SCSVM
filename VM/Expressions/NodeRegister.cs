@@ -12,7 +12,7 @@ namespace VMCore.Expressions
             _registerName = registerName;
         }
 
-        public override float Evaluate(CPU cpu)
+        public override int Evaluate(CPU cpu)
         {
             // This should not usually happen, but
             // when we are compiling a binary

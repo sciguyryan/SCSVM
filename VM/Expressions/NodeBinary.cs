@@ -16,7 +16,7 @@ namespace VMCore.Expressions
             _op = op;
         }
 
-        public override float Evaluate(CPU cpu)
+        public override int Evaluate(CPU cpu)
         {
             var lhsVal = _lhs.Evaluate(cpu);
             var rhsVal = _rhs.Evaluate(cpu);

@@ -4,14 +4,14 @@ namespace VMCore.Expressions
 {
     class NodeNumber : Node
     {
-        private float _value;
+        private int _value;
 
-        public NodeNumber(float value)
+        public NodeNumber(int value)
         {
             _value = value;
         }
 
-        public override float Evaluate(CPU cpu)
+        public override int Evaluate(CPU cpu)
         {
             return _value;
         }

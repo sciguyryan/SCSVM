@@ -8,7 +8,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_MOV_REG_PTR_REG : Test_Instruction_Base
+    public class Test_MOV_REG_PTR_REG
+        : Test_Instruction_Base
     {
         public Test_MOV_REG_PTR_REG()
         {
@@ -27,12 +28,12 @@ namespace UnitTests.Instructions
             const int address = 0x15;
             const int expected = 0x12;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),    // mov $0x12, R1
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { r1, address }),     // mov R1, $0x15
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { address, r2 }),     // mov $0x15, R2
-                new QuickInstruction(OpCode.MOV_REG_PTR_REG, new object[] { r2, r3 })       // mov *R2, R3
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),    // mov $0x12, R1
+                new QuickIns(OpCode.MOV_REG_MEM, new object[] { r1, address }),     // mov R1, $0x15
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { address, r2 }),     // mov $0x15, R2
+                new QuickIns(OpCode.MOV_REG_PTR_REG, new object[] { r2, r3 })       // mov *R2, R3
             };
 
             _vm.Run(Utils.QuickRawCompile(program));
@@ -53,10 +54,10 @@ namespace UnitTests.Instructions
 
             const int expected = 0x12;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { -0x1, r1 }),    // mov $-0x1, R1
-                new QuickInstruction(OpCode.MOV_REG_PTR_REG, new object[] { r1, r2 })   // mov *R1, R2
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { -0x1, r1 }),    // mov $-0x1, R1
+                new QuickIns(OpCode.MOV_REG_PTR_REG, new object[] { r1, r2 })   // mov *R1, R2
             };
 
 

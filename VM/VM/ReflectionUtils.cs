@@ -28,11 +28,12 @@ namespace VMCore.VM
         /// Build the type caches used by this application and applies
         /// any hooked types that are being used.
         /// </summary>
-        /// <param name="instructionOnly">A boolean, true if only the instruction cache should be built, false otherwise.</param>
-        /// <param name="forceRebuild">A boolean, true if the caches should be cleared and rebuilt from scratch, false otherwise.</param>
-        public static void BuildCachesAndHooks(bool instructionOnly = false, bool forceRebuild = false)
+        /// <param name="aInsOnly">A boolean, true if only the instruction cache should be built, false otherwise.</param>
+        /// <param name="aForceRebuild">A boolean, true if the caches should be cleared and rebuilt from scratch, false otherwise.</param>
+        public static void BuildCachesAndHooks(bool aInsOnly = false,
+                                               bool aForceRebuild = false)
         {
-            if (forceRebuild)
+            if (aForceRebuild)
             {
                 ClearCachesAndHooks();
             }
@@ -54,7 +55,7 @@ namespace VMCore.VM
                 }
                 else
                 {
-                    if (instructionOnly)
+                    if (aInsOnly)
                     {
                         // We have been instructed to only build
                         // the instruction cache. We can skip this
@@ -63,13 +64,15 @@ namespace VMCore.VM
                     }
 
                     // Interrupt handlers.
-                    if (t.GetInterfaces().Contains(typeof(IInterruptHandler)))
+                    if (t.GetInterfaces()
+                        .Contains(typeof(IInterruptHandler)))
                     {
                         HookInterruptHandler(t);
                     }
 
                     // Socket device handlers.
-                    if (t.GetInterfaces().Contains(typeof(ISocketDevice)))
+                    if (t.GetInterfaces()
+                        .Contains(typeof(ISocketDevice)))
                     {
                         HookSocketDevice(t);
                         continue;
@@ -91,12 +94,14 @@ namespace VMCore.VM
         /// <summary>
         /// Handle the building of the instruction cache.
         /// </summary>
-        /// <param name="t">The type of instruction.</param>
-        public static void HandleInstructionType(Type t)
+        /// <param name="aType">The type of instruction.</param>
+        public static void HandleInstructionType(Type aType)
         {
-            var instance = (Instruction)Activator.CreateInstance(t);
+            var instance = 
+                (Instruction)Activator.CreateInstance(aType);
 
-            if (!ReflectionUtils.InstructionCache.TryAdd(instance.OpCode, instance))
+            if (!ReflectionUtils.InstructionCache.TryAdd(instance.OpCode,
+                                                         instance))
             {
                 throw new Exception($"HandleInstructionType: failed to add instruction implementation class '{instance.GetType()}' for opcode '{instance.OpCode}'. An implementation has already been found for the given opcode.");
             }
@@ -105,11 +110,12 @@ namespace VMCore.VM
         /// <summary>
         /// Handle the hooking of the interrupt handlers.
         /// </summary>
-        /// <param name="t">The type of the interruption.</param>
-        public static void HookInterruptHandler(Type t)
+        /// <param name="aType">The type of the interruption.</param>
+        public static void HookInterruptHandler(Type aType)
         {
-            var handler = (IInterruptHandler)Activator.CreateInstance(t);
-            var attr = t.GetCustomAttribute<InterruptAttribute>();
+            var handler = 
+                (IInterruptHandler)Activator.CreateInstance(aType);
+            var attr = aType.GetCustomAttribute<InterruptAttribute>();
 
             InterruptManager.Handlers.Add(attr.InterruptType, handler);
         }
@@ -117,21 +123,24 @@ namespace VMCore.VM
         /// <summary>
         /// Handle the hooking of the socket device read/write handlers.
         /// </summary>
-        /// <param name="t">The type of the socket device.</param>
-        public static void HookSocketDevice(Type t)
+        /// <param name="aType">The type of the socket device.</param>
+        public static void HookSocketDevice(Type aType)
         {
-            var device = (ISocketDevice)Activator.CreateInstance(t);
-            var attrs = t.GetCustomAttributes<SocketAttribute>();
+            var device = 
+                (ISocketDevice)Activator.CreateInstance(aType);
+            var attrs = aType.GetCustomAttributes<SocketAttribute>();
 
             foreach (var att in attrs)
             {
                 if (att.Access == SocketAccess.Read)
                 {
-                    SocketDeviceManager.ReadSockets.Add(att.SocketAddress, device);
+                    SocketDeviceManager
+                        .ReadSockets.Add(att.SocketAddress, device);
                 }
                 else
                 {
-                    SocketDeviceManager.WriteSockets.Add(att.SocketAddress, device);
+                    SocketDeviceManager
+                        .WriteSockets.Add(att.SocketAddress, device);
                 }
             }
         }
@@ -181,20 +190,19 @@ namespace VMCore.VM
         /// <summary>
         /// Create an instance of an object by its type name.
         /// </summary>
-        /// <param name="typeName">The instance type to be created.</param>
+        /// <param name="aTypeName">The instance type to be created.</param>
         /// <returns>An object giving a new instance of the type.</returns>
-        public static object GetInstance(string typeName)
+        public static object GetInstance(string aTypeName)
         {
             var type = (from t in ReflectionUtils.TypesCache
-                        where t.Name == typeName
+                        where t.Name == aTypeName
                         select t).FirstOrDefault();
-
             if (type == null)
             {
-                throw new InvalidOperationException($"GetInstance: the type {typeName} could not be found.");
+                throw new InvalidOperationException($"GetInstance: the type {aTypeName} could not be found.");
             }
 
             return Activator.CreateInstance(type);
         }
     }
-    }
+}

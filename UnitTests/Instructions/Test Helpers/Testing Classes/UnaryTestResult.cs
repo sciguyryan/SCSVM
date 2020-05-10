@@ -10,9 +10,9 @@ namespace UnitTests.Instructions
     {
         public int Value1;
         public int Result;
-        public ResultTestType Type;
+        public ResultTypes Type;
 
-        public UnaryTestResult(int value1, int result, ResultTestType type)
+        public UnaryTestResult(int value1, int result, ResultTypes type)
         {
             Value1 = value1;
             Result = result;
@@ -32,17 +32,17 @@ namespace UnitTests.Instructions
             {
                 var entry = tests[i];
 
-                var program = new List<QuickInstruction>
+                var program = new List<QuickIns>
                 {
-                    new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { entry.Value1, (byte)reg }),
-                    new QuickInstruction(op, new object[] { (byte)reg }),
+                    new QuickIns(OpCode.MOV_LIT_REG, new object[] { entry.Value1, (byte)reg }),
+                    new QuickIns(op, new object[] { (byte)reg }),
                 };
 
                 vm.Run(Utils.QuickRawCompile(program));
 
                 bool success = entry.Type switch
                 {
-                    ResultTestType.EQUAL        => vm.CPU.Registers[reg] == entry.Result,
+                    ResultTypes.EQUAL        => vm.CPU.Registers[reg] == entry.Result,
                     _                           => false
                 };
 

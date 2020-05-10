@@ -15,18 +15,23 @@ namespace VMCore.VM.Core.Sockets
         /// <summary>
         /// Handle reading the value from a socket device of a specified type into a register.
         /// </summary>
-        /// <param name="addr">The socket device address.</param>
-        /// <param name="reg">The register into which the value read from the device should be placed.</param>
-        /// <param name="vm">The virtual machine in which the interrupt should be handled.</param>
-        /// <param name="context">The security context to be used when writing this value into the register.</param>
-        void HandleRead(DeviceSocketAddresses addr, Registers reg, VirtualMachine vm, SecurityContext context);
+        /// <param name="aAddr">The socket device address.</param>
+        /// <param name="aReg">The register into which the value read from the device should be placed.</param>
+        /// <param name="aVm">The virtual machine in which the interrupt should be handled.</param>
+        /// <param name="aContext">The security context to be used when writing this value into the register.</param>
+        void HandleRead(SocketAddresses aAddr,
+                        Registers aReg,
+                        VirtualMachine aVm,
+                        SecurityContext aContext);
 
         /// <summary>
         /// Handle writing a value to a socket device of a specified type.
         /// </summary>
-        /// <param name="addr">The socket device address.</param>
-        /// <param name="value">The value to be written to the socket device.</param>
-        /// <param name="vm">The virtual machine in which the interrupt should be handled.</param>
-        void HandleWrite(DeviceSocketAddresses addr, int value, VirtualMachine vm);
+        /// <param name="aAddr">The socket device address.</param>
+        /// <param name="aValue">The value to be written to the socket device.</param>
+        /// <param name="aVm">The virtual machine in which the interrupt should be handled.</param>
+        void HandleWrite(SocketAddresses aAddr,
+                         int aValue,
+                         VirtualMachine aVm);
     }
 }

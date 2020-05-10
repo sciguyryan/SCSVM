@@ -10,11 +10,11 @@ namespace VMCore.VM.Core.Mem
 
         public MemoryAccess Access { get; set; }
 
-        public MemoryRegion(int start, int end, MemoryAccess access)
+        public MemoryRegion(int aStart, int aEnd, MemoryAccess aAccess)
         {
-            Start = start;
-            End = end;
-            Access = access;
+            Start = aStart;
+            End = aEnd;
+            Access = aAccess;
         }
     }
 }

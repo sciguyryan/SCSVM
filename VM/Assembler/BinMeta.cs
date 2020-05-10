@@ -3,7 +3,7 @@ using System.IO;
 
 namespace VMCore.Assembler
 {
-    public class RawBinaryMeta
+    public class BinMeta
     {
         /// <summary>
         /// The binary version of this meta data section.
@@ -18,12 +18,12 @@ namespace VMCore.Assembler
         /// <summary>
         /// Deserialize a RawBinaryMeta object from a byte array.
         /// </summary>
-        /// <param name="raw">A byte array holding the raw binary data.</param>
+        /// <param name="aRaw">A byte array holding the raw binary data.</param>
         /// <returns>A RawBinaryMeta object derived from the byte array.</returns>
-        public static RawBinaryMeta Deserialize(byte[] raw)
+        public static BinMeta Deserialize(byte[] aRaw)
         {
-            using var br = new BinaryReader(new MemoryStream(raw));
-            var res = new RawBinaryMeta
+            using var br = new BinaryReader(new MemoryStream(aRaw));
+            var res = new BinMeta
             {
                 ID = new Guid(br.ReadBytes(16)),
                 Version = new Version(br.ReadString())

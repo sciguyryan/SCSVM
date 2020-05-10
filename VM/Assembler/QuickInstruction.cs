@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using VMCore.VM;
+﻿using VMCore.VM;
 using VMCore.VM.Core;
 
 namespace VMCore.Assembler
@@ -11,7 +9,7 @@ namespace VMCore.Assembler
     /// Do not use outside of this purpose as it contains
     /// none of the validation present in the other classes.
     /// </summary>
-    public class QuickInstruction
+    public class QuickIns
     {
         public OpCode Op { get; private set; }
 
@@ -19,11 +17,13 @@ namespace VMCore.Assembler
 
         public AsmLabel Label { get; private set; }
 
-        public QuickInstruction(OpCode opCode, object[] args = null, AsmLabel label = null)
+        public QuickIns(OpCode aOpCode,
+                        object[] aArgs = null,
+                        AsmLabel aLabel = null)
         {
-            Op = opCode;
-            Args = args;
-            Label = label;
+            Op = aOpCode;
+            Args = aArgs;
+            Label = aLabel;
         }
 
         public override string ToString()
@@ -35,7 +35,7 @@ namespace VMCore.Assembler
 
             for (var i = 0; i < Args.Length; i++)
             {
-                var arg = new AsmInstructionArg
+                var arg = new InstructionArg
                 {
                     Value = Args[i]
                 };

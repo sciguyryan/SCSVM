@@ -8,7 +8,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_BIT : Test_Instruction_Base
+    public class Test_BIT
+        : Test_Instruction_Base
     {
         public Test_BIT()
         {
@@ -52,10 +53,10 @@ namespace UnitTests.Instructions
             {
                 var entry = table[i];
 
-                var program = new List<QuickInstruction>
+                var program = new List<QuickIns>
                 {
-                    new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { (int)entry[1], Registers.R1 }),
-                    new QuickInstruction(OpCode.BIT, new object[] { (int)entry[0], Registers.R1 }),
+                    new QuickIns(OpCode.MOV_LIT_REG, new object[] { (int)entry[1], Registers.R1 }),
+                    new QuickIns(OpCode.BIT, new object[] { (int)entry[0], Registers.R1 }),
                 };
 
                 _vm.Run(Utils.QuickRawCompile(program));

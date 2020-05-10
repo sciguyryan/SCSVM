@@ -66,17 +66,15 @@ namespace VMCore.VM.Core.Reg
         /// </summary>
         /// <param name="regTuple">A tuple of the register identifier and the security context.</param>
         /// <returns>The value of the register, nothing otherwise.</returns>
-        public int this[(Registers reg, SecurityContext context) regTuple]
+        public int this[(Registers r, SecurityContext c) regTuple]
         {
             get
             {
-                return Registers[regTuple.reg]
-                    .GetValue(regTuple.context);
+                return Registers[regTuple.r].GetValue(regTuple.c);
             }
             set
             {
-                Registers[regTuple.reg]
-                    .SetValue(value, regTuple.context);
+                Registers[regTuple.r].SetValue(value, regTuple.c);
             }
         }
 
@@ -85,18 +83,18 @@ namespace VMCore.VM.Core.Reg
         /// </summary>
         /// <param name="regTuple">A tuple of the register ID and the security context.</param>
         /// <returns>The value of the register, nothing otherwise.</returns>
-        public int this[(int regID, SecurityContext context) regTuple]
+        public int this[(int rID, SecurityContext c) regTuple]
         {
             get
             {
                 return 
-                    Registers[(Registers)regTuple.regID]
-                        .GetValue(regTuple.context);
+                    Registers[(Registers)regTuple.rID]
+                        .GetValue(regTuple.c);
             }
             set
             {
-                Registers[(Registers)regTuple.regID]
-                    .SetValue(value, regTuple.context);
+                Registers[(Registers)regTuple.rID]
+                    .SetValue(value, regTuple.c);
             }
         }
 
@@ -104,15 +102,15 @@ namespace VMCore.VM.Core.Reg
         /// Short hand get or set a register with a default (user) security context.
         /// </summary>
         /// <returns>The value of the register if accessed via get, nothing otherwise.</returns>
-        public int this[Registers reg]
+        public int this[Registers r]
         {
             get
             {
-                return Registers[reg].GetValue(SecurityContext.User);
+                return Registers[r].GetValue(SecurityContext.User);
             }
             set
             {
-                Registers[reg].SetValue(value, SecurityContext.User);
+                Registers[r].SetValue(value, SecurityContext.User);
             }
         }
 
@@ -120,16 +118,16 @@ namespace VMCore.VM.Core.Reg
         /// Short hand get or set a register with a default (user) security context.
         /// </summary>
         /// <returns>The value of the register if accessed via get, nothing otherwise.</returns>
-        public int this[int regID]
+        public int this[int rID]
         {
             get
             {
-                return Registers[(Registers)regID]
+                return Registers[(Registers)rID]
                     .GetValue(SecurityContext.User);
             }
             set
             {
-                Registers[(Registers)regID]
+                Registers[(Registers)rID]
                     .SetValue(value, SecurityContext.User);
             }
         }
@@ -186,17 +184,19 @@ namespace VMCore.VM.Core.Reg
         /// Apply a hook to a register.
         /// </summary>
         /// <param name="reg">The register to which the hook should be applied.</param>
-        /// <param name="hook">The hook to be executed.</param>
-        public void Hook(Registers reg, Action<int> hook, Register.HookTypes hookType)
+        /// <param name="aHook">The hook to be executed.</param>
+        public void Hook(Registers aReg,
+                         Action<int> aHook,
+                         Register.HookTypes aHookType)
         {
-            switch (hookType)
+            switch (aHookType)
             {
                 case Register.HookTypes.Change:
-                    Registers[reg].OnChange = hook;
+                    Registers[aReg].OnChange = aHook;
                     break;
 
                 case Register.HookTypes.Read:
-                    Registers[reg].OnRead = hook;
+                    Registers[aReg].OnRead = aHook;
                     break;
 
                 default:

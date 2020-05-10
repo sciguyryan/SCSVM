@@ -3,31 +3,37 @@ using VMCore.VM.Core.Sockets;
 
 namespace VMCore.VM.IO.DeviceSockets
 {
-    [Socket(DeviceSocketAddresses.SoundControl, SocketAccess.Write)]
-    [Socket(DeviceSocketAddresses.SoundData, SocketAccess.Read)]
-    public class SoundDevice : ISocketDevice
+    [Socket(SocketAddresses.SoundControl, SocketAccess.Write)]
+    [Socket(SocketAddresses.SoundData, SocketAccess.Read)]
+    public class SoundDevice
+        : ISocketDevice
     {
         public enum ControlCodes : int
         {
             None = 0x0,
         }
 
-        public void HandleRead(DeviceSocketAddresses addr, Registers reg, VirtualMachine vm, SecurityContext context)
+        public void HandleRead(SocketAddresses aAddr,
+                               Registers aReg,
+                               VirtualMachine aVm,
+                               SecurityContext aContext)
         {
             int result = 0;
-            switch (addr)
+            switch (aAddr)
             {
-                case DeviceSocketAddresses.ConsoleData:
+                case SocketAddresses.ConsoleData:
                     result = Console.Read();
                     break;
             }
 
-            vm.CPU.Registers[(reg, context)] = result;
+            aVm.CPU.Registers[(aReg, aContext)] = result;
         }
 
-        public void HandleWrite(DeviceSocketAddresses addr, int control, VirtualMachine vm)
+        public void HandleWrite(SocketAddresses aAddr,
+                                int aControl,
+                                VirtualMachine aVm)
         {
-            switch ((ControlCodes)control)
+            switch ((ControlCodes)aControl)
             {
                 case ControlCodes.None:
                     break;

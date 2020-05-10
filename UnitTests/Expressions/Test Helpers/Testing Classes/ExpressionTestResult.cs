@@ -9,17 +9,17 @@ namespace UnitTests.Expressions
         public string Input;
         public int Result;
         public int[] RegisterValues;
-        public ResultTestType Type;
+        public ResultTypes Type;
 
-        public ExpressionTestResult(string input,
-                                    int result,
-                                    int[] registerValues = null,
-                                    ResultTestType type = ResultTestType.EQUAL)
+        public ExpressionTestResult(string aInput,
+                                    int aResult,
+                                    int[] aRegisterValues = null,
+                                    ResultTypes aType = ResultTypes.EQUAL)
         {
-            Input = input;
-            Result = result;
-            RegisterValues = registerValues;
-            Type = type;
+            Input = aInput;
+            Result = aResult;
+            RegisterValues = aRegisterValues;
+            Type = aType;
         }
 
         public override string ToString()
@@ -30,31 +30,31 @@ namespace UnitTests.Expressions
         /// <summary>
         /// Run a set of tests for the expression parser.
         /// </summary>
-        /// <param name="vm">The virtual machine instance in which the tests should be run.</param>
-        /// <param name="tests">An array of the tests to be executed.</param>
-        public static void RunTests(VirtualMachine vm, 
-                                    ExpressionTestResult[] tests)
+        /// <param name="aVm">The virtual machine instance in which the tests should be run.</param>
+        /// <param name="aTests">An array of the tests to be executed.</param>
+        public static void RunTests(VirtualMachine aVm, 
+                                    ExpressionTestResult[] aTests)
         {
-            for (var i = 0; i < tests.Length; i++)
+            for (var i = 0; i < aTests.Length; i++)
             {
-                var entry = tests[i];
+                var entry = aTests[i];
                 if (entry.RegisterValues != null)
                 {
                     for (var j = 0; j < entry.RegisterValues.Length; j++)
                     {
-                        vm.CPU.Registers[(Registers)j] =
+                        aVm.CPU.Registers[(Registers)j] =
                             entry.RegisterValues[j];
                     }
                 }
 
                 int value = new Parser(entry.Input)
                     .ParseExpression()
-                    .Evaluate(vm.CPU);
+                    .Evaluate(aVm.CPU);
 
                 bool success = entry.Type switch
                 {
-                    ResultTestType.EQUAL    => value == entry.Result,
-                    _                       => false
+                    ResultTypes.EQUAL   => value == entry.Result,
+                    _                   => false
                 };
 
                 Assert.IsTrue(success,

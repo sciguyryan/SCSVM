@@ -5,7 +5,7 @@ using System.IO;
 
 namespace VMCore.Assembler
 {
-    public class RawBinaryFile
+    public class BinFile
     {
         // ψ - Psi, Psi-Core, (p)sci-Core. Someone out there will understand!
         /// <summary>
@@ -13,21 +13,29 @@ namespace VMCore.Assembler
         /// </summary>
         public static readonly int MagicNumber = 0x03C8;
 
-        public RawBinaryMeta Meta => 
-            RawBinaryMeta.Deserialize(this[RawBinarySections.Metadata].Raw);
+        /// <summary>
+        /// The metadata section for this binary file.
+        /// </summary>
+        public BinMeta Meta => 
+            BinMeta.Deserialize(this[BinSections.Metadata].Raw);
 
-        public List<RawBinarySection> Sections { get; set; } = 
-            new List<RawBinarySection>();
+        /// <summary>
+        /// A list of sections within this binary file.
+        /// </summary>
+        public List<BinSection> Sections { get; set; } = 
+            new List<BinSection>();
 
-        public RawBinarySection this[RawBinarySections section]
+        public BinSection this[BinSections section]
         {
             // TODO - there probably isn't any need to optimize this...
             // but noting this here just in case.
             get
             {
-                return (from s in Sections 
-                        where s.Name == Enum.GetName(typeof(RawBinarySections), section) 
-                        select s).FirstOrDefault();
+                return 
+                    (from s in Sections 
+                     where s.Name == 
+                        Enum.GetName(typeof(BinSections), section)
+                     select s).FirstOrDefault();
             }
             set { }
         }
@@ -35,15 +43,15 @@ namespace VMCore.Assembler
         /// <summary>
         /// Creates the RawBinaryFile object represented by a byte array.
         /// </summary>
-        /// <param name="data">A byte array representing a RawBinaryFile object.</param>
+        /// <param name="aData">A byte array representing a RawBinaryFile object.</param>
         /// <returns>A RawBinaryFile containing the deserialized binary data.</returns>
-        public static RawBinaryFile Load(byte[] data)
+        public static BinFile Load(byte[] aData)
         {
-            using var br = new BinaryReader(new MemoryStream(data));
-            var rbf = new RawBinaryFile();
+            using var br = new BinaryReader(new MemoryStream(aData));
+            var rbf = new BinFile();
 
             var magic = br.ReadInt32();
-            if (magic != RawBinaryFile.MagicNumber)
+            if (magic != BinFile.MagicNumber)
             {
                 throw new Exception("Load: Unrecognized binary format.");
             }
@@ -51,7 +59,7 @@ namespace VMCore.Assembler
             var sectionCount = br.ReadInt32();
             for (var i = 0; i < sectionCount; i++)
             {
-                var sect = new RawBinarySection
+                var sect = new BinSection
                 {
                     Name = br.ReadString()
                 };

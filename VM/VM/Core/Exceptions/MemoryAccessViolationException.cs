@@ -2,19 +2,20 @@
 
 namespace VMCore.VM.Core.Exceptions
 {
-    public class MemoryAccessViolationException : Exception
+    public class MemoryAccessViolationException
+        : Exception
     {
         public MemoryAccessViolationException()
         {
         }
 
-        public MemoryAccessViolationException(string message)
-            : base(message)
+        public MemoryAccessViolationException(string aMessage)
+            : base(aMessage)
         {
         }
 
-        public MemoryAccessViolationException(string message, Exception inner)
-            : base(message, inner)
+        public MemoryAccessViolationException(string aMessage, Exception aInner)
+            : base(aMessage, aInner)
         {
         }
     }

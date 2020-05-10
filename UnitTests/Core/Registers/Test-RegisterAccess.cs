@@ -32,10 +32,10 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserAssemblyWriteProtectedRegister()
         {
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
                 // Attempt to write a value to a protected write register.
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 0x0, (byte)Registers.IP })
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x0, (byte)Registers.IP })
             };
 
             // This should fail with a RegisterAccessViolationException.
@@ -71,11 +71,11 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserAssemblyReadProtectedRegister()
         {
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
                 // Attempt to read a value from a protected write register
                 // directly from user code.
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { (byte)Registers.IP, 0x0 })
+                new QuickIns(OpCode.MOV_REG_MEM, new object[] { (byte)Registers.IP, 0x0 })
             };
 
             // This should fail with a RegisterAccessViolationException.
@@ -110,10 +110,10 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestUserAssemblyReadRegister()
         {
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
                 // Attempt to write a value to a protected write register.
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { (byte)Registers.R1, 0x0 })
+                new QuickIns(OpCode.MOV_REG_MEM, new object[] { (byte)Registers.R1, 0x0 })
             };
 
             // This should fail with a RegisterAccessViolationException.
@@ -148,9 +148,9 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(InvalidRegisterException))]
         public void TestAssemblyReadInvalidRegiser()
         {
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { (byte)0xFF, 0x0 }),
+                new QuickIns(OpCode.MOV_REG_MEM, new object[] { (byte)0xFF, 0x0 }),
             };
 
             // This should throw an exception as the specified register
@@ -166,9 +166,9 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(InvalidRegisterException))]
         public void TestAssemblyWriteInvalidRegiser()
         {
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 0x123, (byte)0xFF }),
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x123, (byte)0xFF }),
             };
 
             // This should throw an exception as the specified register

@@ -2,19 +2,20 @@
 
 namespace VMCore.VM.Core.Exceptions
 {
-    public class MemoryOutOfRangeException : Exception
+    public class MemoryOutOfRangeException
+        : Exception
     {
         public MemoryOutOfRangeException()
         {
         }
 
-        public MemoryOutOfRangeException(string message)
-            : base(message)
+        public MemoryOutOfRangeException(string aMessage)
+            : base(aMessage)
         {
         }
 
-        public MemoryOutOfRangeException(string message, Exception inner)
-            : base(message, inner)
+        public MemoryOutOfRangeException(string aMessage, Exception aInner)
+            : base(aMessage, aInner)
         {
         }
     }

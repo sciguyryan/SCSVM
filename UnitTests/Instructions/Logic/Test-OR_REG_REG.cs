@@ -9,7 +9,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_OR_REG_REG : Test_Instruction_Base
+    public class Test_OR_REG_REG
+        : Test_Instruction_Base
     {
         public Test_OR_REG_REG()
         {

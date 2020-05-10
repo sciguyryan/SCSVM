@@ -10,9 +10,9 @@ namespace VMCore.VM
         /// An delegate function to be fired when a breakpoint
         /// is triggered.
         /// </summary>
-        /// <param name="dataValue">The value passed from the breakpoint.</param>
+        /// <param name="aDataValue">The value passed from the breakpoint.</param>
         /// <returns>A boolean, true if the CPU should halt executing, false otherwise.</returns>
-        public delegate bool BreakpointAction(int dataValue);
+        public delegate bool BreakpointAction(int aDataValue);
 
         /// <summary>
         /// A type of breakpoint to be fired.
@@ -48,11 +48,12 @@ namespace VMCore.VM
         /// </summary>
         public BreakpointAction Action { get; set; }
 
-        public Breakpoint(int breakAt, BreakpointType type, BreakpointAction action)
+        public Breakpoint(int breakAt, BreakpointType aType,
+                          BreakpointAction aAction)
         {
             BreakAt = breakAt;
-            Type = type;
-            Action = action;
+            Type = aType;
+            Action = aAction;
         }
     }
 }

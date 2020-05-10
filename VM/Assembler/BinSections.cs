@@ -1,11 +1,12 @@
 ﻿namespace VMCore.Assembler
 {
-    public enum RawBinarySections
+    public enum BinSections
     {
         Metadata,
         ReadOnly,
         DebugInfo,
         TypeInfo,
         Code,
+        Strings
     }
 }

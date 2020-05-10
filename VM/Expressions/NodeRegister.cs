@@ -3,23 +3,24 @@ using VMCore.VM;
 
 namespace VMCore.Expressions
 {
-    public class NodeRegister : Node
+    public class NodeRegister
+        : Node
     {
         private string _registerName;
 
-        public NodeRegister(string registerName)
+        public NodeRegister(string aRegisterName)
         {
-            _registerName = registerName;
+            _registerName = aRegisterName;
         }
 
-        public override int Evaluate(CPU cpu)
+        public override int Evaluate(CPU aCpu)
         {
             // This should not usually happen, but
             // when we are compiling a binary
             // no CPU will be passed.
             // This is done in order to allow
             // for optimization analysis.
-            if (cpu == null)
+            if (aCpu == null)
             {
                 return -1;
             }
@@ -28,7 +29,7 @@ namespace VMCore.Expressions
                 (Registers)Enum.Parse(typeof(Registers),
                                       _registerName);
 
-            return cpu.Registers[reg];
+            return aCpu.Registers[reg];
         }
     }
 }

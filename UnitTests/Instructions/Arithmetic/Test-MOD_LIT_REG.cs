@@ -8,7 +8,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_MOD_LIT_REG : Test_Instruction_Base
+    public class Test_MOD_LIT_REG
+        : Test_Instruction_Base
     {
         public Test_MOD_LIT_REG()
         {
@@ -56,10 +57,10 @@ namespace UnitTests.Instructions
             {
                 var entry = table[i];
 
-                var program = new List<QuickInstruction>
+                var program = new List<QuickIns>
                 {
-                    new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { entry[0], (byte)Registers.R1 }),
-                    new QuickInstruction(OpCode.MOD_LIT_REG, new object[] { entry[1], (byte)Registers.R1 }),
+                    new QuickIns(OpCode.MOV_LIT_REG, new object[] { entry[0], (byte)Registers.R1 }),
+                    new QuickIns(OpCode.MOD_LIT_REG, new object[] { entry[1], (byte)Registers.R1 }),
                 };
 
                 Assert.ThrowsException<DivideByZeroException>(() => _vm.Run(Utils.QuickRawCompile(program)),

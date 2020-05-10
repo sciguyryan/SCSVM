@@ -59,30 +59,32 @@ namespace VMCore.VM.Core.Reg
         /// </summary>
         private Type _flagType;
 
-        public Register(CPU cpu, RegisterAccess access, Type flagType = null)
+        public Register(CPU aCpu,
+                        RegisterAccess aAccess,
+                        Type aFlagType = null)
         {
-            CPU = cpu;
-            AccessFlags = access;
-            _flagType = flagType;
+            CPU = aCpu;
+            AccessFlags = aAccess;
+            _flagType = aFlagType;
         }
 
         /// <summary>
         /// Set the internal ID of this register. Mainly used for debugging.
         /// </summary>
-        /// <param name="id">The ID to be applied to this register.</param>
-        public void SetID(Registers id)
+        /// <param name="aId">The ID to be applied to this register.</param>
+        public void SetID(Registers aId)
         {
-            _registerID = id;
+            _registerID = aId;
         }
 
         /// <summary>
         /// Gets the value from register.
         /// </summary>
-        /// <param name="context">The security context for this request.</param>
+        /// <param name="aContext">The security context for this request.</param>
         /// <exception>RegisterAccessViolationException is the specified permission flag is not set for the register.</exception>
-        public int GetValue(SecurityContext context)
+        public int GetValue(SecurityContext aContext)
         {
-            ValidateAccess(DataAccessType.Read, context);
+            ValidateAccess(DataAccessType.Read, aContext);
 
             OnRead?.Invoke(_value);
 
@@ -92,15 +94,15 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// Sets the value of the register.
         /// </summary>
-        /// <param name="value">The value to which the register should be set.</param>
-        /// <param name="context">The security context for this request.</param>
+        /// <param name="aValue">The value to which the register should be set.</param>
+        /// <param name="aContext">The security context for this request.</param>
         /// <exception>RegisterAccessViolationException is the specified permission flag is not set for the register.</exception>
-        public void SetValue(int value, SecurityContext context)
+        public void SetValue(int aValue, SecurityContext aContext)
         {
-            ValidateAccess(DataAccessType.Write, context);
-            _value = value;
+            ValidateAccess(DataAccessType.Write, aContext);
+            _value = aValue;
 
-            OnChange?.Invoke(value);
+            OnChange?.Invoke(aValue);
         }
 
         /// <summary>
@@ -138,14 +140,15 @@ namespace VMCore.VM.Core.Reg
         /// Checks if the register can be accessed in a specified way.
         /// Using a system-level security context will always grant access.
         /// </summary>
-        /// <param name="type">The data access type to check.</param>
-        /// <param name="context">The security context for this request.</param>
+        /// <param name="aType">The data access type to check.</param>
+        /// <param name="aContext">The security context for this request.</param>
         /// <exception>RegisterAccessViolationException is the specified permission flag is not set for the register.</exception>
-        private void ValidateAccess(DataAccessType type, SecurityContext context)
+        private void ValidateAccess(DataAccessType aType,
+                                    SecurityContext aContext)
         {
             // A system-level security context is granted
             // automatic access.
-            if (context == SecurityContext.System)
+            if (aContext == SecurityContext.System)
             {
                 return;
             }
@@ -156,11 +159,11 @@ namespace VMCore.VM.Core.Reg
             // they will fall through these checks and
             // trigger the RegisterAccessViolationException below.
             bool hasFlags;
-            if (type.HasFlag(DataAccessType.Read)) {
+            if (aType.HasFlag(DataAccessType.Read)) {
                 hasFlags = AccessFlags.HasFlag(RegisterAccess.R);
 
             }
-            else if (type.HasFlag(DataAccessType.Write))
+            else if (aType.HasFlag(DataAccessType.Write))
             {
                 hasFlags = AccessFlags.HasFlag(RegisterAccess.W);
             }
@@ -171,7 +174,7 @@ namespace VMCore.VM.Core.Reg
 
             if (!hasFlags)
             {
-                throw new RegisterAccessViolationException($"ValidateAccess: attempted to access a register without the correct security context or access flags. Access Type = {type}, AccessFlags = {AccessFlags}");
+                throw new RegisterAccessViolationException($"ValidateAccess: attempted to access a register without the correct security context or access flags. Access Type = {aType}, AccessFlags = {AccessFlags}");
             }
         }
     }

@@ -1,6 +1,6 @@
 ﻿namespace VMCore.Assembler
 {
-    public class RawBinarySection
+    public class BinSection
     {
         public string Name { get; set; }
 

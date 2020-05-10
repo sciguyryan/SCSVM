@@ -12,10 +12,10 @@
         /// </summary>
         public int BoundArgumentIndex { get; private set; }
 
-        public AsmLabel(string name, int boundArgumnetIndex)
+        public AsmLabel(string aName, int aBoundArgIndex)
         {
-            Name = name;
-            BoundArgumentIndex = boundArgumnetIndex;
+            Name = aName;
+            BoundArgumentIndex = aBoundArgIndex;
         }
     }
 }

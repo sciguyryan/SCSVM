@@ -59,47 +59,50 @@ namespace VMCore.Assembler
         /// <summary>
         /// Add an opcode instruction to the byte stream.
         /// </summary>
-        /// <param name="opCode">The opcode of the instruction.</param>
-        public void Add(OpCode opCode)
+        /// <param name="aOpCode">The opcode of the instruction.</param>
+        public void Add(OpCode aOpCode)
         {
-            AddWithLabel(opCode, null, null);
+            AddWithLabel(aOpCode, null, null);
         }
 
         /// <summary>
         /// Add an opcode instruction to the byte stream.
         /// </summary>
-        /// <param name="opCode">The opcode of the instruction.</param>
-        /// <param name="boundLabel">A label that is bound to this opcode, can be null.</param>
-        public void Add(OpCode opCode, AsmLabel boundLabel)
+        /// <param name="aOpCode">The opcode of the instruction.</param>
+        /// <param name="aBoundLabel">A label that is bound to this opcode, can be null.</param>
+        public void Add(OpCode aOpCode, AsmLabel aBoundLabel)
         {
-            AddWithLabel(opCode, null, boundLabel);
+            AddWithLabel(aOpCode, null, aBoundLabel);
         }
 
         /// <summary>
         /// Add an opcode instruction to the byte stream.
         /// </summary>
-        /// <param name="opCode">The opcode of the instruction.</param>
-        /// <param name="args">Any argument data that is required by the opcode instruction.</param>
-        public void Add(OpCode opCode, object[] args)
+        /// <param name="aOpCode">The opcode of the instruction.</param>
+        /// <param name="aArgs">Any argument data that is required by the opcode instruction.</param>
+        public void Add(OpCode aOpCode, object[] aArgs)
         {
-            AddWithLabel(opCode, args, null);
+            AddWithLabel(aOpCode, aArgs, null);
         }
 
         /// <summary>
         /// Add an opcode instruction to the byte stream.
         /// </summary>
-        /// <param name="opCode">The opcode of the instruction.</param>
-        /// <param name="args">Any argument data that is required by the opcode instruction.</param>
-        /// <param name="boundLabel">A label that is bound to this opcode, can be null.</param>
-        public void AddWithLabel(OpCode opCode, object[] args, AsmLabel boundLabel)
+        /// <param name="aOpCode">The opcode of the instruction.</param>
+        /// <param name="aArgs">Any argument data that is required by the opcode instruction.</param>
+        /// <param name="aBoundLabel">A label that is bound to this opcode, can be null.</param>
+        public void AddWithLabel(OpCode aOpCode,
+                                 object[] aArgs,
+                                 AsmLabel aBoundLabel)
         {
-            if (!_instructionCache.TryGetValue((OpCode)opCode, out Instruction ins))
+            if (!_instructionCache.TryGetValue(aOpCode,
+                                               out Instruction ins))
             {
                 // TODO - handle this better.
                 return;
             }
 
-            OpCode op = opCode;
+            OpCode op = aOpCode;
 
             // Quick exit, no argument data to write.
             if (ins.ArgumentTypes.Length == 0)
@@ -109,7 +112,7 @@ namespace VMCore.Assembler
             }
 
             // We should have at least one argument here...
-            if (args == null || args.Length < ins.ArgumentTypes.Length)
+            if (aArgs == null || aArgs.Length < ins.ArgumentTypes.Length)
             {
                 // TODO - handle this better.
                 return;
@@ -122,58 +125,50 @@ namespace VMCore.Assembler
             var opCodePos = _bw.BaseStream.Position;
             _bw.Write(0);
 
-            OpCode newOp = opCode;
+            OpCode newOp = aOpCode;
             bool hasOpCodeChanged = false;
-            for (int i = 0; i < args.Length; i++)
+            for (int i = 0; i < aArgs.Length; i++)
             {
-                var expType = ins.ExpressionArgType(i);
                 Type argType = ins.ArgumentTypes[i];
-                object arg = args[i];
+                object arg = aArgs[i];
 
                 if (_optimize)
                 {
-                    (newOp, argType, arg, expType) 
-                        = Optimize(newOp, i, ins, args[i]);
+                    (newOp, argType, arg) 
+                        = Optimize(newOp, i, ins, aArgs[i]);
 
                     // We cannot change the opcode more than
-                    // once during optimisation otherwise it
+                    // once during optimization otherwise it
                     // would likely cause things to break.
                     // In theory this should never happen.
-                    if (newOp != opCode)
+                    if (newOp != aOpCode)
                     {
                         if (hasOpCodeChanged)
                         {
-                            throw new NotSupportedException($"AddWithLabel: attempted to change the opcode from {opCode} to {newOp}, however the opcode has already been changed. This operation is not supported.");
+                            throw new NotSupportedException($"AddWithLabel: attempted to change the opcode from {aOpCode} to {newOp}, however the opcode has already been changed. This operation is not supported.");
                         }
-
-                        // If the opcode changed then we have
-                        // moved from an expression argument
-                        // to a flat one. We therefore need
-                        // to set the expType to null here
-                        // as we no longer have an expression
-                        // to deal with.
-                        expType = null;
                     }
 
                     op = newOp;
                 }
 
                 // Check if we have a bound label.
-                if (boundLabel != null)
+                if (aBoundLabel != null)
                 {
                     // Check if the instruction is permitted to bind a label
                     // to a given argument.
                     if (!ins.CanBindToLabel(i))
                     {
-                        throw new Exception($"AddWithLabel: attempted to bind a label to an argument that cannot accept it. Op = {opCode}, boundLabel = {boundLabel.Name}, labelBoundArgument = {i}");
+                        throw new Exception($"AddWithLabel: attempted to bind a label to an argument that cannot accept it. Op = {aOpCode}, boundLabel = {aBoundLabel.Name}, labelBoundArgument = {i}");
                     }
 
                     // TODO we can optimize here by replacing
                     // known labels immediately.
-                    _labelsToBeReplaced.Add(boundLabel.Name, _ms.Position);
+                    _labelsToBeReplaced.Add(aBoundLabel.Name,
+                                            _ms.Position);
                 }
 
-                Utils.WriteDataByType(argType, arg, _bw, expType);
+                Utils.WriteDataByType(argType, arg, _bw);
             }
 
             // This is a little bit ugly.
@@ -193,38 +188,44 @@ namespace VMCore.Assembler
         /// <summary>
         /// Optimize any operations that support optimization.
         /// </summary>
-        /// <param name="op">The opcode of the instruction to be Optimized.</param>
-        /// <param name="argIndex">The index of the argument to be Optimized.</param>
-        /// <param name="ins">The instruction instance for the opcode.</param>
-        /// <param name="arg">The data for the opcode argument.</param>
-        /// <returns>A tuple of the output opcode, argument type, data and expression argument type.</returns>
-        private (OpCode, Type, object, Type) Optimize(OpCode op, int argIndex, Instruction ins, object arg)
+        /// <param name="aOp">The opcode of the instruction to be Optimized.</param>
+        /// <param name="aArgIndex">The index of the argument to be Optimized.</param>
+        /// <param name="aIns">The instruction instance for the opcode.</param>
+        /// <param name="aArg">The data for the opcode argument.</param>
+        /// <returns>A tuple of the output opcode, argument type and argument data.</returns>
+        private (OpCode, Type, object) Optimize(OpCode aOp,
+                                                int aArgIndex,
+                                                Instruction aIns,
+                                                object aArg)
         {
 
-            Type argType = ins.ArgumentTypes[argIndex];
-            Type exprArgType = ins.ExpressionArgType(argIndex);
+            Type argType = aIns.ArgumentTypes[aArgIndex];
 
             if (!_optimize)
             {
-                return (op, argType, arg, exprArgType);
+                return (aOp, argType, aArg);
             }
 
-            if (ins.ExpressionArgType(argIndex) != null)
+            if (aIns.ExpressionArgType(aArgIndex) != null)
             {
-                return FoldExpressionArgs.FoldExpressionArg(op, argIndex, ins, arg);
+                return 
+                    FoldExpressionArg.FoldExpression(aOp,
+                                                     aArgIndex,
+                                                     aIns,
+                                                     aArg);
             }
 
-            return (op, argType, arg, exprArgType);
+            return (aOp, argType, aArg);
         }
 
         /// <summary>
         /// Create a label from a given ID.
         /// </summary>
-        /// <param name="id">The ID of this label.</param>
+        /// <param name="aId">The ID of this label.</param>
         /// <returns>A boolean, true if the label was added and false if the label already existed.</returns>
-        public bool CreateLabel(string id)
+        public bool CreateLabel(string aId)
         {
-            return _labelDestinations.TryAdd(id, _ms.Position);
+            return _labelDestinations.TryAdd(aId, _ms.Position);
         }
         
         /// <summary>

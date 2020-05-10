@@ -1,6 +1,6 @@
 ﻿namespace VMCore.VM.IO.DeviceSockets
 {
-    public enum DeviceSocketAddresses : int
+    public enum SocketAddresses : int
     {
         ConsoleControl = 0x000,
         ConsoleData    = 0x001,

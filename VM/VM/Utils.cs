@@ -13,8 +13,8 @@ namespace VMCore.VM
         /// Convert an integer into a string representing the flags
         /// that would be set if it were cast to an flags enum.
         /// </summary>
-        /// <param name="enumType">The type of the flags enumeration to be referenced.</param>
-        /// <param name="value">An integer, the bits of which should be treated as flags.</param>
+        /// <param name="aEnumType">The type of the flags enumeration to be referenced.</param>
+        /// <param name="aValue">An integer, the bits of which should be treated as flags.</param>
         /// <returns></returns>
         /// <remarks>
         /// Intended to be used for the CPU flags register.
@@ -22,21 +22,25 @@ namespace VMCore.VM
         /// directly type-cast. If someone knows of a way then please
         /// do let me know.
         /// </remarks>
-        public static string MapIntegerBitsToFlagsEnum(Type enumType, int value)
+        public static string MapIntegerBitsToFlagsEnum(Type aEnumType,
+                                                       int aValue)
         {
-            if (!enumType.IsEnum)
+            if (!aEnumType.IsEnum)
             {
                 // TODO - might need to handle this a bit better.
                 return "";
             }
 
-            var enumEntries = enumType.GetEnumNames();
+            var enumEntries = aEnumType.GetEnumNames();
             var enumEntriesLen = enumEntries.Length;
 
             var flagStates = new List<string>();
             for (byte i = 0; i < enumEntriesLen; i++)
             {
-                flagStates.Add(enumEntries[i] + " = " + Utils.IsBitSet(value, i));
+                var str =
+                    enumEntries[i] + " = " + Utils.IsBitSet(aValue, i);
+
+                flagStates.Add(str);
             }
 
             return string.Join(", ", flagStates.ToArray());
@@ -45,115 +49,125 @@ namespace VMCore.VM
         /// <summary>
         /// Check if a given bit is set within an integer.
         /// </summary>
-        /// <param name="v">The value to be modified.</param>
-        /// <param name="p">The position of the bit to be modified.</param>
+        /// <param name="aV">The value to be modified.</param>
+        /// <param name="aP">The position of the bit to be modified.</param>
         /// <returns>An integer with the specified bit modified.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsBitSet(int v, int p)
+        public static bool IsBitSet(int aV, int aP)
         {
-            return (v & (1 << p)) != 0;
+            return (aV & (1 << aP)) != 0;
         }
 
         /// <summary>
         /// Set a given bit within an integer.
         /// </summary>
-        /// <param name="v">The value to be modified.</param>
-        /// <param name="p">The position of the bit to be modified.</param>
+        /// <param name="aV">The value to be modified.</param>
+        /// <param name="aP">The position of the bit to be modified.</param>
         /// <returns>An integer with the specified bit modified.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int SetBit(int v, int p)
+        public static int SetBit(int aV, int aP)
         {
-            return v | 1 << p;
+            return aV | 1 << aP;
         }
 
         /// <summary>
         /// Clear a given bit within an integer.
         /// </summary>
-        /// <param name="position">The bit to be cleared.</param>
+        /// <param name="aP">The bit to be cleared.</param>
         /// <returns>An integer with the specified bit modified.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ClearBit(int value, int position)
+        public static int ClearBit(int aV, int aP)
         {
-            return value & ~(1 << position);
+            return aV & ~(1 << aP);
         }
 
         /// <summary>
         /// Set the state of a specific bit within an integer.
         /// </summary>
-        /// <param name="v">The value to be modified.</param>
-        /// <param name="p">The position of the bit to be modified.</param>
-        /// <param name="s">The state to which the bit should be set.</param>
+        /// <param name="aV">The value to be modified.</param>
+        /// <param name="aP">The position of the bit to be modified.</param>
+        /// <param name="aS">The state to which the bit should be set.</param>
         /// <returns>An integer with the specified bit modified.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int SetBitState(int v, int p, int s)
+        public static int SetBitState(int aV, int aP, int aS)
         {
-            var mask = 1 << p;
-            return (v & ~mask) | ((s << p) & mask);
+            var mask = 1 << aP;
+            return (aV & ~mask) | ((aS << aP) & mask);
         }
 
         /// <summary>
         /// Cast an object to a given type.
         /// </summary>
         /// <typeparam name="T">The type that the object should be cast into.</typeparam>
-        /// <param name="obj">The object to be case.</param>
+        /// <param name="aObj">The object to be case.</param>
         /// <returns>An object of the designated type.</returns>
-        public static T CastTo<T>(object obj)
+        public static T CastTo<T>(object aObj)
         {
-            return (T)obj;
+            return (T)aObj;
         }
 
         /// <summary>
         /// Read data from a binary reader based on the specified type.
         /// </summary>
-        /// <param name="type">The type of the data being written.</param>
-        /// <param name="br">The binary reader from which the data will be read.</param>
+        /// <param name="aType">The type of the data being written.</param>
+        /// <param name="aBr">The binary reader from which the data will be read.</param>
         /// <returns>An object representing the read data.</returns>
         /// <exception>NotSupportedException if the specified type is currently not supported.</exception>
-        public static object ReadDataByType(Type type, BinaryReader br)
+        public static object ReadDataByType(Type aType, BinaryReader aBr)
         {
             // This is the cleanest way that I can come up with
             // to do this. It uses the new C# switch pattern
             // matching statement.
-            return type switch
+            return aType switch
             {
-                Type _ when type == typeof(byte)        => br.ReadByte(),
-                Type _ when type == typeof(int)         => br.ReadInt32(),
-                Type _ when type == typeof(string)      => br.ReadString(),
-                Type _ when type == typeof(Registers)   => (Registers)(int)br.ReadByte(),
-                _                                       => throw new NotSupportedException($"ReadDataByType: the type {type} was passed as an argument type, but no support has been given provided for that type.")
+                Type _ when aType == typeof(byte)
+                    => aBr.ReadByte(),
+
+                Type _ when aType == typeof(int)
+                    => aBr.ReadInt32(),
+
+                Type _ when aType == typeof(string)
+                    => aBr.ReadString(),
+
+                Type _ when aType == typeof(Registers)
+                    => (Registers)(int)aBr.ReadByte(),
+
+                _
+                    => throw new NotSupportedException($"ReadDataByType: the type {aType} was passed as an argument type, but no support has been given provided for that type.")
             };
         }
 
         /// <summary>
         /// Write data to a binary writer based on the specified type.
         /// </summary>
-        /// <param name="type">The type of the data being written.</param>
-        /// <param name="data">An object representing the data to be written.</param>
-        /// <param name="bw">The binary writer into which the data will be written.</param>
-        /// <param name="isExprArg">A boolean indicating if the argument is to be treated as an expression.</param>
+        /// <param name="aType">The type of the data being written.</param>
+        /// <param name="aData">An object representing the data to be written.</param>
+        /// <param name="aBw">The binary writer into which the data will be written.</param>
         /// <exception>NotSupportedException if the specified type is currently not supported.</exception>
-        public static void WriteDataByType(Type type, object data, BinaryWriter bw, Type exprArg = null)
+        public static void WriteDataByType(Type aType,
+                                           object aData,
+                                           BinaryWriter aBw)
         {
             // This is the cleanest way that I can come up with
             // to do this. It uses the new C# switch pattern
             // matching statement.
-            switch (type)
+            switch (aType)
             {
-                case Type _ when type == typeof(byte):
-                case Type _ when type == typeof(Registers):
-                    bw.Write((byte)data);
+                case Type _ when aType == typeof(byte):
+                case Type _ when aType == typeof(Registers):
+                    aBw.Write((byte)aData);
                     break;
 
-                case Type _ when type == typeof(int):
-                    bw.Write((int)data);
+                case Type _ when aType == typeof(int):
+                    aBw.Write((int)aData);
                     break;
 
-                case Type _ when type == typeof(string):
-                    bw.Write((string)data);
+                case Type _ when aType == typeof(string):
+                    aBw.Write((string)aData);
                     break;
 
                 default:
-                    throw new NotSupportedException($"WriteDataByType: the type {type} was passed as an argument type, but no support has been provided for that type.");
+                    throw new NotSupportedException($"WriteDataByType: the type {aType} was passed as an argument type, but no support has been provided for that type.");
                     break;
             }
         }
@@ -161,20 +175,20 @@ namespace VMCore.VM
         /// <summary>
         /// Strip any whitespace characters from a string.
         /// </summary>
-        /// <param name="s">The string to be processed.</param>
+        /// <param name="aStr">The string to be processed.</param>
         /// <returns>A string with any of the whitespaces removed.</returns>
-        public static string StripWhiteSpaces(string s)
+        public static string StripWhiteSpaces(string aStr)
         {
-            if (string.IsNullOrEmpty(s))
+            if (string.IsNullOrEmpty(aStr))
             {
-                return s;
+                return aStr;
             }
 
             char[] newArr = 
-                new char[s.Length];
+                new char[aStr.Length];
 
             var j = 0;
-            foreach (var c in s)
+            foreach (var c in aStr)
             {
                 if (!char.IsWhiteSpace(c))
                 {
@@ -188,15 +202,16 @@ namespace VMCore.VM
         /// <summary>
         /// Builds a binary file with the specified parameters.
         /// </summary>
-        /// <param name="sections">An array of the sections to be added to the binary.</param>
-        /// <param name="version">The version of the binary.</param>
+        /// <param name="aSecs">An array of the sections to be added to the binary.</param>
+        /// <param name="aVersion">The version of the binary.</param>
         /// <returns>A RawBinaryWriter containing the specified sections.</returns>
-        public static RawBinaryWriter BinaryFileBuilder(RawBinarySections[] sections = null, Version version = null)
+        public static BinWriter BinFileBuilder(BinSections[] aSecs = null,
+                                               Version aVersion = null)
         {
-            var rbw = new RawBinaryWriter();
-            var rbi = new RawBinaryMeta
+            var rbw = new BinWriter();
+            var rbi = new BinMeta
             {
-                Version = version ?? new Version("1.0.0.0"),
+                Version = aVersion ?? new Version("1.0.0.0"),
                 ID = Guid.NewGuid(),
             };
 
@@ -204,12 +219,13 @@ namespace VMCore.VM
 
             // Create all sections by default if none
             // were provided.
-            if (sections == null || sections.Length == 0)
+            if (aSecs == null || aSecs.Length == 0)
             {
-                sections = (RawBinarySections[])Enum.GetValues(typeof(RawBinarySections));
+                aSecs = 
+                    (BinSections[])Enum.GetValues(typeof(BinSections));
             }
 
-            foreach (var s in sections)
+            foreach (var s in aSecs)
             {
                 _ = rbw.CreateSection(s);
             }
@@ -220,17 +236,17 @@ namespace VMCore.VM
         /// <summary>
         /// Compile a list of instructions directly into a binary file.
         /// </summary>
-        /// <param name="instructions">The list of instruction to be compiled.</param>
+        /// <param name="aIns">The list of instruction to be compiled.</param>
         /// <returns>A byte array containing the bytecode data for the binary file.</returns>
-        public static byte[] QuickFileCompile(List<QuickInstruction> instructions)
+        public static byte[] QuickFileCompile(List<QuickIns> aIns)
         {
             // We are only interested in the code section here.
-            RawBinaryWriter writer = 
-                Utils.BinaryFileBuilder(new[] { RawBinarySections.Code });
+            BinWriter writer = 
+                Utils.BinFileBuilder(new[] { BinSections.Code });
 
             // Add the compiled opcode instructions to the file section.
-            writer.Sections[RawBinarySections.Code].Raw = 
-                Utils.QuickRawCompile(instructions);
+            writer.Sections[BinSections.Code].Raw = 
+                Utils.QuickRawCompile(aIns);
 
             // Return the byte stream.
             return writer.Save();
@@ -239,14 +255,15 @@ namespace VMCore.VM
         /// <summary>
         /// Compile a list of instructions directly into a bytecode array.
         /// </summary>
-        /// <param name="instructions">The list of instruction to be compiled.</param>
-        /// <param name="optimize">A boolean indicating if we should attempt to optimize the assembled code.</param>
+        /// <param name="aIns">The list of instruction to be compiled.</param>
+        /// <param name="aOptimize">A boolean indicating if we should attempt to optimize the assembled code.</param>
         /// <returns>A byte array containing the bytecode data for the program.</returns>
-        public static byte[] QuickRawCompile(List<QuickInstruction> instructions, bool optimize = false)
+        public static byte[] QuickRawCompile(List<QuickIns> aIns,
+                                             bool aOptimize = false)
         {
-            var aw = new AsmWriter(optimize);
+            var aw = new AsmWriter(aOptimize);
 
-            foreach (var entry in instructions)
+            foreach (var entry in aIns)
             {
                 aw.AddWithLabel(entry.Op, entry.Args, entry.Label);
             }
@@ -260,30 +277,35 @@ namespace VMCore.VM
         /// <returns>A string giving the path to the directory of this application.</returns>
         public static string GetProgramDirectory()
         {
-            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var loc = Assembly.GetExecutingAssembly().Location;
+            return Path.GetDirectoryName(loc);
         }
 
         /// <summary>
         /// Write a single line to a log file.
         /// </summary>
-        /// <param name="path">The path to the log file.</param>
-        /// <param name="overwrite">A boolean, true indicating that the file should be overwritten and false if it should append the data.</param>
-        /// <param name="arg">The string to be written to the file.</param>
-        public static void WriteLogFile(string path, bool overwrite, string arg)
+        /// <param name="aPath">The path to the log file.</param>
+        /// <param name="aOverwrite">A boolean, true indicating that the file should be overwritten and false if it should append the data.</param>
+        /// <param name="aArg">The string to be written to the file.</param>
+        public static void WriteLogFile(string aPath,
+                                        bool aOverwrite,
+                                        string aArg)
         {
-            Utils.WriteLogFile(path, overwrite, new[] { arg });
+            Utils.WriteLogFile(aPath, aOverwrite, new[] { aArg });
         }
 
         /// <summary>
         /// Writes one or more lines to a log file.
         /// </summary>
-        /// <param name="path">The path to the log file.</param>
-        /// <param name="overwrite">A boolean, true indicating that the file should be overwritten and false if it should append the data.</param>
-        /// <param name="args">The strings to be written to the file, one line per entry.</param>
-        public static void WriteLogFile(string path, bool overwrite, params string[] args)
+        /// <param name="aPath">The path to the log file.</param>
+        /// <param name="aOverwrite">A boolean, true indicating that the file should be overwritten and false if it should append the data.</param>
+        /// <param name="aArgs">The strings to be written to the file, one line per entry.</param>
+        public static void WriteLogFile(string aPath,
+                                        bool aOverwrite,
+                                        params string[] aArgs)
         {
-            using var sw = new StreamWriter(path, !overwrite);
-            foreach (var s in args)
+            using var sw = new StreamWriter(aPath, !aOverwrite);
+            foreach (var s in aArgs)
             {
                 sw.WriteLine(s);
             }

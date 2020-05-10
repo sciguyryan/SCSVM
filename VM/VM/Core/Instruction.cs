@@ -135,6 +135,7 @@ namespace VMCore.VM.Core
                     {
                         Type _ when t == typeof(Registers) 
                             => sizeof(Registers),
+
                         _
                             => throw new NotSupportedException($"ArgumentByteSize: the type {t} was passed as an argument type, but no support has been provided for that type."),
                     };

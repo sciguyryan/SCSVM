@@ -2,19 +2,20 @@
 
 namespace VMCore.VM.Core.Exceptions
 {
-    public class RegisterAccessViolationException : Exception
+    public class RegisterAccessViolationException
+        : Exception
     {
         public RegisterAccessViolationException()
         {
         }
 
-        public RegisterAccessViolationException(string message)
-            : base(message)
+        public RegisterAccessViolationException(string aMessage)
+            : base(aMessage)
         {
         }
 
-        public RegisterAccessViolationException(string message, Exception inner)
-            : base(message, inner)
+        public RegisterAccessViolationException(string aMessage, Exception aInner)
+            : base(aMessage, aInner)
         {
         }
     }

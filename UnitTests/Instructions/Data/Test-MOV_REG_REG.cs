@@ -8,7 +8,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_MOV_REG_REG : Test_Instruction_Base
+    public class Test_MOV_REG_REG
+        : Test_Instruction_Base
     {
         public Test_MOV_REG_REG()
         {
@@ -23,10 +24,10 @@ namespace UnitTests.Instructions
         {
             const int expected = 0x12;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, Registers.R1 }),
-                new QuickInstruction(OpCode.MOV_REG_REG, new object[] { Registers.R1, Registers.R2 }),
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, Registers.R1 }),
+                new QuickIns(OpCode.MOV_REG_REG, new object[] { Registers.R1, Registers.R2 }),
             };
 
             _vm.Run(Utils.QuickRawCompile(program));

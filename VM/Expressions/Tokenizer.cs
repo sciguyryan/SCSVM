@@ -48,9 +48,9 @@ namespace VMCore.Expressions
         /// </summary>
         private int _bracketDepth = 0;
 
-        public Tokenizer(string input)
+        public Tokenizer(string aInput)
         {
-            _str = input;
+            _str = aInput;
 
             NextChar();
             NextToken();
@@ -186,10 +186,10 @@ namespace VMCore.Expressions
                 NextChar();
             }
 
-            int numi;
+            int num;
             var success = (!isHex) ?
-                TryParseInt(sb, out numi) :
-                TryParseHexInt(sb, out numi);
+                TryParseInt(sb, out num) :
+                TryParseHexInt(sb, out num);
 
             // We were not able to successfully
             // parse a numeric value. We cannot
@@ -199,7 +199,7 @@ namespace VMCore.Expressions
                 throw new ParserException("HandleNumericToken: failed to parse numerical token from data. Numeric value was invalid.");
             }
 
-            Number = numi;
+            Number = num;
             Token = Tokens.Number;
             return;
         }
@@ -208,30 +208,30 @@ namespace VMCore.Expressions
         /// Attempt to parse the string contained in a string builder
         /// as a hexadecimal integer.
         /// </summary>
-        /// <param name="sb">The string builder containing the input string.</param>
-        /// <param name="numi">An integer representing the parsed value.</param>
+        /// <param name="aSb">The string builder containing the input string.</param>
+        /// <param name="aNum">An integer representing the parsed value.</param>
         /// <returns>A boolean, true if the parsing yielded a valid integer, false otherwise.</returns>
-        private bool TryParseInt(StringBuilder sb, out int numi)
+        private bool TryParseInt(StringBuilder aSb, out int aNum)
         {
             return 
-                int.TryParse(sb.ToString(),
-                             out numi);
+                int.TryParse(aSb.ToString(),
+                             out aNum);
         }
 
         /// <summary>
         /// Attempt to parse the string contained in a string builder
         /// as a integer.
         /// </summary>
-        /// <param name="sb">The string builder containing the input string.</param>
-        /// <param name="numi">An integer representing the parsed value.</param>
+        /// <param name="aSb">The string builder containing the input string.</param>
+        /// <param name="aNum">An integer representing the parsed value.</param>
         /// <returns>A boolean, true if the parsing yielded a valid integer, false otherwise.</returns>
-        private bool TryParseHexInt(StringBuilder sb, out int numi)
+        private bool TryParseHexInt(StringBuilder aSb, out int aNum)
         {
             return 
-                int.TryParse(sb.ToString(),
+                int.TryParse(aSb.ToString(),
                              NumberStyles.HexNumber,
                              CultureInfo.CurrentCulture,
-                             out numi);
+                             out aNum);
         }
 
         /// <summary>
@@ -239,25 +239,25 @@ namespace VMCore.Expressions
         /// This can be any decimal digit or a dollar sign ($)
         /// to specify a hex literal.
         /// </summary>
-        /// <param name="c">The character to be tested.</param>
+        /// <param name="aChar">The character to be tested.</param>
         /// <returns>A boolean, true if the character can represent a valid starting numerical literal, false otherwise.</returns>
-        private bool IsNumericLiteralStart(char c)
+        private bool IsNumericLiteralStart(char aChar)
         {
-            return (c >= '0' && c <= '9') ||
-                   (c == '$');
+            return (aChar >= '0' && aChar <= '9') ||
+                   (aChar == '$');
         }
 
         /// <summary>
         /// If the specified character is a valid numeric literal.
         /// This can be any decimal or hexadecimal digit.
         /// </summary>
-        /// <param name="c">The character to be tested.</param>
+        /// <param name="aChar">The character to be tested.</param>
         /// <returns>A boolean, true if the character can represent a valid numerical literal, false otherwise.</returns>
-        private bool IsNumericLiteral(char c)
+        private bool IsNumericLiteral(char aChar)
         {
-            return (c >= '0' && c <= '9') ||
-                   (c >= 'a' && c <= 'f') ||
-                   (c >= 'A' && c <= 'F');
+            return (aChar >= '0' && aChar <= '9') ||
+                   (aChar >= 'a' && aChar <= 'f') ||
+                   (aChar >= 'A' && aChar <= 'F');
         }
     }
 }

@@ -12,9 +12,9 @@ namespace UnitTests.Instructions
         public bool SignFlag;
         public bool ZeroFlag;
         public bool OverflowFlag;
-        public ResultTestType Type;
+        public ResultTypes Type;
 
-        public IntegerTestResult(int value1, int value2, int result, bool signed, bool zero, bool overflow, ResultTestType type = ResultTestType.EQUAL)
+        public IntegerTestResult(int value1, int value2, int result, bool signed, bool zero, bool overflow, ResultTypes type = ResultTypes.EQUAL)
         {
             Values = new int[] { value1, value2 };
             Result = result;
@@ -43,13 +43,13 @@ namespace UnitTests.Instructions
             {
                 var entry = tests[i];
 
-                var program = TestUtilties.GenerateProgram<int>(op, entry.Values);
+                var program = TestUtilties.Generate<int>(op, entry.Values);
 
                 vm.Run(Utils.QuickRawCompile(program));
 
                 bool success = entry.Type switch
                 {
-                    ResultTestType.EQUAL => vm.CPU.Registers[reg] == entry.Result,
+                    ResultTypes.EQUAL => vm.CPU.Registers[reg] == entry.Result,
                     _                    => false
                 };
 

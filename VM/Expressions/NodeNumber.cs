@@ -2,16 +2,17 @@
 
 namespace VMCore.Expressions
 {
-    class NodeNumber : Node
+    class NodeNumber
+        : Node
     {
         private int _value;
 
-        public NodeNumber(int value)
+        public NodeNumber(int aValue)
         {
-            _value = value;
+            _value = aValue;
         }
 
-        public override int Evaluate(CPU cpu)
+        public override int Evaluate(CPU aCpu)
         {
             return _value;
         }

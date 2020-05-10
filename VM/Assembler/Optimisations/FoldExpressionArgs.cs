@@ -5,40 +5,39 @@ using VMCore.Expressions;
 
 namespace VMCore.Assembler.Optimisations
 {
-    class FoldExpressionArgs
+    class FoldExpressionArg
     {
         /// <summary>
         /// Optimize an expression by attempting to fold
         /// (simplify) an expression into a single literal
         /// value.
         /// </summary>
-        /// <param name="op">The opcode of the instruction to be folded.</param>
-        /// <param name="argIndex">The index of the argument to be folded.</param>
+        /// <param name="aOp">The opcode of the instruction to be folded.</param>
+        /// <param name="aArgIndex">The index of the argument to be folded.</param>
         /// <param name="ins">The instruction instance for the opcode.</param>
-        /// <param name="arg">The data for the opcode argument.</param>
-        /// <returns>A tuple of the output opcode, argument type, data and expression argument type.</returns>
-        public static (OpCode, Type, object, Type) FoldExpressionArg(OpCode op, int argIndex, Instruction ins, object arg)
+        /// <param name="aArg">The data for the opcode argument.</param>
+        /// <returns>A tuple of the output opcode, argument type and argument data.</returns>
+        public static (OpCode, Type, object) FoldExpression(OpCode aOp,
+                                                            int aArgIndex,
+                                                            Instruction aIns,
+                                                            object aArg)
         {
-            if (ins.ExpressionArgType(argIndex) == null)
+            if (aIns.ExpressionArgType(aArgIndex) == null)
             {
-                throw new Exception($"FoldExpressionArg: argument {argIndex} for opcode {op} is not an expression and so should not have been passed here.");
+                throw new Exception($"FoldExpression: argument {aArgIndex} for opcode {aOp} is not an expression and so should not have been passed here.");
             }
 
-            OpCode opCode = op;
+            OpCode opCode = aOp;
 
             // Expression arguments are always of type string
             // unless they can be flattened.
             Type outArgType = typeof(string);
 
-            // The expected output type of the expression.
-            Type expArgType =
-                ins.ExpressionArgType(argIndex);
-
             // Get rid of any white-spaces that
             // we do not need here.
             // This will make parsing these strings
             // faster.
-            var s = Utils.StripWhiteSpaces((string)arg);
+            var s = Utils.StripWhiteSpaces((string)aArg);
             object output;
 
             // Next we will see if we can simplify
@@ -63,7 +62,7 @@ namespace VMCore.Assembler.Optimisations
                 // The case of a valid simplification
                 // the new type of the argument
                 // becomes the expression output type.
-                outArgType = ins.ExpressionArgType(argIndex);
+                outArgType = aIns.ExpressionArgType(aArgIndex);
 
                 // In the case of a valid simplification
                 // we can subtract one from the opcode and
@@ -72,19 +71,17 @@ namespace VMCore.Assembler.Optimisations
                 // into a MOV_LIT_OFF_REG.
                 if (outArgType == typeof(int))
                 {
-                    opCode = op - 1;
+                    opCode = aOp - 1;
                     output = (int)val;
-                    expArgType = null;
                 }
                 else if (outArgType == typeof(float))
                 {
-                    opCode = op - 1;
+                    opCode = aOp - 1;
                     output = (float)val;
-                    expArgType = null;
                 }
                 else
                 {
-                    throw new NotSupportedException($"OptimizeExpressionArg: the type {outArgType} was passed as the expression argument type, but no support has been provided for that type.");
+                    throw new NotSupportedException($"FoldExpression: the type {outArgType} was passed as the expression argument type, but no support has been provided for that type.");
                 }
             }
             else
@@ -95,7 +92,7 @@ namespace VMCore.Assembler.Optimisations
                 output = s;
             }
 
-            return (opCode, outArgType, output, expArgType);
+            return (opCode, outArgType, output);
         }
     }
 }

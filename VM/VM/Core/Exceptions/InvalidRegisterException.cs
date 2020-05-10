@@ -2,19 +2,20 @@
 
 namespace VMCore.VM.Core.Exceptions
 {
-    public class InvalidRegisterException : Exception
+    public class InvalidRegisterException
+        : Exception
     {
         public InvalidRegisterException()
         {
         }
 
-        public InvalidRegisterException(string message)
-            : base(message)
+        public InvalidRegisterException(string aMessage)
+            : base(aMessage)
         {
         }
 
-        public InvalidRegisterException(string message, Exception inner)
-            : base(message, inner)
+        public InvalidRegisterException(string aMessage, Exception aInner)
+            : base(aMessage, aInner)
         {
         }
     }

@@ -12,7 +12,7 @@ namespace VMCore
         /// The assembly binary file that has been loaded into this
         /// virtual machine instance.
         /// </summary>
-        public RawBinaryFile Assembly { get; set; }
+        public BinFile Assembly { get; set; }
 
         /// <summary>
         /// The memory block that has been assigned to this
@@ -40,19 +40,21 @@ namespace VMCore
         private int _dbgFinalMemorySize;
 #endif
 
-        public VirtualMachine(int mainMemoryCapacity = 2048, int stackCapacity = 100)
+        public VirtualMachine(int aMainMemoryCapacity = 2048,
+                              int aStackCapacity = 100)
         {
             CPU = new CPU(this);
             Debugger = new Debugger(this);
 
             // The final memory size is equal to the base memory capacity
             // plus the stack capacity multiplied by the size of an integer.
-            var finalMemorySize = mainMemoryCapacity + (stackCapacity * sizeof(int));
+            var finalMemorySize = 
+                aMainMemoryCapacity + (aStackCapacity * sizeof(int));
             Memory = new Memory(finalMemorySize);
 
 #if DEBUG
-            _dbgMainMemoryCapacity = mainMemoryCapacity;
-            _dbgStackCapacity = stackCapacity;
+            _dbgMainMemoryCapacity = aMainMemoryCapacity;
+            _dbgStackCapacity = aStackCapacity;
             _dbgFinalMemorySize = finalMemorySize;
 #endif
 
@@ -61,13 +63,15 @@ namespace VMCore
             // The stack memory region should be marked
             // as no read/write as the only methods
             // accessing or modifying it should be system only.
-            var stackStart = mainMemoryCapacity;
+            var stackStart = aMainMemoryCapacity;
             var stackEnd = finalMemorySize - 1;
-            Memory.AddMemoryRegion(stackStart, stackEnd, MemoryAccess.PR | MemoryAccess.PW);
+            Memory.AddMemoryRegion(stackStart,
+                                   stackEnd,
+                                   MemoryAccess.PR | MemoryAccess.PW);
 
             // Set the default stack pointer position to be at the very
             // end of our allocated memory block.
-            CPU.Registers[(VMCore.Registers.SP, SecurityContext.System)] = 
+            CPU.Registers[(VMCore.Registers.SP, SecurityContext.System)] =
                 finalMemorySize;
 
             // Build our instruction cache and apply and
@@ -79,8 +83,8 @@ namespace VMCore
         /// <summary>
         /// Run the currently loaded binary file to completion.
         /// </summary>
-        /// <param name="startAddress">The starting address from which to begin execution of the program.</param>
-        public void Run(int startAddress = 0)
+        /// <param name="aStartAddress">The starting address from which to begin execution of the program.</param>
+        public void Run(int aStartAddress = 0)
         {
             if (Assembly == null)
             {
@@ -89,17 +93,17 @@ namespace VMCore
 
             CPU.Reset();
 
-            Run(Assembly[RawBinarySections.Code].Raw, startAddress);
+            Run(Assembly[BinSections.Code].Raw, aStartAddress);
         }
 
         /// <summary>
         /// Run a bytecode program to completion.
         /// </summary>
-        /// <param name="raw">The raw bytecode data representing the program.</param>
-        /// <param name="startAddress">The starting address from which to begin execution of the program.</param>
-        public void Run(byte[] raw, int startAddress = 0)
+        /// <param name="aRaw">The raw bytecode data representing the program.</param>
+        /// <param name="aStartAddress">The starting address from which to begin execution of the program.</param>
+        public void Run(byte[] aRaw, int aStartAddress = 0)
         {
-            if (raw.Length == 0)
+            if (aRaw.Length == 0)
             {
                 throw new Exception("Run: no byte code provided.");
             }
@@ -113,7 +117,7 @@ namespace VMCore
             LoadRegisterTestData();
 #endif
 
-            CPU.LoadData(raw, startAddress);
+            CPU.LoadData(aRaw, aStartAddress);
             CPU.Run();
         }
 
@@ -131,7 +135,7 @@ namespace VMCore
         }
 #endif
 
-        private List<byte[]> GetStackRange(int start, int count)
+        private List<byte[]> GetStackRange(int aStart, int aCount)
         {
             throw new NotImplementedException();
         }

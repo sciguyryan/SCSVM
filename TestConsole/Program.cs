@@ -15,21 +15,21 @@ namespace TestConsole
             int stackCapacity = 100;
             int stackStart = mainMemoryCapacity;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
                 /*// XOR flag testing.
                 new QuickInstruction(OpCode.MOV_REG_REG, new object[] { Registers.R1, Registers.R2 }),
                 new QuickInstruction(OpCode.XOR_REG_REG, new object[] { Registers.R1, Registers.R2 }),*/
 
-                new QuickInstruction(OpCode.MOV_LIT_MEM, new object[] { 3141, 13 }),
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 5, Registers.R1 }),
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 2, Registers.R2 }),
-                new QuickInstruction(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "(R1 * R2) + $3", Registers.R3 }),
-                //new QuickInstruction(OpCode.MOV_LIT_EXP_OFF_REG, new object[] { "(5 * 2) + 3", Registers.R3 }),
-                new QuickInstruction(OpCode.HLT),
+                new QuickIns(OpCode.MOV_LIT_MEM, new object[] { 3141, 13 }),
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 5, Registers.R1 }),
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 2, Registers.R2 }),
+                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "(R1 * R2) + $3", Registers.R3 }),
+                //new QuickInstruction(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "(5 * 2) + 3", Registers.R3 }),
+                new QuickIns(OpCode.HLT),
                 // Does not execute but should show is the disassembly
                 // output.
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 0x13, Registers.R1 })
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x13, Registers.R1 })
             };
 
             /*ass.Add(OpCode.LOAD, (int)Registers.DR1, 0x12);                 // mov 0x12, DR1

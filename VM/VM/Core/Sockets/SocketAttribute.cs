@@ -10,16 +10,18 @@ namespace VMCore.VM.Core.Sockets
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public sealed class SocketAttribute : Attribute
+    public sealed class SocketAttribute
+        : Attribute
     {
         public SocketAccess Access { get; set; }
 
-        public DeviceSocketAddresses SocketAddress { get; set; }
+        public SocketAddresses SocketAddress { get; set; }
 
-        public SocketAttribute(DeviceSocketAddresses deviceSocketAddr, SocketAccess access)
+        public SocketAttribute(SocketAddresses aDeviceSocketAddr,
+                               SocketAccess aAccess)
         {
-            SocketAddress = deviceSocketAddr;
-            Access = access;
+            SocketAddress = aDeviceSocketAddr;
+            Access = aAccess;
         }
     }
 }

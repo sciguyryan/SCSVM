@@ -19,9 +19,9 @@
         /// </summary>
         private Tokenizer _tokenizer;
 
-        public Parser(string input)
+        public Parser(string aInput)
         {
-            _tokenizer = new Tokenizer(input);
+            _tokenizer = new Tokenizer(aInput);
         }
 
         /// <summary>
@@ -65,7 +65,6 @@
                 }
 
                 _tokenizer.NextToken();
-
                 lhs = new NodeBinary(lhs, ParseMultiplyDivide(), op);
             }
         }
@@ -95,7 +94,6 @@
                 }
 
                 _tokenizer.NextToken();
-
                 lhs = new NodeBinary(lhs, ParseUnary(), op);
             }
         }
@@ -117,7 +115,6 @@
                 if (_tokenizer.Token == Tokens.Subtract)
                 {
                     _tokenizer.NextToken();
-
                     return new NodeUnary(ParseUnary(), OpTypes.Negate);
                 }
 
@@ -142,11 +139,8 @@
             {
                 // Skip the open bracket.
                 _tokenizer.NextToken();
-
                 var node = ParseAddSubtract();
-
                 _tokenizer.NextToken();
-
                 return node;
             }
 
@@ -158,8 +152,7 @@
 
                 var name = _tokenizer.Register;
                 _tokenizer.NextToken();
-
-                 return new NodeRegister(name);
+                return new NodeRegister(name);
             }
 
             throw new ParserException($"ParseLeaf: unexpected token: {_tokenizer.Token}.");

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using VMCore.VM.IO.InterruptHandlers;
 
 namespace VMCore.VM.Core.Interrupts
@@ -17,17 +15,19 @@ namespace VMCore.VM.Core.Interrupts
         /// <summary>
         /// Handle an interrupt of a specified type.
         /// </summary>
-        /// <param name="interruptType">The interrupt type.</param>
-        /// <param name="vm">The virtual machine instance in which the interrupt should be handled.</param>
-        public static void Interrupt(InterruptTypes interruptType, VirtualMachine vm)
+        /// <param name="aInterruptType">The interrupt type.</param>
+        /// <param name="aVm">The virtual machine instance in which the interrupt should be handled.</param>
+        public static void Interrupt(InterruptTypes aInterruptType,
+                                     VirtualMachine aVm)
         {
-            if (Handlers.TryGetValue(interruptType, out IInterruptHandler handler))
+            if (Handlers.TryGetValue(aInterruptType,
+                                     out IInterruptHandler handler))
             {
-                handler.Handle(vm);
+                handler.Handle(aVm);
                 return;
             }
 
-            throw new Exception($"Interrupt: interrupt type {interruptType} has no registered handler.");
+            throw new Exception($"Interrupt: interrupt type {aInterruptType} has no registered handler.");
         }
     }
 }

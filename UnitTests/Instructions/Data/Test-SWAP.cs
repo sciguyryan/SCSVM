@@ -7,7 +7,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_SWAP : Test_Instruction_Base
+    public class Test_SWAP
+        : Test_Instruction_Base
     {
         public Test_SWAP()
         {
@@ -25,11 +26,11 @@ namespace UnitTests.Instructions
             const int expected1 = 0x123;
             const int expected2 = 0x321;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected1, r1 }),
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected2, r2 }),
-                new QuickInstruction(OpCode.SWAP, new object[] { r1, r2 }),
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected1, r1 }),
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected2, r2 }),
+                new QuickIns(OpCode.SWAP, new object[] { r1, r2 }),
             };
 
             _vm.Run(Utils.QuickRawCompile(program));

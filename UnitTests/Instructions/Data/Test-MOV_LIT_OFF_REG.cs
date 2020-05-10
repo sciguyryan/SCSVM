@@ -28,12 +28,12 @@ namespace UnitTests.Instructions
 
             const int expected = 0x12;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),    // mov $12, R1
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),        // mov R1, [$15]
-                new QuickInstruction(OpCode.MOV_REG_REG, new object[] { r1, r2 }),          // mov R1, R2
-                new QuickInstruction(OpCode.MOV_LIT_OFF_REG, new object[] { 0x3, r2, r3 })  // mov [$3 + R2], R3
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),    // mov $12, R1
+                new QuickIns(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),        // mov R1, [$15]
+                new QuickIns(OpCode.MOV_REG_REG, new object[] { r1, r2 }),          // mov R1, R2
+                new QuickIns(OpCode.MOV_LIT_OFF_REG, new object[] { 0x3, r2, r3 })  // mov [$3 + R2], R3
             };
 
             _vm.Run(Utils.QuickRawCompile(program));
@@ -54,12 +54,12 @@ namespace UnitTests.Instructions
 
             const int expected = 0x12;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),    // mov $12, R1
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),        // mov R1, [$15]
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { -0x5, r2 }),        // mov -$5, R2
-                new QuickInstruction(OpCode.MOV_LIT_OFF_REG, new object[] { 0x1A, r2, r3 }) // mov [$1A + R2], R3
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),    // mov $12, R1
+                new QuickIns(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),        // mov R1, [$15]
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { -0x5, r2 }),        // mov -$5, R2
+                new QuickIns(OpCode.MOV_LIT_OFF_REG, new object[] { 0x1A, r2, r3 }) // mov [$1A + R2], R3
             };
 
             _vm.Run(Utils.QuickRawCompile(program));
@@ -79,10 +79,10 @@ namespace UnitTests.Instructions
             const Registers r1 = Registers.R1;
             const Registers r2 = Registers.R2;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 0, r1 }),           // mov $0, R1
-                new QuickInstruction(OpCode.MOV_LIT_OFF_REG, new object[] { -0x1, r1, r2 }) // mov [-$1 + R1], R2
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0, r1 }),           // mov $0, R1
+                new QuickIns(OpCode.MOV_LIT_OFF_REG, new object[] { -0x1, r1, r2 }) // mov [-$1 + R1], R2
             };
 
             _vm.Run(Utils.QuickRawCompile(program));

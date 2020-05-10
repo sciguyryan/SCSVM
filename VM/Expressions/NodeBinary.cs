@@ -3,31 +3,32 @@ using VMCore.VM;
 
 namespace VMCore.Expressions
 {
-    class NodeBinary : Node
+    class NodeBinary
+        : Node
     {
         private Node _lhs;
         private Node _rhs;
         private OpTypes _op;
 
-        public NodeBinary(Node lhs, Node rhs, OpTypes op)
+        public NodeBinary(Node aLhs, Node aRhs, OpTypes aOp)
         {
-            _lhs = lhs;
-            _rhs = rhs;
-            _op = op;
+            _lhs = aLhs;
+            _rhs = aRhs;
+            _op = aOp;
         }
 
-        public override int Evaluate(CPU cpu)
+        public override int Evaluate(CPU aCpu)
         {
-            var lhsVal = _lhs.Evaluate(cpu);
-            var rhsVal = _rhs.Evaluate(cpu);
+            var lhsVal = _lhs.Evaluate(aCpu);
+            var rhsVal = _rhs.Evaluate(aCpu);
 
             return _op switch
             {
-                OpTypes.Add         => lhsVal + rhsVal,
-                OpTypes.Subtract    => lhsVal - rhsVal,
-                OpTypes.Multiply    => lhsVal * rhsVal,
-                OpTypes.Divide      => lhsVal / rhsVal,
-                _                   => throw new NotImplementedException(),
+                OpTypes.Add      => lhsVal + rhsVal,
+                OpTypes.Subtract => lhsVal - rhsVal,
+                OpTypes.Multiply => lhsVal * rhsVal,
+                OpTypes.Divide   => lhsVal / rhsVal,
+                _                => throw new NotImplementedException(),
             };
         }
     }

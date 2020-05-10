@@ -7,8 +7,8 @@ namespace VMCore.VM.Core
         /// <summary>
         /// A list of the arguments associated with this instruction.
         /// </summary>
-        public List<AsmInstructionArg> Args { get; set; } = 
-            new List<AsmInstructionArg>();
+        public List<InstructionArg> Args { get; set; } = 
+            new List<InstructionArg>();
 
         /// <summary>
         /// The name of this instruction.
@@ -43,25 +43,5 @@ namespace VMCore.VM.Core
 
             return $"{OpCode} {argString}";
         }
-    }
-
-    public class AsmInstructionArg
-    {
-        public enum AsmArgType
-        {
-            Register,
-            Literal,
-            Label
-        }
-
-        /// <summary>
-        /// The type of this instruction argument.
-        /// </summary>
-        public AsmArgType Type { get; set; }
-
-        /// <summary>
-        /// The value of this instruction argument.
-        /// </summary>
-        public object Value { get; set; }
     }
 }

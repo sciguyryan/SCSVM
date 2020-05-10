@@ -8,7 +8,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_MOV_LIT_MEM : Test_Instruction_Base
+    public class Test_MOV_LIT_MEM
+        : Test_Instruction_Base
     {
         public Test_MOV_LIT_MEM()
         {
@@ -22,9 +23,9 @@ namespace UnitTests.Instructions
         {
             const int expected = 0x123;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_MEM, new object[] { expected, 0x0 }),
+                new QuickIns(OpCode.MOV_LIT_MEM, new object[] { expected, 0x0 }),
             };
 
             _vm.Run(Utils.QuickRawCompile(program));
@@ -43,9 +44,9 @@ namespace UnitTests.Instructions
         [ExpectedException(typeof(MemoryOutOfRangeException))]
         public void TestCopyRegisterToInvalidMemory()
         {
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_MEM, new object[] { 0x00, int.MaxValue }),
+                new QuickIns(OpCode.MOV_LIT_MEM, new object[] { 0x00, int.MaxValue }),
             };
 
             _vm.Run(Utils.QuickRawCompile(program));

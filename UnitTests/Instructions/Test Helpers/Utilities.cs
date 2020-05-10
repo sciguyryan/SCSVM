@@ -16,15 +16,15 @@ namespace UnitTests.Instructions
         /// <param name="op">The opcode to be tested.</param>
         /// <param name="values">An array of values to be passed to as arguments to the instruction.</param>
         /// <returns>A list of QuickInstruction objects to be executed for the test.</returns>
-        public static List<QuickInstruction> GenerateProgram<T>(OpCode op, T[] values)
+        public static List<QuickIns> Generate<T>(OpCode aOp, T[] aVals)
         {
             var instructionList
-                = new List<QuickInstruction>();
+                = new List<QuickIns>();
 
             // The types of argument that we expect for this
             // instruction.
             var types =
-                ReflectionUtils.InstructionCache[op].ArgumentTypes;
+                ReflectionUtils.InstructionCache[aOp].ArgumentTypes;
 
             // The number of arguments that
             // take the Register type.
@@ -34,8 +34,8 @@ namespace UnitTests.Instructions
             // Load our arguments into a queue
             // to avoid things being accidentally
             // reused.
-            var argQueue = new Queue<T>(values);
-            foreach (var arg in values)
+            var argQueue = new Queue<T>(aVals);
+            foreach (var arg in aVals)
             {
                 argQueue.Enqueue(arg);
             }
@@ -47,7 +47,7 @@ namespace UnitTests.Instructions
             // to avoid overlaps.
             for (int i = 0; i < registerArgs; i++)
             {
-                instructionList.Add(new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { argQueue.Dequeue(), (byte)i }));
+                instructionList.Add(new QuickIns(OpCode.MOV_LIT_REG, new object[] { argQueue.Dequeue(), (byte)i }));
             }
 
             // Build the instruction argument
@@ -74,7 +74,8 @@ namespace UnitTests.Instructions
                         {
                             // Ensure that we are not reusing
                             // the same values.
-                            args.Add(Convert.ChangeType(argQueue.Dequeue(), typeof(int)));
+                            args.Add(Convert.ChangeType(argQueue.Dequeue(),
+                                                        typeof(int)));
                         }
                         break;
 
@@ -84,7 +85,7 @@ namespace UnitTests.Instructions
                 }
             }
 
-            instructionList.Add(new QuickInstruction(op, args.ToArray()));
+            instructionList.Add(new QuickIns(aOp, args.ToArray()));
 
             return instructionList;
         }

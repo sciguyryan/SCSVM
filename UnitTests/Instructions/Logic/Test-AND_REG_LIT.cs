@@ -4,7 +4,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_AND_REG_LIT : Test_Instruction_Base
+    public class Test_AND_REG_LIT
+        : Test_Instruction_Base
     {
         public Test_AND_REG_LIT()
         {

@@ -9,7 +9,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_MOV_LIT_REG : Test_Instruction_Base
+    public class Test_MOV_LIT_REG
+        : Test_Instruction_Base
     {
         public Test_MOV_LIT_REG()
         {
@@ -25,9 +26,9 @@ namespace UnitTests.Instructions
             var register = Registers.R1;
             const int expected = 0x123;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, register }),
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, register }),
             };
 
 

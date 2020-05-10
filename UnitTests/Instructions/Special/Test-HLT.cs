@@ -7,7 +7,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_HLT : Test_Instruction_Base
+    public class Test_HLT
+        : Test_Instruction_Base
     {
         public Test_HLT()
         {
@@ -20,10 +21,10 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestCPUHaltState()
         {
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
                 // Attempt to write a value to a protected write register.
-                new QuickInstruction(OpCode.HLT)
+                new QuickIns(OpCode.HLT)
             };
 
             _vm.Run(Utils.QuickRawCompile(program));
@@ -40,12 +41,12 @@ namespace UnitTests.Instructions
         {
             var expected = 0x123;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, (byte)Registers.R1 }),
-                new QuickInstruction(OpCode.HLT),
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, (byte)Registers.R1 }),
+                new QuickIns(OpCode.HLT),
                 // This statement should never execute.
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { 0xABC, (byte)Registers.R1 })
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0xABC, (byte)Registers.R1 })
             };
 
             _vm.Run(Utils.QuickRawCompile(program));

@@ -1,6 +1,6 @@
 ﻿namespace UnitTests
 {
-    public enum ResultTestType
+    public enum ResultTypes
     {
         EQUAL,
         NOT_EQUAL

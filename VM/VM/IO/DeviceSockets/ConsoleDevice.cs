@@ -3,9 +3,10 @@ using VMCore.VM.Core.Sockets;
 
 namespace VMCore.VM.IO.DeviceSockets
 {
-    [Socket(DeviceSocketAddresses.ConsoleControl, SocketAccess.Write)]
-    [Socket(DeviceSocketAddresses.ConsoleData, SocketAccess.Read)]
-    public class ConsoleDevice : ISocketDevice
+    [Socket(SocketAddresses.ConsoleControl, SocketAccess.Write)]
+    [Socket(SocketAddresses.ConsoleData, SocketAccess.Read)]
+    public class ConsoleDevice
+        : ISocketDevice
     {
         public enum ControlCodes : int
         {
@@ -17,37 +18,42 @@ namespace VMCore.VM.IO.DeviceSockets
             Beep                = 0x5,
         }
 
-        public void HandleRead(DeviceSocketAddresses addr, Registers reg, VirtualMachine vm, SecurityContext context)
+        public void HandleRead(SocketAddresses aAddr,
+                               Registers aReg,
+                               VirtualMachine aVm,
+                               SecurityContext aContext)
         {
             int result = 0;
-            switch (addr)
+            switch (aAddr)
             {
-                case DeviceSocketAddresses.ConsoleData:
+                case SocketAddresses.ConsoleData:
                     result = Console.Read();
                     break;
             }
 
-            vm.CPU.Registers[(reg, context)] = result;
+            aVm.CPU.Registers[(aReg, aContext)] = result;
         }
 
-        public void HandleWrite(DeviceSocketAddresses addr, int control, VirtualMachine vm)
+        public void HandleWrite(SocketAddresses aAddr,
+                                int aControl,
+                                VirtualMachine aVm)
         {
-            switch ((ControlCodes)control)
+            switch ((ControlCodes)aControl)
             {
                 case ControlCodes.ClearConsole:
                     Console.Clear();
                     break;
 
                 case ControlCodes.WriteChar:
-                    Console.Write('a'); // TODO - use the stack
+                    Console.Write('a'); // TODO - unfinished
                     break;
 
                 case ControlCodes.SetForegroundColor:
-                    Console.ForegroundColor = (ConsoleColor)0; // TODO - use the stack
+                    Console.ForegroundColor = 0; // TODO - unfinished
                     break;
 
                 case ControlCodes.SetBackgroundColor:
-                    Console.BackgroundColor = (ConsoleColor)0; // TODO - use the stack
+                    Console.BackgroundColor = 0; // TODO - unfinished
                     break;
 
                 case ControlCodes.ResetColors:
@@ -55,7 +61,7 @@ namespace VMCore.VM.IO.DeviceSockets
                     break;
 
                 case ControlCodes.Beep:
-                    Console.Beep(0, 0); // TODO - use the stack
+                    Console.Beep(0, 0); // TODO - unfinished
                     break;
             }
         }

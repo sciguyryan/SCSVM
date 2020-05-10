@@ -4,7 +4,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_NOT : Test_Instruction_Base
+    public class Test_NOT
+        : Test_Instruction_Base
     {
         public Test_NOT()
         {

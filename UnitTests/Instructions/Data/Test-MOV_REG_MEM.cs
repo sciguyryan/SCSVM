@@ -8,7 +8,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Instructions
 {
     [TestClass]
-    public class Test_MOV_REG_MEM : Test_Instruction_Base
+    public class Test_MOV_REG_MEM
+        : Test_Instruction_Base
     {
         public Test_MOV_REG_MEM()
         {
@@ -23,10 +24,10 @@ namespace UnitTests.Instructions
         {
             const int expected = 0x123;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, Registers.R1 }),
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { Registers.R1, 0x0 }),
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, Registers.R1 }),
+                new QuickIns(OpCode.MOV_REG_MEM, new object[] { Registers.R1, 0x0 }),
             };
 
             _vm.Run(Utils.QuickRawCompile(program));
@@ -50,10 +51,10 @@ namespace UnitTests.Instructions
         {
             const int expected = 0x123;
 
-            var program = new List<QuickInstruction>
+            var program = new List<QuickIns>
             {
-                new QuickInstruction(OpCode.MOV_LIT_REG, new object[] { expected, Registers.R1 }),
-                new QuickInstruction(OpCode.MOV_REG_MEM, new object[] { Registers.R1, int.MaxValue }),
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, Registers.R1 }),
+                new QuickIns(OpCode.MOV_REG_MEM, new object[] { Registers.R1, int.MaxValue }),
             };
 
             _vm.Run(Utils.QuickRawCompile(program));

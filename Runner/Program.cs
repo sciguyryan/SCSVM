@@ -15,7 +15,7 @@ namespace Runner
 
             var vm = new VirtualMachine
             {
-                Assembly = RawBinaryFile.Load(File.ReadAllBytes(args[0]))
+                Assembly = BinFile.Load(File.ReadAllBytes(args[0]))
             };
 
             vm.Run();

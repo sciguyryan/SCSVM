@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using VMCore.VM.IO.DeviceSockets;
 
 namespace VMCore.VM.Core.Sockets
@@ -11,48 +9,53 @@ namespace VMCore.VM.Core.Sockets
         /// <summary>
         /// A dictionary of the identified readable socket devices.
         /// </summary>
-        public static Dictionary<DeviceSocketAddresses, ISocketDevice> ReadSockets { get; set; } = 
-            new Dictionary<DeviceSocketAddresses, ISocketDevice>();
+        public static Dictionary<SocketAddresses, ISocketDevice> ReadSockets { get; set; } = 
+            new Dictionary<SocketAddresses, ISocketDevice>();
 
         /// <summary>
         /// A dictionary of the identified writable socket devices.
         /// </summary>
-        public static Dictionary<DeviceSocketAddresses, ISocketDevice> WriteSockets { get; set; } = 
-            new Dictionary<DeviceSocketAddresses, ISocketDevice>();
+        public static Dictionary<SocketAddresses, ISocketDevice> WriteSockets { get; set; } = 
+            new Dictionary<SocketAddresses, ISocketDevice>();
 
         /// <summary>
         /// Handle reading the value from a socket device of a specified type into a register.
         /// </summary>
-        /// <param name="addr">The socket device address.</param>
-        /// <param name="reg">The register into which the value read from the device should be placed.</param>
-        /// <param name="vm">The virtual machine instance in which the interrupt should be handled.</param>
-        /// <param name="context">The security context to be used when writing this value into the register.</param>
-        public static void Read(DeviceSocketAddresses addr, Registers reg, VirtualMachine vm, SecurityContext context)
+        /// <param name="aAddr">The socket device address.</param>
+        /// <param name="aReg">The register into which the value read from the device should be placed.</param>
+        /// <param name="aVm">The virtual machine instance in which the interrupt should be handled.</param>
+        /// <param name="aContext">The security context to be used when writing this value into the register.</param>
+        public static void Read(SocketAddresses aAddr,
+                                Registers aReg,
+                                VirtualMachine aVm,
+                                SecurityContext aContext)
         {
-            if (ReadSockets.TryGetValue(addr, out ISocketDevice device))
+            if (ReadSockets.TryGetValue(aAddr, out ISocketDevice device))
             {
-                device.HandleRead(addr, reg, vm, context);
+                device.HandleRead(aAddr, aReg, aVm, aContext);
                 return;
             }
 
-            throw new Exception($"Read: unmapped socket address 0x{addr:X}.");
+            throw new Exception($"Read: unmapped socket address 0x{aAddr:X}.");
         }
 
         /// <summary>
         /// Handle writing a value to a socket device of a specified type.
         /// </summary>
-        /// <param name="addr">The socket device address.</param>
-        /// <param name="value">The value to be written to the socket device.</param>
-        /// <param name="vm">The virtual machine instance in which the interrupt should be handled.</param>
-        public static void Write(DeviceSocketAddresses addr, int value, VirtualMachine vm)
+        /// <param name="aAddr">The socket device address.</param>
+        /// <param name="aValue">The value to be written to the socket device.</param>
+        /// <param name="aVm">The virtual machine instance in which the interrupt should be handled.</param>
+        public static void Write(SocketAddresses aAddr,
+                                 int aValue,
+                                 VirtualMachine aVm)
         {
-            if (WriteSockets.TryGetValue(addr, out ISocketDevice device))
+            if (WriteSockets.TryGetValue(aAddr, out ISocketDevice device))
             {
-                device.HandleWrite(addr, value, vm);
+                device.HandleWrite(aAddr, aValue, aVm);
                 return;
             }
 
-            throw new Exception($"Write: unmapped socket address 0x{addr:X}.");
+            throw new Exception($"Write: unmapped socket address 0x{aAddr:X}.");
         }
     }
 }

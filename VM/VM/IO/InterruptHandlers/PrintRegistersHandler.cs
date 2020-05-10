@@ -3,11 +3,12 @@
 namespace VMCore.VM.IO.InterruptHandlers
 {
     [Interrupt(InterruptTypes.PrintRegisters)]
-    internal class PrintRegistersHandler : IInterruptHandler
+    internal class PrintRegistersHandler
+        : IInterruptHandler
     {
-        public void Handle(VirtualMachine vm)
+        public void Handle(VirtualMachine aVm)
         {
-            vm.CPU.Registers.PrintRegisters();
+            aVm.CPU.Registers.PrintRegisters();
         }
     }
 }

@@ -27,8 +27,7 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "mov";
 
-        public override bool Execute(InstructionData aData,
-                                     CPU aCpu)
+        public override bool Execute(InstructionData aData, CPU aCpu)
         {
             var pos = 
                 (int)aData[0] +
@@ -37,8 +36,7 @@ namespace VMCore.VM.Instructions
             aCpu.Registers[(Registers)aData[2]] = 
                 aCpu
                 .VM.Memory
-                .GetValueAsType<int>(pos,
-                                     GetSecurityContext());
+                .GetValueAsType<int>(pos, GetSecurityContext());
 
             return false;
         }

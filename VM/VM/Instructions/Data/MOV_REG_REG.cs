@@ -3,33 +3,42 @@ using VMCore.VM.Core;
 
 namespace VMCore.VM.Instructions
 {
-    internal class MOV_REG_PTR_REG : Instruction
+    internal class MOV_REG_PTR_REG
+        : Instruction
     {
         public override Type[] ArgumentTypes => 
-            new[] { typeof(Registers), typeof(Registers) };
+            new Type[]
+            {
+                typeof(Registers),
+                typeof(Registers)
+            };
 
         public override Type[] ExpressionArgumentTypes =>
-            new Type[] { null, null };
+            new Type[]
+            {
+                null,
+                null
+            };
 
         public override OpCode OpCode => 
             OpCode.MOV_REG_PTR_REG;
 
         public override string AsmName => "mov";
 
-        public override bool Execute(InstructionData data, CPU cpu)
+        public override bool Execute(InstructionData aData, CPU aCpu)
         {
-            cpu.Registers[(Registers)data[1]] = 
-                cpu.VM.Memory
-                .GetValueAsType<int>(cpu.Registers[(Registers)data[0]], 
+            aCpu.Registers[(Registers)aData[1]] = 
+                aCpu.VM.Memory
+                .GetValueAsType<int>(aCpu.Registers[(Registers)aData[0]],
                                      GetSecurityContext());
 
             return false;
         }
 
-        public override string ToString(InstructionData data)
+        public override string ToString(InstructionData aData)
         {
-            var fromReg = (Registers)data[0];
-            var toReg = (Registers)data[1];
+            var fromReg = (Registers)aData[0];
+            var toReg = (Registers)aData[1];
 
             // mov *R1, R2
             return $"{AsmName} *{fromReg}, {toReg}";

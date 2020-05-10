@@ -4,38 +4,47 @@ using VMCore.Expressions;
 
 namespace VMCore.VM.Instructions
 {
-    internal class MOV_LIT_EXP_MEM_REG : Instruction
+    internal class MOV_LIT_EXP_MEM_REG
+        : Instruction
     {
         public override Type[] ArgumentTypes =>
-            new[] { typeof(string), typeof(Registers) };
+            new Type[]
+            {
+                typeof(string),
+                typeof(Registers)
+            };
 
         public override Type[] ExpressionArgumentTypes =>
-            new[] { typeof(int), null };
+            new Type[]
+            {
+                typeof(int),
+                null
+            };
 
         public override OpCode OpCode =>
             OpCode.MOV_LIT_EXP_MEM_REG;
 
         public override string AsmName => "mov";
 
-        public override bool Execute(InstructionData data, CPU cpu)
+        public override bool Execute(InstructionData aData, CPU aCpu)
         {
-            var pos = (int)new Parser((string)data[0])
+            var pos = (int)new Parser((string)aData[0])
                     .ParseExpression()
-                    .Evaluate(cpu);
+                    .Evaluate(aCpu);
 
-            cpu.Registers[(Registers)data[1]] =
-                cpu.VM.Memory
+            aCpu.Registers[(Registers)aData[1]] =
+                aCpu.VM.Memory
                 .GetValueAsType<int>(pos, GetSecurityContext());
 
             return false;
         }
 
-        public override string ToString(InstructionData data)
+        public override string ToString(InstructionData aData)
         {
-            var toReg = (Registers)data[1];
+            var toReg = (Registers)aData[1];
 
             // mov [EXPRESSION], R2
-            return $"{AsmName} [{data[0]}], {toReg}";
+            return $"{AsmName} [{aData[0]}], {toReg}";
         }
     }
 }

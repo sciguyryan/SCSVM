@@ -17,9 +17,9 @@ namespace VMCore.VM.Core.Reg
         /// </summary>
         public CPU CPU { get; private set; }
 
-        public RegisterCollection(CPU cpu)
+        public RegisterCollection(CPU aCpu)
         {
-            CPU = cpu;
+            CPU = aCpu;
 
             // Initialization here is done manually as, if I ever
             // decide to re-add the shadow registers this will be important.
@@ -36,21 +36,21 @@ namespace VMCore.VM.Core.Reg
             const RegisterAccess prpw = RegisterAccess.PR | pw;
 
             // Data registers.
-            Registers.Add(VMCore.Registers.R1, new Register(cpu, rw));
-            Registers.Add(VMCore.Registers.R2, new Register(cpu, rw));
-            Registers.Add(VMCore.Registers.R3, new Register(cpu, rw));
-            Registers.Add(VMCore.Registers.R4, new Register(cpu, rw));
-            Registers.Add(VMCore.Registers.R5, new Register(cpu, rw));
-            Registers.Add(VMCore.Registers.R6, new Register(cpu, rw));
-            Registers.Add(VMCore.Registers.R7, new Register(cpu, rw));
-            Registers.Add(VMCore.Registers.R8, new Register(cpu, rw));
+            Registers.Add(VMCore.Registers.R1, new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R2, new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R3, new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R4, new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R5, new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R6, new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R7, new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R8, new Register(aCpu, rw));
 
             // Special registers.
-            Registers.Add(VMCore.Registers.IP, new Register(cpu, prpw));
-            Registers.Add(VMCore.Registers.SP, new Register(cpu, prpw));
-            Registers.Add(VMCore.Registers.AC, new Register(cpu, rw));
-            Registers.Add(VMCore.Registers.FL, new Register(cpu, rw, typeof(CPUFlags)));
-            Registers.Add(VMCore.Registers.PC, new Register(cpu, r | pw));
+            Registers.Add(VMCore.Registers.IP, new Register(aCpu, prpw));
+            Registers.Add(VMCore.Registers.SP, new Register(aCpu, prpw));
+            Registers.Add(VMCore.Registers.AC, new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.FL, new Register(aCpu, rw, typeof(CPUFlags)));
+            Registers.Add(VMCore.Registers.PC, new Register(aCpu, r | pw));
 
 #if DEBUG
             // For debugging.
@@ -64,17 +64,39 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// Get or set a register with a security context.
         /// </summary>
-        /// <param name="registerAccess">A tuple of the register identifier and the security context.</param>
+        /// <param name="regTuple">A tuple of the register identifier and the security context.</param>
         /// <returns>The value of the register, nothing otherwise.</returns>
-        public int this[(Registers reg, SecurityContext context) registerAccess]
+        public int this[(Registers reg, SecurityContext context) regTuple]
         {
             get
             {
-                return Registers[registerAccess.reg].GetValue(registerAccess.context);
+                return Registers[regTuple.reg]
+                    .GetValue(regTuple.context);
             }
             set
             {
-                Registers[registerAccess.reg].SetValue(value, registerAccess.context);
+                Registers[regTuple.reg]
+                    .SetValue(value, regTuple.context);
+            }
+        }
+
+        /// <summary>
+        /// Get or set a register with a security context.
+        /// </summary>
+        /// <param name="regTuple">A tuple of the register ID and the security context.</param>
+        /// <returns>The value of the register, nothing otherwise.</returns>
+        public int this[(int regID, SecurityContext context) regTuple]
+        {
+            get
+            {
+                return 
+                    Registers[(Registers)regTuple.regID]
+                        .GetValue(regTuple.context);
+            }
+            set
+            {
+                Registers[(Registers)regTuple.regID]
+                    .SetValue(value, regTuple.context);
             }
         }
 
@@ -91,6 +113,24 @@ namespace VMCore.VM.Core.Reg
             set
             {
                 Registers[reg].SetValue(value, SecurityContext.User);
+            }
+        }
+
+        /// <summary>
+        /// Short hand get or set a register with a default (user) security context.
+        /// </summary>
+        /// <returns>The value of the register if accessed via get, nothing otherwise.</returns>
+        public int this[int regID]
+        {
+            get
+            {
+                return Registers[(Registers)regID]
+                    .GetValue(SecurityContext.User);
+            }
+            set
+            {
+                Registers[(Registers)regID]
+                    .SetValue(value, SecurityContext.User);
             }
         }
 

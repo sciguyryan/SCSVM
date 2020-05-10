@@ -3,25 +3,32 @@ using VMCore.VM.Core;
 
 namespace VMCore.VM.Instructions
 {
-    internal class NOT : Instruction
+    internal class NOT
+        : Instruction
     {
-        public override Type[] ArgumentTypes => 
-            new [] { typeof(Registers) };
+        public override Type[] ArgumentTypes =>
+            new Type[]
+            {
+                typeof(Registers)
+            };
 
         public override Type[] ExpressionArgumentTypes =>
-            new Type[] { null };
+            new Type[]
+            {
+                null
+            };
 
         public override OpCode OpCode => 
             OpCode.NOT;
 
         public override string AsmName => "not";
 
-        public override bool Execute(InstructionData data, CPU cpu)
+        public override bool Execute(InstructionData aData, CPU aCpu)
         {
             var result = 
-                ~cpu.Registers[(Registers)data[0]];
+                ~aCpu.Registers[(Registers)aData[0]];
 
-            cpu.Registers[Registers.AC] = result;
+            aCpu.Registers[Registers.AC] = result;
 
             // Update the CPU flags based on the result of
             // the calculation just performed.
@@ -30,14 +37,14 @@ namespace VMCore.VM.Instructions
             // of the same type to ever overflow. No new bits are
             // added and no casts are performed.
 
-            base.UpdateCalculationFlags(cpu, result);
+            base.UpdateCalculationFlags(aCpu, result);
 
             return false;
         }
 
-        public override string ToString(InstructionData data)
+        public override string ToString(InstructionData aData)
         {
-            var register = (Registers)data[0];
+            var register = (Registers)aData[0];
 
             // not R1
             return $"{AsmName} {register}";

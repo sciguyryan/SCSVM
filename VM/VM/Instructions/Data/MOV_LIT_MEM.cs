@@ -3,35 +3,44 @@ using VMCore.VM.Core;
 
 namespace VMCore.VM.Instructions
 {
-    internal class MOV_LIT_MEM : Instruction
+    internal class MOV_LIT_MEM
+        : Instruction
     {
         public override Type[] ArgumentTypes =>
-            new [] { typeof(int), typeof(int) };
+            new Type[]
+            {
+                typeof(int),
+                typeof(int)
+            };
 
         public override Type[] ExpressionArgumentTypes =>
-            new Type[] { null, null };
+            new Type[]
+            {
+                null,
+                null
+            };
 
         public override OpCode OpCode => 
             OpCode.MOV_LIT_MEM;
 
         public override string AsmName => "mov";
 
-        public override bool Execute(InstructionData data, CPU cpu)
+        public override bool Execute(InstructionData aData, CPU aCpu)
         {
             var bytes =
-                BitConverter.GetBytes((int)data[0]);
+                BitConverter.GetBytes((int)aData[0]);
 
-            cpu.VM.Memory
-                .SetValueRange((int)data[1], bytes,
+            aCpu.VM.Memory
+                .SetValueRange((int)aData[1], bytes,
                                GetSecurityContext());
 
             return false;
         }
 
-        public override string ToString(InstructionData data)
+        public override string ToString(InstructionData aData)
         {
-            var literal = (int)data[0];
-            var toAddr = (int)data[1];
+            var literal = (int)aData[0];
+            var toAddr = (int)aData[1];
 
             // mov $LITERAL, [$MEMORY ADDR]
             return $"{AsmName} ${literal:X}, [${toAddr:X}]";

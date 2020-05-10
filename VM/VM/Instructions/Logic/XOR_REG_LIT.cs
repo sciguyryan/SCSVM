@@ -3,26 +3,35 @@ using VMCore.VM.Core;
 
 namespace VMCore.VM.Instructions
 {
-    internal class XOR_REG_LIT : Instruction
+    internal class XOR_REG_LIT
+        : Instruction
     {
         public override Type[] ArgumentTypes => 
-            new Type[] { typeof(Registers), typeof(int) };
+            new Type[]
+            {
+                typeof(Registers),
+                typeof(int)
+            };
 
         public override Type[] ExpressionArgumentTypes =>
-            new Type[] { null, null };
+            new Type[]
+            {
+                null,
+                null
+            };
 
         public override OpCode OpCode => 
             OpCode.XOR_REG_LIT;
 
         public override string AsmName => "xor";
 
-        public override bool Execute(InstructionData data, CPU cpu)
+        public override bool Execute(InstructionData aData, CPU aCpu)
         {
             var result = 
-                cpu.Registers[(Registers)data[0]] ^ 
-                (int)data[1];
+                aCpu.Registers[(Registers)aData[0]] ^ 
+                (int)aData[1];
 
-            cpu.Registers[Registers.AC] = result;
+            aCpu.Registers[Registers.AC] = result;
 
             // Update the CPU flags based on the result of
             // the calculation just performed.
@@ -30,15 +39,15 @@ namespace VMCore.VM.Instructions
             // is not possible for a XOR operation on two
             // of the same type to ever overflow. No new bits are
             // added and no casts are performed.
-            base.UpdateCalculationFlags(cpu, result);
+            base.UpdateCalculationFlags(aCpu, result);
 
             return false;
         }
 
-        public override string ToString(InstructionData data)
+        public override string ToString(InstructionData aData)
         {
-            var fromReg = (Registers)data[0];
-            var literal = (int)data[1];
+            var fromReg = (Registers)aData[0];
+            var literal = (int)aData[1];
 
             // xor R1, $LITERAL
             return $"{AsmName} {fromReg}, ${literal:X}";

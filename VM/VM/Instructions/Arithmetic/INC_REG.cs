@@ -3,22 +3,29 @@ using VMCore.VM.Core;
 
 namespace VMCore.VM.Instructions
 {
-    internal class INC_REG : Instruction
+    internal class INC_REG
+        : Instruction
     {
         public override Type[] ArgumentTypes => 
-            new [] { typeof(Registers) };
+            new Type[]
+            {
+                typeof(Registers)
+            };
 
         public override Type[] ExpressionArgumentTypes =>
-            new Type[] { null };
+            new Type[]
+            {
+                null
+            };
 
         public override OpCode OpCode => 
             OpCode.INC_REG;
 
         public override string AsmName => "inc";
 
-        public override bool Execute(InstructionData data, CPU cpu)
+        public override bool Execute(InstructionData aData, CPU aCpu)
         {
-            ++cpu.Registers[(Registers)data[0]];
+            ++aCpu.Registers[(Registers)aData[0]];
 
             // We do not need to update the CPU flags
             // here as the result is not going
@@ -27,9 +34,9 @@ namespace VMCore.VM.Instructions
             return false;
         }
 
-        public override string ToString(InstructionData data)
+        public override string ToString(InstructionData aData)
         {
-            var fromReg = (Registers)data[0];
+            var fromReg = (Registers)aData[0];
 
             // inc R1
             return $"{AsmName} {fromReg}";

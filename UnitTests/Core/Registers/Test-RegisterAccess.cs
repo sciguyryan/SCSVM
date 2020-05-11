@@ -35,7 +35,7 @@ namespace UnitTests.Core.Reg
             var program = new List<QuickIns>
             {
                 // Attempt to write a value to a protected write register.
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x0, (byte)Registers.IP })
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x0, Registers.SP })
             };
 
             // This should fail with a RegisterAccessViolationException.
@@ -50,7 +50,7 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserDirectWriteProtectedRegister()
         {
-            _vm.CPU.Registers[(Registers.IP, SecurityContext.User)] = 0x1;
+            _vm.CPU.Registers[(Registers.SP, SecurityContext.User)] = 0x1;
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestSystemDirectWriteProtectedRegister()
         {
-            _vm.CPU.Registers[(Registers.IP, SecurityContext.System)] = 0x1;
+            _vm.CPU.Registers[(Registers.SP, SecurityContext.System)] = 0x1;
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace UnitTests.Core.Reg
             {
                 // Attempt to read a value from a protected write register
                 // directly from user code.
-                new QuickIns(OpCode.MOV_REG_MEM, new object[] { (byte)Registers.IP, 0x0 })
+                new QuickIns(OpCode.MOV_REG_MEM, new object[] { Registers.SP, 0x0 })
             };
 
             // This should fail with a RegisterAccessViolationException.
@@ -90,7 +90,7 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserDirectReadProtectedRegister()
         {
-            _ = _vm.CPU.Registers[(Registers.IP, SecurityContext.User)];
+            _ = _vm.CPU.Registers[(Registers.SP, SecurityContext.User)];
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestSystemDirectReadProtectedRegister()
         {
-            _ = _vm.CPU.Registers[(Registers.IP, SecurityContext.System)];
+            _ = _vm.CPU.Registers[(Registers.SP, SecurityContext.System)];
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace UnitTests.Core.Reg
             var program = new List<QuickIns>
             {
                 // Attempt to write a value to a protected write register.
-                new QuickIns(OpCode.MOV_REG_MEM, new object[] { (byte)Registers.R1, 0x0 })
+                new QuickIns(OpCode.MOV_REG_MEM, new object[] { Registers.R1, 0x0 })
             };
 
             // This should fail with a RegisterAccessViolationException.
@@ -150,7 +150,7 @@ namespace UnitTests.Core.Reg
         {
             var program = new List<QuickIns>
             {
-                new QuickIns(OpCode.MOV_REG_MEM, new object[] { (byte)0xFF, 0x0 }),
+                new QuickIns(OpCode.MOV_REG_MEM, new object[] { (Registers)0xFF, 0x0 }),
             };
 
             // This should throw an exception as the specified register
@@ -168,7 +168,7 @@ namespace UnitTests.Core.Reg
         {
             var program = new List<QuickIns>
             {
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x123, (byte)0xFF }),
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x123, (Registers)0xFF }),
             };
 
             // This should throw an exception as the specified register

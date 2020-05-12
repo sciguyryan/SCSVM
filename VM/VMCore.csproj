@@ -12,4 +12,8 @@
     <None Remove="VM\IO\InterruptHandler\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="VM\Instructions\Branching\" />
+  </ItemGroup>
+
 </Project>

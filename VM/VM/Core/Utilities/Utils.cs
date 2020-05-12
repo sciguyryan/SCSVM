@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using VMCore.Assembler;
 
 namespace VMCore.VM
@@ -163,7 +164,12 @@ namespace VMCore.VM
                     break;
 
                 case Type _ when aType == typeof(string):
-                    aBw.Write((string)aData);
+                    var bytes = Encoding.UTF8.GetBytes((string)aData);
+                    // Write the number of bytes that made up
+                    // the string. This is -not- the string
+                    // length but the length of the byte array!
+                    aBw.Write(bytes.Length);
+                    aBw.Write(bytes);
                     break;
 
                 default:

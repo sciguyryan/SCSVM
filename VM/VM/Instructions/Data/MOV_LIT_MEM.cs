@@ -30,8 +30,12 @@ namespace VMCore.VM.Instructions
             var bytes =
                 BitConverter.GetBytes((int)aData[0]);
 
+            // We do not care if this writes to executable
+            // memory.
             aCpu.VM.Memory
-                .SetValueRange((int)aData[1], bytes,
+                .SetValueRange((int)aData[1],
+                               bytes,
+                               false,
                                GetSecurityContext());
 
             return false;

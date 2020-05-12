@@ -41,9 +41,10 @@ namespace VMCore
 #endif
 
         public VirtualMachine(int aMainMemoryCapacity = 2048,
-                              int aStackCapacity = 100)
+                              int aStackCapacity = 100,
+                              bool aCanCPUSwapMemoryRegions = false)
         {
-            CPU = new CPU(this);
+            CPU = new CPU(this, aCanCPUSwapMemoryRegions);
             Debugger = new Debugger(this);
 
             // The final memory size is equal to the base memory capacity
@@ -101,13 +102,18 @@ namespace VMCore
         /// </summary>
         /// <param name="aRaw">The raw bytecode data representing the program.</param>
         /// <param name="aStartAddress">The starting address from which to begin execution of the program.</param>
-        public void Run(byte[] aRaw, int aStartAddress = 0)
+        public void Run(byte[] aRaw, int aStartAddress = 0, bool aCanSwapMemoryRegions = true)
         {
             if (aRaw.Length == 0)
             {
                 throw new Exception("Run: no byte code provided.");
             }
 
+            // In case we have used this virtual machine
+            // instance before.
+            Memory.RemoveExecutableRegions();
+
+            // Clear any data within the CPU.
             CPU.Reset();
 
 #if DEBUG
@@ -117,8 +123,25 @@ namespace VMCore
             LoadRegisterTestData();
 #endif
 
-            CPU.LoadData(aRaw, aStartAddress);
-            CPU.Run();
+            //CPU.LoadData(aRaw, aStartAddress);
+
+            // Copy the data into memory.
+            (_, _, int seqid) =
+                Memory.SetupExMemory(aRaw);
+
+            CPU.Run(seqid, 0);
+            /*System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            
+            sw.Start();
+            
+            for (int i = 0; i < 1_000_000; i++)
+            {
+                CPU.Run(seqid, 0);
+            }
+
+            sw.Stop();
+
+            System.Diagnostics.Debug.WriteLine("Elapsed={0}", sw.Elapsed);*/
         }
 
 #if DEBUG

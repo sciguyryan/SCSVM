@@ -18,8 +18,8 @@ namespace TestConsole
             var program = new List<QuickIns>
             {
                 /*// XOR flag testing.
-                new QuickInstruction(OpCode.MOV_REG_REG, new object[] { Registers.R1, Registers.R2 }),
-                new QuickInstruction(OpCode.XOR_REG_REG, new object[] { Registers.R1, Registers.R2 }),*/
+                new QuickIns(OpCode.MOV_REG_REG, new object[] { Registers.R1, Registers.R2 }),
+                new QuickIns(OpCode.XOR_REG_REG, new object[] { Registers.R1, Registers.R2 }),*/
 
                 new QuickIns(OpCode.MOV_LIT_MEM, new object[] { 3141, 13 }),
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { 5, Registers.R1 }),
@@ -97,6 +97,19 @@ namespace TestConsole
             var programBytes = Utils.QuickRawCompile(program, true);
             //File.WriteAllBytes(@"D:\Downloads\test.bin", programBytes);
 
+            /*Stopwatch sw = new Stopwatch();
+
+            sw.Start();
+
+            for (int i = 0; i < 1_000_000; i++)
+            {
+                vm.Run(programBytes);
+            }
+
+            sw.Stop();
+
+            Console.WriteLine("Elapsed={0}", sw.Elapsed);*/
+
             vm.Run(programBytes);
 
             Console.WriteLine("----------[Registers]----------");
@@ -105,16 +118,16 @@ namespace TestConsole
             // TODO - show stack memory here when stack is done.
 
             Console.WriteLine("----------[Raw Memory]----------");
-            var mem = vm.Memory.GetValueRange(0, 0x20, SecurityContext.System);
+            var mem = vm.Memory.GetValueRange(0, 0x20, false, SecurityContext.System);
             foreach (var m in mem)
             {
-                Console.Write(m.ToString("X") + " ");
+                Console.Write(m.ToString("X2") + " ");
             }
 
             Console.WriteLine();
 
             Console.WriteLine("----------[Disassembly]----------");
-            foreach (var s in vm.CPU.Disassemble(true))
+            foreach (var s in vm.CPU.Disassemble(vm.CPU.MemExecutableSeqID, true))
             {
                 Console.WriteLine(s);
             }

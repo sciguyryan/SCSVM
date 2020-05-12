@@ -32,9 +32,12 @@ namespace VMCore.VM.Instructions
                     .ParseExpression()
                     .Evaluate(aCpu);
 
+            // We do not care if this read
+            // is within an executable
+            // region or not.
             aCpu.Registers[(Registers)aData[1]] =
                 aCpu.VM.Memory
-                .GetValueAsType<int>(pos, GetSecurityContext());
+                .GetInt(pos, GetSecurityContext(), false);
 
             return false;
         }

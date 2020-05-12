@@ -25,7 +25,6 @@ namespace VMCore.VM
         public List<Breakpoint> Breakpoints { get; set; } =
             new List<Breakpoint>();
 
-
         /// <summary>
         /// Add a break point for a given position and type.
         /// </summary>
@@ -91,7 +90,7 @@ namespace VMCore.VM
         /// <param name="aBreakAt">The position at which the breakpoint is expected to trigger.</param>
         /// <param name="aType">The type of breakpoint.</param>
         /// <returns>A boolean indicating true if a breakpoint exists, false otherwise.</returns>
-        public bool HasBreakPoint(int aBreakAt,
+        public bool HasBreakpoint(int aBreakAt,
                                   Breakpoint.BreakpointType aType)
         {
             foreach (var bp in Breakpoints)
@@ -111,13 +110,13 @@ namespace VMCore.VM
         /// <param name="aReg">The register who's value should be checked.</param>
         /// <param name="aType">The type of breakpoint.</param>
         /// <returns>A boolean indicating true if a breakpoint exists, false otherwise.</returns>
-        public bool HasBreakPoint(Registers aReg,
+        public bool HasBreakpoint(Registers aReg,
                                   Breakpoint.BreakpointType aType)
         {
             var breakAt = 
                 _vm.CPU.Registers[(aReg, SecurityContext.System)];
 
-            return HasBreakPoint(breakAt, aType);
+            return HasBreakpoint(breakAt, aType);
         }
 
         /// <summary>
@@ -125,7 +124,7 @@ namespace VMCore.VM
         /// </summary>
         /// <param name="aType">The type of breakpoint.</param>
         /// <returns>A boolean true if one or more breakpoints have been added of this breakpoint type, false otherwise.</returns>
-        public bool HasBreakPointOfType(Breakpoint.BreakpointType aType)
+        public bool HasBreakpointOfType(Breakpoint.BreakpointType aType)
         {
             foreach (var bp in Breakpoints)
             {
@@ -144,10 +143,10 @@ namespace VMCore.VM
         /// <param name="aBreakAt">The position at which the breakpoint is expected to trigger.</param>
         /// <param name="aType">The type of breakpoint.</param>
         /// <returns>A boolean true if the breakpoint should trigger a halt in the CPU, false otherwise.</returns>
-        public bool TriggerBreakPoint(int aBreakAt,
+        public bool TriggerBreakpoint(int aBreakAt,
                                       Breakpoint.BreakpointType aType)
         {
-            if (!HasBreakPoint(aBreakAt, aType))
+            if (!HasBreakpoint(aBreakAt, aType))
             {
                 return false;
             }

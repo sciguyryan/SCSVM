@@ -10,5 +10,6 @@ namespace VMCore.VM.Core.Mem
         W  = 1 << 2,
         PR = 1 << 3,
         PW = 1 << 4,
+        EX = 1 << 5,
     }
 }

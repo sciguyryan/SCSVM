@@ -36,21 +36,34 @@ namespace VMCore.VM.Core.Reg
             const RegisterAccess prpw = RegisterAccess.PR | pw;
 
             // Data registers.
-            Registers.Add(VMCore.Registers.R1, new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R2, new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R3, new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R4, new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R5, new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R6, new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R7, new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R8, new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R1,
+                          new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R2,
+                          new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R3,
+                          new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R4,
+                          new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R5,
+                          new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R6,
+                          new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R7,
+                          new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.R8,
+                          new Register(aCpu, rw));
 
             // Special registers.
-            Registers.Add(VMCore.Registers.IP, new Register(aCpu, prpw));
-            Registers.Add(VMCore.Registers.SP, new Register(aCpu, prpw));
-            Registers.Add(VMCore.Registers.AC, new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.FL, new Register(aCpu, rw, typeof(CPUFlags)));
-            Registers.Add(VMCore.Registers.PC, new Register(aCpu, r | pw));
+            Registers.Add(VMCore.Registers.IP,
+                          new Register(aCpu, prpw));
+            Registers.Add(VMCore.Registers.SP,
+                          new Register(aCpu, prpw));
+            Registers.Add(VMCore.Registers.AC,
+                          new Register(aCpu, rw));
+            Registers.Add(VMCore.Registers.FL,
+                          new Register(aCpu, rw, typeof(CPUFlags)));
+            Registers.Add(VMCore.Registers.PC,
+                          new Register(aCpu, r | pw));
 
 #if DEBUG
             // For debugging.

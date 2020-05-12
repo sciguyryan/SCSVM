@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 using VMCore.Assembler.Optimisations;
 using VMCore.VM;
 using VMCore.VM.Core;
-using VMCore.Expressions;
 
 namespace VMCore.Assembler
 {

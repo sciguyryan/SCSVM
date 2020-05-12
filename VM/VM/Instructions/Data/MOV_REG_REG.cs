@@ -29,8 +29,9 @@ namespace VMCore.VM.Instructions
         {
             aCpu.Registers[(Registers)aData[1]] = 
                 aCpu.VM.Memory
-                .GetValueAsType<int>(aCpu.Registers[(Registers)aData[0]],
-                                     GetSecurityContext());
+                .GetInt(aCpu.Registers[(Registers)aData[0]],
+                        GetSecurityContext(),
+                        true);
 
             return false;
         }

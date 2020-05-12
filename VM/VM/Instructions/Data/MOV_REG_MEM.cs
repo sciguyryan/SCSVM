@@ -31,8 +31,13 @@ namespace VMCore.VM.Instructions
                 BitConverter
                     .GetBytes(aCpu.Registers[(Registers)aData[0]]);
 
+            // We do not care if this write
+            // is within an executable
+            // region or not.
             aCpu.VM.Memory
-                .SetValueRange((int)aData[1], bytes,
+                .SetValueRange((int)aData[1],
+                               bytes,
+                               false,
                                GetSecurityContext());
 
             return false;

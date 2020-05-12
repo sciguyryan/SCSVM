@@ -36,8 +36,14 @@ namespace VMCore.VM.Instructions
                     .ParseExpression()
                     .Evaluate(aCpu);
 
+            // We do not care if this write
+            // is within an executable
+            // region or not.
             aCpu.VM.Memory
-                .SetValueRange(pos, bytes, GetSecurityContext());
+                .SetValueRange(pos,
+                               bytes,
+                               false,
+                               GetSecurityContext());
 
             return false;
         }

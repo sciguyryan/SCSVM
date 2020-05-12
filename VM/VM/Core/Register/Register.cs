@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using VMCore.VM.Core.Exceptions;
 
 namespace VMCore.VM.Core.Reg
@@ -59,6 +61,13 @@ namespace VMCore.VM.Core.Reg
         /// </summary>
         private Type _flagType;
 
+        /// <summary>
+        /// A dictionary mapping the access flags to their respective position
+        /// within the enum. Used for bitshifting.
+        /// </summary>
+        private Dictionary<RegisterAccess, int> _flagIndicies
+            = new Dictionary<RegisterAccess, int>();
+
         public Register(CPU aCpu,
                         RegisterAccess aAccess,
                         Type aFlagType = null)
@@ -66,6 +75,12 @@ namespace VMCore.VM.Core.Reg
             CPU = aCpu;
             AccessFlags = aAccess;
             _flagType = aFlagType;
+
+            var flags = (RegisterAccess[])Enum.GetValues(typeof(RegisterAccess));
+            for (var i = 0; i < flags.Length; i++)
+            {
+                _flagIndicies.Add(flags[i], i);
+            }
         }
 
         /// <summary>
@@ -137,35 +152,43 @@ namespace VMCore.VM.Core.Reg
         }
 
         /// <summary>
+        /// Check if a given flag is set.
+        /// </summary>
+        /// <param name="aFlags">The flag value to be checked against.</param>
+        /// <param name="aFlag">The flag ID to be checked.</param>
+        /// <returns>A boolean, true if the flag is set, false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsFlagSet(RegisterAccess aFlags, RegisterAccess aFlag)
+        {
+            return
+                Utils.IsBitSet((int)aFlags,
+                               _flagIndicies[aFlag]);
+        }
+
+        /// <summary>
         /// Checks if the register can be accessed in a specified way.
         /// Using a system-level security context will always grant access.
         /// </summary>
         /// <param name="aType">The data access type to check.</param>
         /// <param name="aContext">The security context for this request.</param>
-        /// <exception>RegisterAccessViolationException is the specified permission flag is not set for the register.</exception>
+        /// <exception>RegisterAccessViolationException if the specified permission flag is not set for the register.</exception>
         private void ValidateAccess(DataAccessType aType,
                                     SecurityContext aContext)
         {
-            // A system-level security context is granted
-            // automatic access.
-            if (aContext == SecurityContext.System)
-            {
-                return;
-            }
-
-            // We do not need to check for private read
-            // and write here as they will either use the
-            // system context and fall through above or
-            // they will fall through these checks and
-            // trigger the RegisterAccessViolationException below.
             bool hasFlags;
-            if (aType.HasFlag(DataAccessType.Read)) {
-                hasFlags = AccessFlags.HasFlag(RegisterAccess.R);
-
-            }
-            else if (aType.HasFlag(DataAccessType.Write))
+            if (aType == DataAccessType.Read)
             {
-                hasFlags = AccessFlags.HasFlag(RegisterAccess.W);
+                hasFlags =
+                    IsFlagSet(AccessFlags, RegisterAccess.R) ||
+                    (IsFlagSet(AccessFlags, RegisterAccess.PR) &&
+                     aContext == SecurityContext.System);
+            }
+            else if (aType == DataAccessType.Write)
+            {
+                hasFlags =
+                    IsFlagSet(AccessFlags, RegisterAccess.W) ||
+                    (IsFlagSet(AccessFlags, RegisterAccess.PW) &&
+                     aContext == SecurityContext.System);
             }
             else
             {

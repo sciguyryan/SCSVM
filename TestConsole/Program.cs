@@ -94,7 +94,9 @@ namespace TestConsole
             // Enable CPU debug logging.
             vm.CPU.SetLoggingEnabled(true);
 
-            var programBytes = Utils.QuickRawCompile(program, true);
+            var programBytes = 
+                Utils.QuickRawCompile(program.ToArray(),
+                                      true);
             //File.WriteAllBytes(@"D:\Downloads\test.bin", programBytes);
 
             /*Stopwatch sw = new Stopwatch();

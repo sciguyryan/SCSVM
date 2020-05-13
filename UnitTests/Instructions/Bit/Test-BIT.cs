@@ -53,7 +53,7 @@ namespace UnitTests.Instructions
             {
                 var entry = table[i];
 
-                var program = new List<QuickIns>
+                var program = new QuickIns[]
                 {
                     new QuickIns(OpCode.MOV_LIT_REG, new object[] { (int)entry[1], Registers.R1 }),
                     new QuickIns(OpCode.BIT, new object[] { (int)entry[0], Registers.R1 }),

@@ -28,7 +28,7 @@ namespace UnitTests.Instructions
             const int address = 0x15;
             const int expected = 0x12;
 
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),    // mov $0x12, R1
                 new QuickIns(OpCode.MOV_REG_MEM, new object[] { r1, address }),     // mov R1, $0x15
@@ -54,7 +54,7 @@ namespace UnitTests.Instructions
 
             const int expected = 0x12;
 
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { -0x1, r1 }),    // mov $-0x1, R1
                 new QuickIns(OpCode.MOV_REG_PTR_REG, new object[] { r1, r2 })   // mov *R1, R2

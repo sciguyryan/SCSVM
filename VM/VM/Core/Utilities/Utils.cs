@@ -244,7 +244,7 @@ namespace VMCore.VM
         /// </summary>
         /// <param name="aIns">The list of instruction to be compiled.</param>
         /// <returns>A byte array containing the bytecode data for the binary file.</returns>
-        public static byte[] QuickFileCompile(List<QuickIns> aIns)
+        public static byte[] QuickFileCompile(QuickIns[] aIns)
         {
             // We are only interested in the code section here.
             BinWriter writer = 
@@ -264,7 +264,7 @@ namespace VMCore.VM
         /// <param name="aIns">The list of instruction to be compiled.</param>
         /// <param name="aOptimize">A boolean indicating if we should attempt to optimize the assembled code.</param>
         /// <returns>A byte array containing the bytecode data for the program.</returns>
-        public static byte[] QuickRawCompile(List<QuickIns> aIns,
+        public static byte[] QuickRawCompile(QuickIns[] aIns,
                                              bool aOptimize = false)
         {
             var aw = new AsmWriter(aOptimize);

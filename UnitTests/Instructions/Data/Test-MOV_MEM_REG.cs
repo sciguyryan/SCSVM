@@ -23,7 +23,7 @@ namespace UnitTests.Instructions
         {
             const int expected = 0x123;
 
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 new QuickIns(OpCode.MOV_LIT_MEM, new object[] { expected, 0x0 }),
                 new QuickIns(OpCode.MOV_MEM_REG, new object[] { 0x0, Registers.R1 }),
@@ -42,7 +42,7 @@ namespace UnitTests.Instructions
         [ExpectedException(typeof(MemoryOutOfRangeException))]
         public void TestCopyInvalidMemoryToRegister()
         {
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 new QuickIns(OpCode.MOV_MEM_REG, new object[] { int.MaxValue, Registers.R1 }),
             };

@@ -101,6 +101,15 @@ namespace VMCore.VM.Core.Mem
             }
         }
 
+        /// <summary>
+        /// Create an executable memory region and load
+        /// the provided binary data into it.
+        /// </summary>
+        /// <param name="aData">The bytecode data to be loaded into the memory region.</param>
+        /// <returns>
+        /// A tuple of the start and end addresses of the executable region
+        /// and the unique sequence ID for the memory region.
+        /// </returns>
         public (int start, int end, int seqID) SetupExMemory(byte[] aData)
         {
             var memLen = Data.Length;
@@ -121,12 +130,7 @@ namespace VMCore.VM.Core.Mem
                                 newMemLen - 1,
                                 flags);
 
-            // Copy the data from the data array
-            // into the system memory block.
-            for (var i = 0; i < exLen; i++)
-            {
-                Data[i + memLen] = aData[i];
-            }
+            Array.Copy(aData, 0, Data, memLen, aData.Length);
 
             return (memLen, newMemLen, seqID);
         }
@@ -212,7 +216,7 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         /// <param name="aStart">The start of the memory region range.</param>
         /// <param name="aEnd">The end of the memory region range.</param>
-        /// <returns>The permissions for the memory region.</returns>
+        /// <returns>The permission flags for the memory region.</returns>
         public MemoryAccess GetMemoryPermissions(int aStart, int aEnd)
         {
             var regions = _memoryRegions.ToArray();

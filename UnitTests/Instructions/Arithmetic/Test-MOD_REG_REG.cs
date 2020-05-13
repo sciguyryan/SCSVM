@@ -58,14 +58,15 @@ namespace UnitTests.Instructions
             {
                 var entry = table[i];
 
-                var program = new List<QuickIns>
+                var program = new QuickIns[]
                 {
                     new QuickIns(OpCode.MOV_LIT_REG, new object[] { entry[0], (byte)Registers.R1 }),
                     new QuickIns(OpCode.MOV_LIT_REG, new object[] { entry[1], (byte)Registers.R2 }),
                     new QuickIns(OpCode.MOD_REG_REG, new object[] { (byte)Registers.R1, (byte)Registers.R2 }),
                 };
 
-                Assert.ThrowsException<DivideByZeroException>(() => _vm.Run(Utils.QuickRawCompile(program)),
+                Assert.ThrowsException<DivideByZeroException>(
+                    () => _vm.Run(Utils.QuickRawCompile(program)),
                     $"Expected exception of type DivideByZeroException for test {i}.");
             }
         }

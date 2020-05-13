@@ -24,7 +24,7 @@ namespace UnitTests.Instructions
         {
             const int expected = 0x123;
 
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, Registers.R1 }),
                 new QuickIns(OpCode.MOV_REG_MEM, new object[] { Registers.R1, 0x0 }),
@@ -51,7 +51,7 @@ namespace UnitTests.Instructions
         {
             const int expected = 0x123;
 
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, Registers.R1 }),
                 new QuickIns(OpCode.MOV_REG_MEM, new object[] { Registers.R1, int.MaxValue }),

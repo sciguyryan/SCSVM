@@ -26,7 +26,7 @@ namespace UnitTests.Instructions
             var register = Registers.R1;
             const int expected = 0x123;
 
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, register }),
             };

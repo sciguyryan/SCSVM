@@ -32,7 +32,7 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserAssemblyWriteProtectedRegister()
         {
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 // Attempt to write a value to a protected write register.
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x0, Registers.SP })
@@ -71,7 +71,7 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserAssemblyReadProtectedRegister()
         {
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 // Attempt to read a value from a protected write register
                 // directly from user code.
@@ -110,7 +110,7 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestUserAssemblyReadRegister()
         {
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 // Attempt to write a value to a protected write register.
                 new QuickIns(OpCode.MOV_REG_MEM, new object[] { Registers.R1, 0x0 })
@@ -148,7 +148,7 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(InvalidRegisterException))]
         public void TestAssemblyReadInvalidRegiser()
         {
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 new QuickIns(OpCode.MOV_REG_MEM, new object[] { (Registers)0xFF, 0x0 }),
             };
@@ -166,7 +166,7 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(InvalidRegisterException))]
         public void TestAssemblyWriteInvalidRegiser()
         {
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x123, (Registers)0xFF }),
             };

@@ -16,7 +16,7 @@ namespace UnitTests.Instructions
         /// <param name="op">The opcode to be tested.</param>
         /// <param name="values">An array of values to be passed to as arguments to the instruction.</param>
         /// <returns>A list of QuickInstruction objects to be executed for the test.</returns>
-        public static List<QuickIns> Generate<T>(OpCode aOp, T[] aVals)
+        public static QuickIns[] Generate<T>(OpCode aOp, T[] aVals)
         {
             var instructionList
                 = new List<QuickIns>();
@@ -87,7 +87,7 @@ namespace UnitTests.Instructions
 
             instructionList.Add(new QuickIns(aOp, args.ToArray()));
 
-            return instructionList;
+            return instructionList.ToArray();
         }
     }
 }

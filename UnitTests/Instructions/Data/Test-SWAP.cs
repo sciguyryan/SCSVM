@@ -26,7 +26,7 @@ namespace UnitTests.Instructions
             const int expected1 = 0x123;
             const int expected2 = 0x321;
 
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected1, r1 }),
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected2, r2 }),

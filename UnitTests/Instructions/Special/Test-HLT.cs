@@ -21,7 +21,7 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestCPUHaltState()
         {
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 // Attempt to write a value to a protected write register.
                 new QuickIns(OpCode.HLT)
@@ -41,7 +41,7 @@ namespace UnitTests.Instructions
         {
             var expected = 0x123;
 
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, (byte)Registers.R1 }),
                 new QuickIns(OpCode.HLT),

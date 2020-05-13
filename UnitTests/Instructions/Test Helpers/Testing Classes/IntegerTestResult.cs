@@ -14,14 +14,20 @@ namespace UnitTests.Instructions
         public bool OverflowFlag;
         public ResultTypes Type;
 
-        public IntegerTestResult(int value1, int value2, int result, bool signed, bool zero, bool overflow, ResultTypes type = ResultTypes.EQUAL)
+        public IntegerTestResult(int aValue1,
+                                 int aValue2,
+                                 int aResult,
+                                 bool aSigned,
+                                 bool aZero,
+                                 bool aOverflow,
+                                 ResultTypes aType = ResultTypes.EQUAL)
         {
-            Values = new int[] { value1, value2 };
-            Result = result;
-            SignFlag = signed;
-            ZeroFlag = zero;
-            OverflowFlag = overflow;
-            Type = type;
+            Values = new int[] { aValue1, aValue2 };
+            Result = aResult;
+            SignFlag = aSigned;
+            ZeroFlag = aZero;
+            OverflowFlag = aOverflow;
+            Type = aType;
         }
 
         public override string ToString()
@@ -33,36 +39,39 @@ namespace UnitTests.Instructions
         /// <summary>
         /// Run a set of tests within a given virtual machine instance for a given opcode.
         /// </summary>
-        /// <param name="vm">The virtual machine instance in which the tests should be run.</param>
-        /// <param name="tests">An array of the </param>
-        /// <param name="op"></param>
-        /// <param name="reg"></param>
-        public static void RunTests(VirtualMachine vm, IntegerTestResult[] tests, OpCode op, Registers reg = Registers.AC)
+        /// <param name="aVm">The virtual machine instance in which the tests should be run.</param>
+        /// <param name="aTests">An array of the tests to be run.</param>
+        /// <param name="aOp">The opcode to be tested.</param>
+        /// <param name="aReg">The register to be used when checking the result. Defaults to AC.</param>
+        public static void RunTests(VirtualMachine aVm,
+                                    IntegerTestResult[] aTests,
+                                    OpCode aOp,
+                                    Registers aReg = Registers.AC)
         {
-            for (var i = 0; i < tests.Length; i++)
+            for (var i = 0; i < aTests.Length; i++)
             {
-                var entry = tests[i];
+                var entry = aTests[i];
 
-                var program = TestUtilties.Generate<int>(op, entry.Values);
+                var program = TestUtilties.Generate<int>(aOp, entry.Values);
 
-                vm.Run(Utils.QuickRawCompile(program));
+                aVm.Run(Utils.QuickRawCompile(program));
 
                 bool success = entry.Type switch
                 {
-                    ResultTypes.EQUAL => vm.CPU.Registers[reg] == entry.Result,
+                    ResultTypes.EQUAL => aVm.CPU.Registers[aReg] == entry.Result,
                     _                    => false
                 };
 
                 Assert.IsTrue(success,
-                              $"Value of register '{reg}' for test {i} is incorrect. Expected {entry.Result}, got {vm.CPU.Registers[reg]}.");
+                              $"Value of register '{aReg}' for test {i} is incorrect. Expected {entry.Result}, got {aVm.CPU.Registers[aReg]}.");
 
-                Assert.IsTrue(vm.CPU.IsFlagSet(CPUFlags.S) == entry.SignFlag,
+                Assert.IsTrue(aVm.CPU.IsFlagSet(CPUFlags.S) == entry.SignFlag,
                               $"Sign flag not correctly set for test {i}. Expected {entry.SignFlag}.");
 
-                Assert.IsTrue(vm.CPU.IsFlagSet(CPUFlags.Z) == entry.ZeroFlag,
+                Assert.IsTrue(aVm.CPU.IsFlagSet(CPUFlags.Z) == entry.ZeroFlag,
                               $"Zero flag not correctly set for test {i}. Expected {entry.ZeroFlag}.");
 
-                Assert.IsTrue(vm.CPU.IsFlagSet(CPUFlags.O) == entry.OverflowFlag,
+                Assert.IsTrue(aVm.CPU.IsFlagSet(CPUFlags.O) == entry.OverflowFlag,
                               $"Overflow flag not correctly set for test {i}. Expected {entry.OverflowFlag}.");
             }
         }

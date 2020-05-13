@@ -118,7 +118,7 @@ namespace TestConsole
             // TODO - show stack memory here when stack is done.
 
             Console.WriteLine("----------[Raw Memory]----------");
-            var mem = vm.Memory.GetValueRange(0, 0x20, false, SecurityContext.System);
+            var mem = vm.Memory.GetValueRange(0, 0x20, SecurityContext.System, false);
             foreach (var m in mem)
             {
                 Console.Write(m.ToString("X2") + " ");

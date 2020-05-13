@@ -47,6 +47,13 @@ namespace VMCore.VM.Core.Reg
         public CPU CPU { get; private set; }
 
         /// <summary>
+        /// A dictionary mapping the access flags to their respective position
+        /// within the enum. Used for bitshifting.
+        /// </summary>
+        private Dictionary<RegisterAccess, int> _flagIndicies
+            = new Dictionary<RegisterAccess, int>();
+
+        /// <summary>
         /// The internal value of this register.
         /// </summary>
         private int _value;
@@ -61,13 +68,6 @@ namespace VMCore.VM.Core.Reg
         /// </summary>
         private Type _flagType;
 
-        /// <summary>
-        /// A dictionary mapping the access flags to their respective position
-        /// within the enum. Used for bitshifting.
-        /// </summary>
-        private Dictionary<RegisterAccess, int> _flagIndicies
-            = new Dictionary<RegisterAccess, int>();
-
         public Register(CPU aCpu,
                         RegisterAccess aAccess,
                         Type aFlagType = null)
@@ -76,7 +76,8 @@ namespace VMCore.VM.Core.Reg
             AccessFlags = aAccess;
             _flagType = aFlagType;
 
-            var flags = (RegisterAccess[])Enum.GetValues(typeof(RegisterAccess));
+            var flags =
+                (RegisterAccess[])Enum.GetValues(typeof(RegisterAccess));
             for (var i = 0; i < flags.Length; i++)
             {
                 _flagIndicies.Add(flags[i], i);

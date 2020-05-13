@@ -3,7 +3,7 @@ using VMCore.VM.Core;
 
 namespace VMCore.VM.Instructions
 {
-    internal class MOV_REG_PTR_REG
+    internal class MOV_REG_REG
         : Instruction
     {
         public override Type[] ArgumentTypes => 
@@ -21,17 +21,14 @@ namespace VMCore.VM.Instructions
             };
 
         public override OpCode OpCode => 
-            OpCode.MOV_REG_PTR_REG;
+            OpCode.MOV_REG_REG;
 
         public override string AsmName => "mov";
 
         public override bool Execute(InstructionData aData, CPU aCpu)
         {
             aCpu.Registers[(Registers)aData[1]] = 
-                aCpu.VM.Memory
-                .GetInt(aCpu.Registers[(Registers)aData[0]],
-                        GetSecurityContext(),
-                        true);
+                aCpu.Registers[(Registers)aData[0]];
 
             return false;
         }
@@ -41,8 +38,8 @@ namespace VMCore.VM.Instructions
             var fromReg = (Registers)aData[0];
             var toReg = (Registers)aData[1];
 
-            // mov *R1, R2
-            return $"{AsmName} *{fromReg}, {toReg}";
+            // mov R1, R2
+            return $"{AsmName} {fromReg}, {toReg}";
         }
     }
 }

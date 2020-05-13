@@ -29,7 +29,7 @@ namespace VMCore.VM.Instructions
         {
             aCpu.Registers[(Registers)aData[1]] = 
                 aCpu.VM.Memory
-                .GetInt((int)aData[0], GetSecurityContext(), true);
+                .GetInt((int)aData[0], GetSecurityContext(), false);
 
             return false;
         }

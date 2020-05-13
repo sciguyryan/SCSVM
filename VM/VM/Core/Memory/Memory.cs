@@ -80,6 +80,9 @@ namespace VMCore.VM.Core.Mem
             new Span<byte>(Data).Fill(0);
         }
 
+        /// <summary>
+        /// Remove any executable regions of memory that have been allocated.
+        /// </summary>
         public void RemoveExecutableRegions()
         {
             // Resize the memory back to the original.
@@ -100,7 +103,6 @@ namespace VMCore.VM.Core.Mem
 
         public (int start, int end, int seqID) SetupExMemory(byte[] aData)
         {
-            //Data = new byte[_baseSize];
             var memLen = Data.Length;
             var exLen = aData.Length;
             var newMemLen = memLen + exLen;
@@ -135,10 +137,10 @@ namespace VMCore.VM.Core.Mem
         /// <param name="aStart">The starting position of the memory region.</param>
         /// <param name="aEnd">The ending position of the memory region. </param>
         /// <param name="aAccess">The access flags to be applied to the region.</param>
-        /// <returns>A Guid that uniquely represents the memory region.</returns>
+        /// <returns>The sequence ID that uniquely represents the memory region.</returns>
         public int AddMemoryRegion(int aStart,
-                                    int aEnd,
-                                    MemoryAccess aAccess)
+                                   int aEnd,
+                                   MemoryAccess aAccess)
         {
             var region = 
                 new MemoryRegion(aStart, aEnd, aAccess, _seqID);
@@ -152,7 +154,7 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Gets a memory region with a given sequence identifier.
         /// </summary>
-        /// <param name="aGuid">The sequence identifier to be checked.</param>
+        /// <param name="aSeqID">The sequence identifier to be checked.</param>
         public MemoryRegion GetMemoryRegion(int aSeqID)
         {
             for (var i = 0; i < _memoryRegions.Count; i++)
@@ -199,7 +201,7 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Remove a memory region with a given sequence identifier.
         /// </summary>
-        /// <param name="aGuid">The sequence identifier to be checked.</param>
+        /// <param name="aSeqID">The sequence identifier to be checked.</param>
         public void RemoveMemoryRegion(int aSeqID)
         {
             _memoryRegions.RemoveAll(x => x.SeqID == aSeqID);
@@ -235,26 +237,30 @@ namespace VMCore.VM.Core.Mem
             return access;
         }
 
+        /// <summary>
+        /// Read an integer from memory.
+        /// </summary>
+        /// <param name="aStartPos">The location of the first byte of data to be read.</param>
+        /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        /// <returns>An integer derived from the value read from memory.</returns>
         public int GetInt(int aStartPos,
                           SecurityContext aContext,
                           bool aExec)
         {
             var bytes =
-                GetValueRange(aStartPos, sizeof(int), aExec, aContext);
+                GetValueRange(aStartPos, sizeof(int), aContext, aExec);
 
             return BitConverter.ToInt32(bytes);
         }
 
-        public byte GetByte(int aStartPos,
-                            SecurityContext aContext,
-                            bool aExec)
-        {
-            var bytes = 
-                GetValueRange(aStartPos, sizeof(byte), aExec, aContext);
-
-            return bytes[0];
-        }
-
+        /// <summary>
+        /// Read an opcode from memory.
+        /// </summary>
+        /// <param name="aStartPos">The location of the first byte of data to be read.</param>
+        /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        /// <returns>An opcode derived from the value read from memory.</returns>
         public OpCode GetOpCode(int aStartPos,
                                 SecurityContext aContext,
                                 bool aExec)
@@ -262,13 +268,31 @@ namespace VMCore.VM.Core.Mem
             return (OpCode)GetInt(aStartPos, aContext, aExec);
         }
 
+        /// <summary>
+        /// Read a register identifier from memory.
+        /// </summary>
+        /// <param name="aStartPos">The location of the first byte of data to be read.</param>
+        /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        /// <returns>A register identifier derived from the value read from memory.</returns>
         public Registers GetRegister(int aStartPos,
                                      SecurityContext aContext,
                                      bool aExec)
         {
-            return (Registers)GetByte(aStartPos, aContext, aExec);
+            return (Registers)GetValue(aStartPos, aContext, aExec);
         }
 
+        /// <summary>
+        /// Read a string from memory.
+        /// </summary>
+        /// <param name="aStartPos">The location of the first byte of data to be read.</param>
+        /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        /// <returns>
+        /// A tuple giving. The first value indicating how many bytes in total
+        /// were read in order to construct the string.
+        /// The second value being the string that was read from memory.
+        /// </returns>
         public (int, string) GetString(int aStartPos,
                                        SecurityContext aContext,
                                        bool aExec)
@@ -286,24 +310,26 @@ namespace VMCore.VM.Core.Mem
             var bytes = 
                 GetValueRange(aStartPos + sizeof(int),
                               bytesCount,
-                              aExec,
-                              aContext);
+                              aContext,
+                              aExec);
 
-            // Bytes to skip, string
+            // The number of bytes used to build the string
+            // and the string.
             return (bytesCount + sizeof(int),
                     Encoding.UTF8.GetString(bytes));
         }
 
         /// <summary>
-        /// Reads a single byte from memory.
+        /// Read a single byte from memory.
         /// </summary>
         /// <param name="aPos">The location of the byte to retrieve.</param>
         /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
         /// <returns>A single byte from memory.</returns>
         /// <exception>MemoryAccessViolationException if the specified permission flag is not set for the memory region.</exception>
         public byte GetValue(int aPos,
-                             bool aExec,
-                             SecurityContext aContext)
+                             SecurityContext aContext,
+                             bool aExec)
         {
             if (aPos < 0 || aPos > Data.Length)
             {
@@ -313,8 +339,8 @@ namespace VMCore.VM.Core.Mem
             ValidateAccess(aPos,
                            aPos,
                            DataAccessType.Read,
-                           aExec,
-                           aContext);
+                           aContext,
+                           aExec);
 
             return Data[aPos];
         }
@@ -325,12 +351,13 @@ namespace VMCore.VM.Core.Mem
         /// <param name="aPos">The location of the first byte to retrieve.</param>
         /// <param name="aLength">The number of bytes to retrieve.</param>
         /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
         /// <returns>An array of bytes from memory.</returns>
         /// <exception>MemoryAccessViolationException if the specified permission flag is not set for the memory region.</exception>
         public byte[] GetValueRange(int aPos,
                                     int aLength,
-                                    bool aExec,
-                                    SecurityContext aContext)
+                                    SecurityContext aContext,
+                                    bool aExec)
         {
             if (aPos < 0 || aPos > Data.Length)
             {
@@ -340,8 +367,8 @@ namespace VMCore.VM.Core.Mem
             ValidateAccess(aPos,
                            aPos + aLength,
                            DataAccessType.Read,
-                           aExec,
-                           aContext);
+                           aContext,
+                           aExec);
 
             return new Span<byte>(Data).Slice(aPos, aLength).ToArray();
         }
@@ -352,11 +379,12 @@ namespace VMCore.VM.Core.Mem
         /// <param name="aPos">The location of the byte to set.</param>
         /// <param name="aValue">The value of the byte to be set.</param>
         /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
         /// <exception>MemoryAccessViolationException is the specified permission flag is not set for the memory region.</exception>
         public void SetValue(int aPos,
                              byte aValue,
-                             bool aExec,
-                             SecurityContext aContext)
+                             SecurityContext aContext,
+                             bool aExec)
         {
             if (aPos < 0 || aPos > Data.Length)
             {
@@ -366,8 +394,8 @@ namespace VMCore.VM.Core.Mem
             ValidateAccess(aPos,
                            aPos,
                            DataAccessType.Write,
-                           aExec,
-                           aContext);
+                           aContext,
+                           aExec);
 
             Data[aPos] = aValue;
         }
@@ -378,11 +406,12 @@ namespace VMCore.VM.Core.Mem
         /// <param name="aPos">The location of the first byte to be written.</param>
         /// <param name="aBytes">The value of the byte to be set.</param>
         /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
         /// <exception>MemoryAccessViolationException is the specified permission flag is not set for the memory region.</exception>
         public void SetValueRange(int aPos,
                                   byte[] aBytes,
-                                  bool aExec,
-                                  SecurityContext aContext)
+                                  SecurityContext aContext,
+                                  bool aExec)
         {
             if (aPos < 0 || aPos > Data.Length)
             {
@@ -392,8 +421,8 @@ namespace VMCore.VM.Core.Mem
             ValidateAccess(aPos,
                            aPos + aBytes.Length,
                            DataAccessType.Write,
-                           aExec,
-                           aContext);
+                           aContext,
+                           aExec);
 
             // Sigh... why couldn't array ranges for writing too :(
             for (var i = 0; i < aBytes.Length; i++)
@@ -422,14 +451,15 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         /// <param name="aStart">The starting location of the memory region.</param>
         /// <param name="aEnd">The ending location of the memory region.</param>
-        /// <param name="aType">The data access type to check.</param>
         /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aType">The data access type to check.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
         /// <exception>MemoryAccessViolationException if the specified permission flag is not set for the memory region.</exception>
         private void ValidateAccess(int aStart,
                                     int aEnd,
                                     DataAccessType aType,
-                                    bool aExec,
-                                    SecurityContext aContext)
+                                    SecurityContext aContext,
+                                    bool aExec)
         {
             var flags = GetMemoryPermissions(aStart, aEnd);
 

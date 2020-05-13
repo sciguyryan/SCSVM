@@ -84,8 +84,8 @@ namespace VMCore
         /// <summary>
         /// Run the currently loaded binary file to completion.
         /// </summary>
-        /// <param name="aStartAddress">The starting address from which to begin execution of the program.</param>
-        public void Run(int aStartAddress = 0)
+        /// <param name="aStartAddr">The starting address from which to begin execution of the program.</param>
+        public void Run(int aStartAddr = 0)
         {
             if (Assembly == null)
             {
@@ -94,15 +94,18 @@ namespace VMCore
 
             CPU.Reset();
 
-            Run(Assembly[BinSections.Code].Raw, aStartAddress);
+            Run(Assembly[BinSections.Code].Raw, aStartAddr);
         }
 
         /// <summary>
         /// Run a bytecode program to completion.
         /// </summary>
         /// <param name="aRaw">The raw bytecode data representing the program.</param>
-        /// <param name="aStartAddress">The starting address from which to begin execution of the program.</param>
-        public void Run(byte[] aRaw, int aStartAddress = 0, bool aCanSwapMemoryRegions = true)
+        /// <param name="aStartAddr">The starting address from which to begin execution of the program.</param>
+        /// <param name="aCanSwapMemoryRegions">A boolean, true if the CPU will be permitted to swap between executable memory regions, false otherwise.</param>
+        public void Run(byte[] aRaw,
+                        int aStartAddr = 0,
+                        bool aCanSwapMemoryRegions = true)
         {
             if (aRaw.Length == 0)
             {
@@ -123,13 +126,12 @@ namespace VMCore
             LoadRegisterTestData();
 #endif
 
-            //CPU.LoadData(aRaw, aStartAddress);
-
-            // Copy the data into memory.
+            // Load the executable data into memory.
             (_, _, int seqid) =
                 Memory.SetupExMemory(aRaw);
 
             CPU.Run(seqid, 0);
+
             /*System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             
             sw.Start();

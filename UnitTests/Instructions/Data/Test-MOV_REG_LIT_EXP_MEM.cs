@@ -39,7 +39,7 @@ namespace UnitTests.Instructions
             // Extract the value type from memory.
             var intOut = 
                 _vm.Memory
-                    .GetValueAsType<int>(0x15, SecurityContext.System);
+                    .GetInt(0x15, SecurityContext.System, false);
 
             Assert.IsTrue(intOut == expected);
         }
@@ -68,7 +68,7 @@ namespace UnitTests.Instructions
             // Extract the value type from memory.
             var intOut =
                 _vm.Memory
-                    .GetValueAsType<int>(0x15, SecurityContext.System);
+                    .GetInt(0x15, SecurityContext.System, false);
 
             Assert.IsTrue(intOut == expected);
         }

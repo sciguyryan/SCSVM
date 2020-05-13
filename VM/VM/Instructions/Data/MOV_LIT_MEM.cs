@@ -35,8 +35,8 @@ namespace VMCore.VM.Instructions
             aCpu.VM.Memory
                 .SetValueRange((int)aData[1],
                                bytes,
-                               false,
-                               GetSecurityContext());
+                               GetSecurityContext(),
+                               false);
 
             return false;
         }

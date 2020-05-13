@@ -23,7 +23,7 @@ namespace VMCore.VM
         /// to be performed when they execute.
         /// </summary>
         public List<Breakpoint> Breakpoints { get; set; } =
-            new List<Breakpoint>();
+            new List<Breakpoint>(1024);
 
         /// <summary>
         /// Add a break point for a given position and type.

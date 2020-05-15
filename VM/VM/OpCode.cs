@@ -175,6 +175,11 @@
         NOT,
 
         JMP_NOT_EQ,
+        /// <summary>
+        /// Jump If Not Equal Register - jump to an address equal to the sum of the value of the register
+        /// and the main memory base size (e.g. offset within the program memory space),
+        /// if the value is not equal to the accumulator.
+        /// </summary>
         JNE_REG,
         JEQ_REG,
         JEQ_LIT,

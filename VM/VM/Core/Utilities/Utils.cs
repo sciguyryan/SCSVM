@@ -108,37 +108,6 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Read data from a binary reader based on the specified type.
-        /// </summary>
-        /// <param name="aType">The type of the data being written.</param>
-        /// <param name="aBr">The binary reader from which the data will be read.</param>
-        /// <returns>An object representing the read data.</returns>
-        /// <exception>NotSupportedException if the specified type is currently not supported.</exception>
-        public static object ReadDataByType(Type aType, BinaryReader aBr)
-        {
-            // This is the cleanest way that I can come up with
-            // to do this. It uses the new C# switch pattern
-            // matching statement.
-            return aType switch
-            {
-                Type _ when aType == typeof(byte)
-                    => aBr.ReadByte(),
-
-                Type _ when aType == typeof(int)
-                    => aBr.ReadInt32(),
-
-                Type _ when aType == typeof(string)
-                    => aBr.ReadString(),
-
-                Type _ when aType == typeof(Registers)
-                    => (Registers)(int)aBr.ReadByte(),
-
-                _
-                    => throw new NotSupportedException($"ReadDataByType: the type {aType} was passed as an argument type, but no support has been given provided for that type.")
-            };
-        }
-
-        /// <summary>
         /// Write data to a binary writer based on the specified type.
         /// </summary>
         /// <param name="aType">The type of the data being written.</param>

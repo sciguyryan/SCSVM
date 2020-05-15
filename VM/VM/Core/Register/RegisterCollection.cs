@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace VMCore.VM.Core.Reg
 {
@@ -20,6 +19,8 @@ namespace VMCore.VM.Core.Reg
         public RegisterCollection(CPU aCpu)
         {
             CPU = aCpu;
+
+            RegisterAccessCache.BuildCache();
 
             // Initialization here is done manually as, if I ever
             // decide to re-add the shadow registers this will be important.
@@ -78,7 +79,7 @@ namespace VMCore.VM.Core.Reg
         /// Get or set a register with a security context.
         /// </summary>
         /// <param name="regTuple">A tuple of the register identifier and the security context.</param>
-        /// <returns>The value of the register, nothing otherwise.</returns>
+        /// <returns>The value of the register if accessed via get, nothing otherwise.</returns>
         public int this[(Registers r, SecurityContext c) regTuple]
         {
             get
@@ -95,7 +96,7 @@ namespace VMCore.VM.Core.Reg
         /// Get or set a register with a security context.
         /// </summary>
         /// <param name="regTuple">A tuple of the register ID and the security context.</param>
-        /// <returns>The value of the register, nothing otherwise.</returns>
+        /// <returns>The value of the register if accessed via get, nothing otherwise.</returns>
         public int this[(int rID, SecurityContext c) regTuple]
         {
             get
@@ -197,7 +198,8 @@ namespace VMCore.VM.Core.Reg
         /// Apply a hook to a register.
         /// </summary>
         /// <param name="reg">The register to which the hook should be applied.</param>
-        /// <param name="aHook">The hook to be executed.</param>
+        /// <param name="aHook">The hook to be executed when the hook is triggered.</param>
+        /// <param name="aHookType">The type of hook to be applied.</param>
         public void Hook(Registers aReg,
                          Action<int> aHook,
                          Register.HookTypes aHookType)

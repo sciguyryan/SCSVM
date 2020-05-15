@@ -25,11 +25,12 @@ namespace TestConsole
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { 5, Registers.R1 }),
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { 2, Registers.R2 }),
                 new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "(R1 * R2) + $3", Registers.R3 }),
-                //new QuickInstruction(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "(5 * 2) + 3", Registers.R3 }),
+                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "(5 * 2) + 3", Registers.R4 }),
                 new QuickIns(OpCode.HLT),
                 // Does not execute but should show is the disassembly
                 // output.
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x13, Registers.R1 })
+                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x13, Registers.R1 }),
+                new QuickIns(OpCode.HLT),
             };
 
             /*ass.Add(OpCode.LOAD, (int)Registers.DR1, 0x12);                 // mov 0x12, DR1
@@ -120,7 +121,7 @@ namespace TestConsole
             // TODO - show stack memory here when stack is done.
 
             Console.WriteLine("----------[Raw Memory]----------");
-            var mem = vm.Memory.GetValueRange(0, 0x20, SecurityContext.System, false);
+            var mem = vm.Memory.DirectGetMemoryRaw(0, 0x20);
             foreach (var m in mem)
             {
                 Console.Write(m.ToString("X2") + " ");

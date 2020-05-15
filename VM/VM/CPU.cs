@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
+using VMCore.VM.Core.Mem;
 using VMCore.VM.Core.Reg;
 
 namespace VMCore.VM
@@ -71,9 +72,15 @@ namespace VMCore.VM
         private Dictionary<CPUFlags, int> _flagIndicies
             = new Dictionary<CPUFlags, int>();
 
+        /// <summary>
+        /// A shorthand for the user security context.
+        /// </summary>
         private const SecurityContext _userCtx = 
             SecurityContext.User;
 
+        /// <summary>
+        /// A short hand for the system security context.
+        /// </summary>
         private const SecurityContext _sysCtx =
             SecurityContext.System;
 
@@ -93,13 +100,13 @@ namespace VMCore.VM
         /// The lower memory bound from which data can be read or written
         /// within the program.
         /// </summary>
-        private int _minExecutableBound;
+        private int _minExecutableBound = -1;
 
         /// <summary>
         /// The upper memory bound from which data can be read or written
         /// within the program.
         /// </summary>
-        private int _maxExecutableBound;
+        private int _maxExecutableBound = -1;
 
         /// <summary>
         /// If this CPU can swap between executable memory regions.
@@ -292,17 +299,20 @@ namespace VMCore.VM
         {
             MemExecutableSeqID = aMemSeqID;
 
-            if (_canSwapMemoryRegions)
+            if (_minExecutableBound == -1)
             {
-                _minExecutableBound = 0;
-                _maxExecutableBound = VM.Memory.Length;
-            }
-            else
-            {
-                var region =
-                    VM.Memory.GetMemoryRegion(aMemSeqID);
-                _minExecutableBound = region.Start;
-                _maxExecutableBound = region.End;
+                if (_canSwapMemoryRegions)
+                {
+                    _minExecutableBound = 0;
+                    _maxExecutableBound = VM.Memory.Length;
+                }
+                else
+                {
+                    var region =
+                        VM.Memory.GetMemoryRegion(aMemSeqID);
+                    _minExecutableBound = region.Start;
+                    _maxExecutableBound = region.End;
+                }
             }
 
             SetStartAddress(aStartAddr);
@@ -321,17 +331,27 @@ namespace VMCore.VM
         public void FetchExecuteNextInstruction()
         {
             var pos = Registers[_ipUserTuple];
-            if (pos < _minExecutableBound ||
-                pos > _maxExecutableBound)
-            {
-                SetHaultedState(true);
-                return;
-            }
-
             var opCodeStartPos = pos;
 
-            OpCode opCode = 
-                    VM.Memory.GetOpCode(pos, _userCtx, true);
+            OpCode opCode;
+            try
+            {
+                opCode =  VM.Memory.GetOpCode(pos, _userCtx, true);
+            }
+            catch (Exception ex)
+            {
+                SetHaultedState(true);
+
+                throw ex switch
+                {
+                    MemoryAccessViolationException _
+                        => new MemoryAccessViolationException($"FetchExecuteNextInstruction: instruction at position {opCodeStartPos} attempted to access memory with insufficient permissions. {ex.Message}"),
+
+                    // I do not know how this can happen, but just to be safe.
+                    _
+                        => new Exception($"FetchExecuteNextInstruction: {ex.Message}"),
+                };
+            }
 
             if (!_instructionCache.TryGetValue(opCode,
                                                out Instruction ins))
@@ -375,6 +395,9 @@ namespace VMCore.VM
                     EndOfStreamException _  
                         => new EndOfStreamException($"FetchExecuteNextInstruction: Expected number of arguments for opcode '{asmIns.OpCode}' is {argTypes.Length}, got {asmIns.Args.Count}."),
 
+                    MemoryAccessViolationException _
+                        => new MemoryAccessViolationException($"FetchExecuteNextInstruction: instruction at position {opCodeStartPos} attempted to access memory with insufficient permissions. {ex.Message}"),
+
                     // I do not know how this can happen, but just to be safe.
                     _                       
                         => new Exception($"FetchExecuteNextInstruction: {ex.Message}"),
@@ -388,6 +411,13 @@ namespace VMCore.VM
             if (ExecuteInstruction(ins, asmIns))
             {
                 SetHaultedState(true);
+            }
+
+            // Have we executed everything that needs to be executed?
+            if (pos >= _maxExecutableBound)
+            {
+                SetHaultedState(true);
+                return;
             }
         }
 
@@ -418,7 +448,7 @@ namespace VMCore.VM
                 throw ex switch
                 {
                     MemoryAccessViolationException _
-                        => new AccessViolationException($"ExecuteInstruction: instruction at position {opCodeStartPos} attempted to access memory with insufficient permissions. {ex.Message}"),
+                        => new MemoryAccessViolationException($"ExecuteInstruction: instruction at position {opCodeStartPos} attempted to access memory with insufficient permissions. {ex.Message}"),
 
                     MemoryOutOfRangeException _
                         => new MemoryOutOfRangeException($"ExecuteInstruction: instruction at position {opCodeStartPos} failed to access the specified memory location as it falls outside of the bounds of the memory region."),
@@ -463,7 +493,7 @@ namespace VMCore.VM
             List<string> disInstructions = new List<string>();
 
             string s;
-            while (pos >= minPos && pos <= maxPos)
+            while (pos >= minPos && pos < maxPos)
             {
                 if (aShowLocation)
                 {
@@ -596,8 +626,15 @@ namespace VMCore.VM
         /// <returns>A string giving the disassembly of the next instruction.</returns>
         private string DisassembleNextInstruction(ref int pos)
         {
-            OpCode opCode =
-                    VM.Memory.GetOpCode(pos, _userCtx, true);
+            OpCode opCode = OpCode.NOP;
+            try
+            {
+                opCode = VM.Memory.GetOpCode(pos, _userCtx, true);
+            }
+            catch
+            {
+                // TODO - handle this better.
+            }
 
             if (!Enum.IsDefined(typeof(OpCode), opCode))
             {

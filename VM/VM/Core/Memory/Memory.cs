@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.VM.Core.Exceptions;
@@ -99,6 +100,8 @@ namespace VMCore.VM.Core.Mem
                     _memoryRegions.Remove(item);
                 }
             }
+
+            ResizeRootMemoryRegion();
         }
 
         /// <summary>
@@ -110,7 +113,7 @@ namespace VMCore.VM.Core.Mem
         /// A tuple of the start and end addresses of the executable region
         /// and the unique sequence ID for the memory region.
         /// </returns>
-        public (int start, int end, int seqID) SetupExMemory(byte[] aData)
+        public (int start, int end, int seqID) AddExMemory(byte[] aData)
         {
             var memLen = Data.Length;
             var exLen = aData.Length;
@@ -127,10 +130,12 @@ namespace VMCore.VM.Core.Mem
                         MemoryAccess.EX;
             var seqID = 
                 AddMemoryRegion(memLen,
-                                newMemLen - 1,
+                                newMemLen,
                                 flags);
 
             Array.Copy(aData, 0, Data, memLen, aData.Length);
+
+            ResizeRootMemoryRegion();
 
             return (memLen, newMemLen, seqID);
         }
@@ -149,6 +154,8 @@ namespace VMCore.VM.Core.Mem
             var region = 
                 new MemoryRegion(aStart, aEnd, aAccess, _seqID);
             _memoryRegions.Add(region);
+
+            ResizeRootMemoryRegion();
 
             ++_seqID;
 
@@ -174,6 +181,7 @@ namespace VMCore.VM.Core.Mem
 
         /// <summary>
         /// Remove a region or regions of memory that contain a given position.
+        /// The root memory region (seqID == 0) will not be removed.
         /// </summary>
         /// <param name="aPoint">The position within memory to target.</param>
         /// <param name="aRemoveAll">A boolean, true if all matching memory regions should be removed, false otherwise.</param>
@@ -185,7 +193,9 @@ namespace VMCore.VM.Core.Mem
 
             MemoryRegion region;
             var regionID = _memoryRegions.Count - 1;
-            while (regionID >= 0)
+
+            // We never want to remove the root memory region.
+            while (regionID >= 1)
             {
                 region = _memoryRegions[regionID];
                 if (aPoint >= region.Start && aPoint <= region.End)
@@ -200,15 +210,37 @@ namespace VMCore.VM.Core.Mem
 
                 --regionID;
             }
+
+            ResizeRootMemoryRegion();
         }
 
         /// <summary>
         /// Remove a memory region with a given sequence identifier.
+        /// The root memory region (seqID == 0) cannot be removed.
         /// </summary>
         /// <param name="aSeqID">The sequence identifier to be checked.</param>
         public void RemoveMemoryRegion(int aSeqID)
         {
+            if (aSeqID == 0)
+            {
+                return;
+            }
+
             _memoryRegions.RemoveAll(x => x.SeqID == aSeqID);
+
+            ResizeRootMemoryRegion();
+        }
+
+        /// <summary>
+        /// Directly get a range of bytes from memory. Do not use in anything other than 
+        /// internal code that does not need to take account of memory permissions!
+        /// </summary>
+        /// <param name="aStart">The start of the memory region range.</param>
+        /// <param name="aEnd">The end of the memory region range.</param>
+        /// <returns>An array of bytes representing the bytes extracted from memory.</returns>
+        public byte[] DirectGetMemoryRaw(int aStart, int aEnd)
+        {
+            return Data[aStart..aEnd];
         }
 
         /// <summary>
@@ -222,23 +254,57 @@ namespace VMCore.VM.Core.Mem
             var regions = _memoryRegions.ToArray();
             var regionID = regions.Length - 1;
 
-            var access = MemoryAccess.R | MemoryAccess.W;
-
             // We want to iterate this list in reverse as the last entry
             // can override those entered before it.
+            var matched = new List<MemoryRegion>();
             while (regionID >= 0)
             {
                 var region = regions[regionID];
-                if (aStart <= region.End && region.Start <= aEnd)
+
+                if (aStart >= region.Start && aEnd <= region.End)
                 {
-                    access = region.Access;
+                    // We have a match where the range is -completely-
+                    // within a region. No cross-region permission issues
+                    // can arise here.
+                    matched.Add(region);
                     break;
+                }
+                else if (aStart <= region.End && region.Start <= aEnd)
+                {
+                    // We have a cross-region match.
+                    // We will have to do some additional checks
+                    // to ensure that we assign the correct permissions.
+                    matched.Add(region);
                 }
 
                 --regionID;
             }
 
-            return access;
+            if (matched.Count == 1)
+            {
+                return matched[0].Access;
+            }
+            else if (matched.Count > 1)
+            {
+                // We have a range that intersects one or more
+                // memory access regions.
+                // In this case we choose the access flags
+                // with the lowest permissions of those
+                // returned.
+                var min = MemoryAccess.PR | MemoryAccess.PW | MemoryAccess.EX;
+                foreach (var r in matched)
+                {
+                    if (r.Access < min)
+                    {
+                        min = r.Access;
+                    }
+                }
+
+                return min;
+
+            }
+
+            throw new MemoryAccessViolationException($"GetMemoryPermissions: attempted to access a memory region that does not exist. Start = {aStart}, End = {aEnd}.");
         }
 
         /// <summary>
@@ -495,8 +561,45 @@ namespace VMCore.VM.Core.Mem
 
             if (!hasFlags)
             {
-                throw new MemoryAccessViolationException($"ValidateAccess: attempted to access a register without the correct security context or access flags. Access Type = {aType}, flags = {flags}");
+                throw new MemoryAccessViolationException($"ValidateAccess: attempted to access a memory without the correct security context or access flags. Access Type = {aType}, Executable = {aExec}, flags = {flags}");
             }
+        }
+
+        /// <summary>
+        /// Resize the root memory region to equal the maximum
+        /// memory bound.
+        /// </summary>
+        private void ResizeRootMemoryRegion()
+        {
+            var maxEnd = 0;
+            foreach (var r in _memoryRegions)
+            {
+                if (r.End > maxEnd)
+                {
+                    maxEnd = r.End;
+                }
+            }
+
+            _memoryRegions[0].End = maxEnd;
+        }
+
+        /// <summary>
+        /// Debugging function to view the list of memory regions,
+        /// their bounds and associated permission flags.
+        /// </summary>
+        private void DebugMemoryRegions()
+        {
+            Debug.WriteLine(new string('-', 68));
+            foreach (var r in _memoryRegions)
+            {
+                var s =
+                    String.Format("|{0,20} | {1,20} | {2,20}|",
+                                  $"{r.Start},{r.End}",
+                                  r.Access,
+                                  r.SeqID);
+                Debug.WriteLine(s);
+            }
+            Debug.WriteLine(new string('-', 68));
         }
     }
 }

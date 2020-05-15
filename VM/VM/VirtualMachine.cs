@@ -128,7 +128,7 @@ namespace VMCore
 
             // Load the executable data into memory.
             (_, _, int seqid) =
-                Memory.SetupExMemory(aRaw);
+                Memory.AddExMemory(aRaw);
 
             CPU.Run(seqid, 0);
 

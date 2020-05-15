@@ -86,6 +86,7 @@ namespace UnitTests.Instructions
             }
 
             instructionList.Add(new QuickIns(aOp, args.ToArray()));
+            instructionList.Add(new QuickIns(OpCode.HLT));
 
             return instructionList.ToArray();
         }

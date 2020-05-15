@@ -5,7 +5,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
-using VMCore.VM.Core.Mem;
 using VMCore.VM.Core.Reg;
 
 namespace VMCore.VM
@@ -79,13 +78,13 @@ namespace VMCore.VM
             SecurityContext.System;
 
         /// <summary>
-        /// A system/IP register tuple to avoid having to repeatedly create one.
+        /// A IP/user register tuple to avoid having to repeatedly create one.
         /// </summary>
-        private readonly (Registers, SecurityContext) _ipSystemTuple
-            = (VMCore.Registers.IP, _sysCtx);
+        private readonly (Registers, SecurityContext) _ipUserTuple
+            = (VMCore.Registers.IP, _userCtx);
 
         /// <summary>
-        /// A system/PC register tuple to avoid having to repeatedly create one.
+        /// A PC/system register tuple to avoid having to repeatedly create one.
         /// </summary>
         private readonly (Registers, SecurityContext) _pcSystemTuple
             = (VMCore.Registers.PC, _sysCtx);
@@ -200,7 +199,7 @@ namespace VMCore.VM
         public void Reset()
         {
             // Reset the instruction pointer.
-            Registers[_ipSystemTuple] = 0;
+            Registers[_ipUserTuple] = 0;
 
             // Reset the program instruction counter.
             Registers[_pcSystemTuple] = 0;
@@ -247,7 +246,7 @@ namespace VMCore.VM
             // It is down to the user to ensure that this is
             // correct.
             // This will default to index zero if not set.
-            Registers[_ipSystemTuple] =
+            Registers[_ipUserTuple] =
                 offsetAddress;
         }
 
@@ -321,7 +320,7 @@ namespace VMCore.VM
         /// </summary>
         public void FetchExecuteNextInstruction()
         {
-            var pos = Registers[_ipSystemTuple];
+            var pos = Registers[_ipUserTuple];
             if (pos < _minExecutableBound ||
                 pos > _maxExecutableBound)
             {
@@ -343,7 +342,7 @@ namespace VMCore.VM
 
             // Advance the instruction pointer by the number of bytes
             // corresponding to the size of the opcode (in bytes)
-            Registers[_ipSystemTuple] += sizeof(OpCode);
+            Registers[_ipUserTuple] += sizeof(OpCode);
             pos += sizeof(OpCode);
 
             var asmIns = new InstructionData
@@ -384,7 +383,7 @@ namespace VMCore.VM
 
             // Advance the instruction pointer by the number of bytes
             // corresponding sum of the size of the arguments (in bytes).
-            Registers[_ipSystemTuple] += (pos - iPos);
+            Registers[_ipUserTuple] += (pos - iPos);
 
             if (ExecuteInstruction(ins, asmIns))
             {
@@ -414,7 +413,7 @@ namespace VMCore.VM
             {
                 SetHaultedState(true);
 
-                var opCodeStartPos = Registers[_ipSystemTuple];
+                var opCodeStartPos = Registers[_ipUserTuple];
 
                 throw ex switch
                 {
@@ -486,7 +485,7 @@ namespace VMCore.VM
         /// <summary>
         /// Read an opcode instruction argument from memory.
         /// </summary>
-        /// <param name="pos">The position in memory from which to beging reading the argument.</param>
+        /// <param name="pos">The position in memory from which to begin reading the argument.</param>
         /// <param name="t">The type of the argument to be read.</param>
         /// <returns>An object containing the opcode instruction data.</returns>
         private object GetNextInstructionArgument(ref int pos, Type t)
@@ -589,9 +588,11 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Used to disassemble the next instruction. Essentially a clone of
-        /// FetchExecuteNextInstruction but without the exception code.
+        /// Used to disassemble the next instruction.
+        /// Essentially a clone of FetchExecuteNextInstruction
+        /// but without the exception throwing code.
         /// </summary>
+        // <param name="pos">The position in memory from which to begin reading the instruction.</param>
         /// <returns>A string giving the disassembly of the next instruction.</returns>
         private string DisassembleNextInstruction(ref int pos)
         {

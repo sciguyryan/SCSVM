@@ -55,7 +55,7 @@ namespace VMCore.VM.Core.Reg
 
             // Special registers.
             Registers.Add(VMCore.Registers.IP,
-                          new Register(aCpu, prpw));
+                          new Register(aCpu, rw));
             Registers.Add(VMCore.Registers.SP,
                           new Register(aCpu, prpw));
             Registers.Add(VMCore.Registers.AC,

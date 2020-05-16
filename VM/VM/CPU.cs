@@ -546,7 +546,7 @@ namespace VMCore.VM
                     break;
 
                 case Type _ when t == typeof(Registers):
-                    arg = VM.Memory.GetRegister(pos, _userCtx, true);
+                    arg = VM.Memory.GetRegisterIdent(pos, _userCtx, true);
                     pos += sizeof(byte);
                     break;
 

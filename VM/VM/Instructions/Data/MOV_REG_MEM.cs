@@ -27,18 +27,13 @@ namespace VMCore.VM.Instructions
 
         public override bool Execute(InstructionData aData, CPU aCpu)
         {
-            var bytes = 
-                BitConverter
-                    .GetBytes(aCpu.Registers[(Registers)aData[0]]);
-
             // We do not care if this write
-            // is within an executable
-            // region or not.
+            // is within an executable region or not.
             aCpu.VM.Memory
-                .SetValueRange((int)aData[1],
-                               bytes,
-                               GetSecurityContext(),
-                               false);
+                .SetInt((int)aData[1],
+                          aCpu.Registers[(Registers)aData[0]],
+                          GetSecurityContext(),
+                          false);
 
             return false;
         }

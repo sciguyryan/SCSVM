@@ -23,8 +23,6 @@
 
   <ItemGroup>
     <Folder Include="Core\CPU\" />
-    <Folder Include="Core\Memory\" />
-    <Folder Include="Instructions\Branching\" />
   </ItemGroup>
 
 </Project>

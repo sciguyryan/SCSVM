@@ -248,8 +248,8 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         /// <param name="aStart">The start of the memory region range.</param>
         /// <param name="aEnd">The end of the memory region range.</param>
-        /// <returns>The permission flags for the memory region.</returns>
-        public MemoryAccess GetMemoryPermissions(int aStart, int aEnd)
+        /// <returns>An array of the regions within which the memory range will fall.</returns>
+        public MemoryRegion[] GetMemoryPermissions(int aStart, int aEnd)
         {
             var regions = _memoryRegions.ToArray();
             var regionID = regions.Length - 1;
@@ -280,33 +280,17 @@ namespace VMCore.VM.Core.Mem
                 --regionID;
             }
 
-            if (matched.Count == 1)
+            if (matched.Count > 0)
             {
-                return matched[0].Access;
-            }
-            else if (matched.Count > 1)
-            {
-                // We have a range that intersects one or more
-                // memory access regions.
-                // In this case we choose the access flags
-                // with the lowest permissions of those
-                // returned.
-                var min = MemoryAccess.PR | MemoryAccess.PW | MemoryAccess.EX;
-                foreach (var r in matched)
-                {
-                    if (r.Access < min)
-                    {
-                        min = r.Access;
-                    }
-                }
-
-                return min;
-
+                return matched.ToArray();
             }
 
+            // This cannot happen with any valid address as
+            // the root memory region will always match a valid address.
             throw new MemoryAccessViolationException($"GetMemoryPermissions: attempted to access a memory region that does not exist. Start = {aStart}, End = {aEnd}.");
         }
 
+        #region Integer IO
         /// <summary>
         /// Read an integer from memory.
         /// </summary>
@@ -325,6 +309,26 @@ namespace VMCore.VM.Core.Mem
         }
 
         /// <summary>
+        /// Writes an integer to memory.
+        /// </summary>
+        /// <param name="aStartPos">The location of the first byte of data to be written.</param>
+        /// <param name="aValue">The integer value to be written to memory.</param>
+        /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        public void SetInt(int aStartPos,
+                           int aValue,
+                           SecurityContext aContext,
+                           bool aExec)
+        {
+            var bytes =
+                BitConverter.GetBytes(aValue);
+
+            SetValueRange(aStartPos, bytes, aContext, aExec);
+        }
+        #endregion
+
+        #region OpCode IO
+        /// <summary>
         /// Read an opcode from memory.
         /// </summary>
         /// <param name="aStartPos">The location of the first byte of data to be read.</param>
@@ -339,19 +343,56 @@ namespace VMCore.VM.Core.Mem
         }
 
         /// <summary>
+        /// Writes an opcode to memory.
+        /// </summary>
+        /// <param name="aStartPos">The location of the first byte of data to be written.</param>
+        /// <param name="aValue">The opcode to be written to memory.</param>
+        /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        public void SetOpCode(int aStartPos,
+                              OpCode aValue,
+                              SecurityContext aContext,
+                              bool aExec)
+        {
+            var bytes =
+                BitConverter.GetBytes((int)aValue);
+
+            SetValueRange(aStartPos, bytes, aContext, aExec);
+        }
+        #endregion
+
+        #region Register Identifier IO
+        /// <summary>
         /// Read a register identifier from memory.
         /// </summary>
         /// <param name="aStartPos">The location of the first byte of data to be read.</param>
         /// <param name="aContext">The security context for this request.</param>
         /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
         /// <returns>A register identifier derived from the value read from memory.</returns>
-        public Registers GetRegister(int aStartPos,
-                                     SecurityContext aContext,
-                                     bool aExec)
+        public Registers GetRegisterIdent(int aStartPos,
+                                          SecurityContext aContext,
+                                          bool aExec)
         {
             return (Registers)GetValue(aStartPos, aContext, aExec);
         }
 
+        /// <summary>
+        /// Writes a register identifier to memory.
+        /// </summary>
+        /// <param name="aStartPos">The location of the first byte of data to be written.</param>
+        /// <param name="aValue">The register identifier to be written to memory.</param>
+        /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        public void SetRegisterIdent(int aStartPos,
+                                     Registers aValue,
+                                     SecurityContext aContext,
+                                     bool aExec)
+        {
+            SetValue(aStartPos, (byte)aValue, aContext, aExec);
+        }
+        #endregion
+
+        #region String IO
         /// <summary>
         /// Read a string from memory.
         /// </summary>
@@ -390,6 +431,33 @@ namespace VMCore.VM.Core.Mem
         }
 
         /// <summary>
+        /// Writes a string to memory.
+        /// </summary>
+        /// <param name="aStartPos">The location of the first byte of data to be written.</param>
+        /// <param name="aValue">The string to be written to memory.</param>
+        /// <param name="aContext">The security context for this request.</param>
+        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        public void SetString(int aStartPos,
+                              string aValue,
+                              SecurityContext aContext,
+                              bool aExec)
+        {
+            // Write the length of the string first.
+            var bytes = BitConverter.GetBytes(aValue.Length);
+
+            SetValueRange(aStartPos, bytes, aContext, aExec);
+
+            // Write the string directly afterwards.
+            bytes = Encoding.UTF8.GetBytes(aValue);
+
+            SetValueRange(aStartPos + sizeof(int),
+                          bytes,
+                          aContext,
+                          aExec);
+        }
+        #endregion
+
+        /// <summary>
         /// Read a single byte from memory.
         /// </summary>
         /// <param name="aPos">The location of the byte to retrieve.</param>
@@ -401,11 +469,6 @@ namespace VMCore.VM.Core.Mem
                              SecurityContext aContext,
                              bool aExec)
         {
-            if (aPos < 0 || aPos > Data.Length)
-            {
-                throw new MemoryOutOfRangeException($"GetValue: the specified memory location is negative and is therefore invalid.");
-            }
-
             ValidateAccess(aPos,
                            aPos,
                            DataAccessType.Read,
@@ -429,11 +492,6 @@ namespace VMCore.VM.Core.Mem
                                     SecurityContext aContext,
                                     bool aExec)
         {
-            if (aPos < 0 || aPos > Data.Length)
-            {
-                throw new MemoryOutOfRangeException($"GetValueRange: the specified memory location is negative and is therefore invalid.");
-            }
-
             ValidateAccess(aPos,
                            aPos + aLength,
                            DataAccessType.Read,
@@ -456,11 +514,6 @@ namespace VMCore.VM.Core.Mem
                              SecurityContext aContext,
                              bool aExec)
         {
-            if (aPos < 0 || aPos > Data.Length)
-            {
-                throw new MemoryOutOfRangeException($"SetValue: the specified memory location is negative and is therefore invalid.");
-            }
-
             ValidateAccess(aPos,
                            aPos,
                            DataAccessType.Write,
@@ -483,11 +536,6 @@ namespace VMCore.VM.Core.Mem
                                   SecurityContext aContext,
                                   bool aExec)
         {
-            if (aPos < 0 || aPos > Data.Length)
-            {
-                throw new MemoryOutOfRangeException($"SetValueRange: the specified memory location is negative and is therefore invalid.");
-            }
-
             ValidateAccess(aPos,
                            aPos + aBytes.Length,
                            DataAccessType.Write,
@@ -524,26 +572,62 @@ namespace VMCore.VM.Core.Mem
         /// <param name="aContext">The security context for this request.</param>
         /// <param name="aType">The data access type to check.</param>
         /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
-        /// <exception>MemoryAccessViolationException if the specified permission flag is not set for the memory region.</exception>
+        /// <exception>MemoryAccessViolationException if the specified permissions are not valid to perform the operation on the memory region.</exception>
+        /// <exception>MemoryOutOfRangeException if the specified position falls outside of the valid memory bounds.</exception>
         private void ValidateAccess(int aStart,
                                     int aEnd,
                                     DataAccessType aType,
                                     SecurityContext aContext,
                                     bool aExec)
         {
-            var flags = GetMemoryPermissions(aStart, aEnd);
+            if (aStart < 0 || aStart > Data.Length ||
+                aEnd < 0 || aEnd > Data.Length)
+            {
+                throw new MemoryOutOfRangeException($"ValidateAccess: the specified memory location is outside of the memory bounds.");
+            }
 
-            bool hasFlags;
+            // If we have an address range that intersects one or more
+            // memory regions then we need to choose the access flags
+            // from the region that has the highest permissions of those
+            // that were returned.
+            // The logic being that the highest permissions will need
+            // to be met for access to be granted to any point within
+            // the range.
+
+            bool hasFlags = true;
+            MemoryAccess flags = MemoryAccess.N;
+            foreach (var r in GetMemoryPermissions(aStart, aEnd))
+            {
+                // If we have requested an executable memory
+                // region and this region is not executable
+                // then we cannot have a match.
+                if (aExec && !IsFlagSet(r.Access, MemoryAccess.EX))
+                {
+                    // In this instance we will now allow the
+                    // operation to continue.
+                    // We cannot permit writing or reading
+                    // from non-executable memory into executable
+                    // memory and vice versa.
+                    hasFlags = false;
+                    break;
+                }
+
+                if (r.Access > flags)
+                {
+                    flags = r.Access;
+                }
+            }
+
             if (aType == DataAccessType.Read)
             {
-                hasFlags =
+                hasFlags &=
                     IsFlagSet(flags, MemoryAccess.R) ||
                     (IsFlagSet(flags, MemoryAccess.PR) &&
                      aContext == SecurityContext.System);
             }
             else if (aType == DataAccessType.Write)
             {
-                hasFlags =
+                hasFlags &=
                     IsFlagSet(flags, MemoryAccess.W) ||
                     (IsFlagSet(flags, MemoryAccess.PW) &&
                      aContext == SecurityContext.System);
@@ -551,12 +635,6 @@ namespace VMCore.VM.Core.Mem
             else
             {
                 throw new NotSupportedException($"ValidateAccess: attempted to check a non-valid data access type.");
-            }
-
-            if (aExec)
-            {
-                hasFlags &= 
-                    IsFlagSet(flags, MemoryAccess.EX);
             }
 
             if (!hasFlags)

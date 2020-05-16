@@ -28,10 +28,6 @@ namespace VMCore.VM.Instructions
 
         public override bool Execute(InstructionData aData, CPU aCpu)
         {
-            var bytes = 
-                BitConverter
-                    .GetBytes(aCpu.Registers[(Registers)aData[0]]);
-
             var pos = (int)new Parser((string)aData[1])
                     .ParseExpression()
                     .Evaluate(aCpu);
@@ -40,10 +36,10 @@ namespace VMCore.VM.Instructions
             // is within an executable
             // region or not.
             aCpu.VM.Memory
-                .SetValueRange(pos,
-                               bytes,
-                               GetSecurityContext(),
-                               false);
+                .SetInt(pos,
+                          aCpu.Registers[(Registers)aData[0]],
+                          GetSecurityContext(),
+                          false);
 
             return false;
         }

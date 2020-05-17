@@ -1,8 +1,8 @@
 ﻿using VMCore;
 using VMCore.Assembler;
 using VMCore.VM;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VMCore.VM.Core.Exceptions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.Instructions
 {
@@ -85,6 +85,44 @@ namespace UnitTests.Instructions
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, r3 }),
                 new QuickIns(OpCode.HLT),
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { fail, r3 }),
+            };
+
+            _vm.Run(Utils.QuickRawCompile(program));
+
+            Assert.IsTrue(_vm.CPU.Registers[r3] == expected);
+        }
+
+
+        /// <summary>
+        /// Test JNE with valid label destination.
+        /// </summary>
+        [TestMethod]
+        public void TestUserAssemblyValidLabel()
+        {
+            var r1 = Registers.R1;
+            var r2 = Registers.R2;
+            var r3 = Registers.R3;
+            const int expected = 0x123;
+            const int fail = 0x321;
+
+            var program = new QuickIns[]
+            {
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 100, r1 }),
+                new QuickIns(OpCode.SUB_LIT_REG,
+                             new object[] { 50, r1 }),  // AC = 50
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 100, r2 }),
+                new QuickIns(OpCode.JNE_REG,
+                             new object[] { r2, 0 },
+                             new AsmLabel("GOOD", 1)),
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { fail, r3 }),
+                new QuickIns(OpCode.HLT),
+                new QuickIns(OpCode.LABEL,
+                             new object[] { "GOOD" }),
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { expected, r3 }),
             };
 
             _vm.Run(Utils.QuickRawCompile(program));

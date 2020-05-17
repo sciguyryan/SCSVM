@@ -1,7 +1,7 @@
 ﻿using System;
 using VMCore.VM;
-using VMCore.VM.Core;
 using VMCore.Expressions;
+using VMCore.VM.Instructions;
 
 namespace VMCore.Assembler.Optimisations
 {

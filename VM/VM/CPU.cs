@@ -7,6 +7,7 @@ using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Mem;
 using VMCore.VM.Core.Reg;
+using VMCore.VM.Instructions;
 
 namespace VMCore.VM
 {
@@ -137,6 +138,62 @@ namespace VMCore.VM
         {
         }
 
+
+        /// <summary>
+        /// Initialize the CPU.
+        /// </summary>
+        /// <param name="aMemSeqID">
+        /// The sequence ID for the memory region containing the code.
+        /// </param>
+        /// <param name="aStartAddr">
+        /// The address from which the execution should commence.
+        /// </param>
+        public void Initialize(int aMemSeqID, int aStartAddr)
+        {
+            MemExecutableSeqID = aMemSeqID;
+
+            if (_minExecutableBound == -1)
+            {
+                if (_canSwapMemoryRegions)
+                {
+                    _minExecutableBound = 0;
+                    _maxExecutableBound = VM.Memory.Length;
+                }
+                else
+                {
+                    var region =
+                        VM.Memory.GetMemoryRegion(aMemSeqID);
+                    _minExecutableBound = region.Start;
+                    _maxExecutableBound = region.End;
+                }
+            }
+
+            SetStartAddress(aStartAddr);
+
+            SetBreakpointObservers();
+        }
+
+        /// <summary>
+        /// Execute a reset on the CPU. 
+        /// Reset various registers and clear the halted state of
+        /// the CPU.
+        /// </summary>
+        public void Reset()
+        {
+            // Reset the instruction pointer.
+            Registers[_ipUserTuple] = 0;
+
+            // Reset the program instruction counter.
+            Registers[_pcSystemTuple] = 0;
+
+            // Reset the flags register.
+            Registers[(VMCore.Registers.FL, _sysCtx)] = 0;
+
+            // TODO - reset stack pointer here.
+
+            SetHaultedState(false);
+        }
+
         /// <summary>
         /// Sets the state of the flag to the specified state.
         /// </summary>
@@ -200,26 +257,6 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Execute a reset on the CPU, clearing any binary data and resetting
-        /// various registers within the CPU.
-        /// </summary>
-        public void Reset()
-        {
-            // Reset the instruction pointer.
-            Registers[_ipUserTuple] = 0;
-
-            // Reset the program instruction counter.
-            Registers[_pcSystemTuple] = 0;
-
-            // Reset the flags register.
-            Registers[(VMCore.Registers.FL, _sysCtx)] = 0;
-
-            // TODO - reset stack pointer here.
-
-            SetHaultedState(false);
-        }
-
-        /// <summary>
         /// Enable or disable logging within the CPU.
         /// </summary>
         /// <param name="aEnabled">The logging state of the CPU.</param>
@@ -260,29 +297,8 @@ namespace VMCore.VM
         /// <summary>
         /// Run the virtual machine with the current binary to completion.
         /// </summary>
-        /// <param name="aMemSeqID">The sequence ID for the memory region containing the code.</param>
-        /// <param name="aStartAddr">The address from which the execution should commence.</param>
-        public void Run(int aMemSeqID, int aStartAddr = 0)
+        public void Run()
         {
-            MemExecutableSeqID = aMemSeqID;
-
-            if (_canSwapMemoryRegions)
-            {
-                _minExecutableBound = 0;
-                _maxExecutableBound = VM.Memory.Length;
-            }
-            else
-            {
-                var region =
-                    VM.Memory.GetMemoryRegion(aMemSeqID);
-                _minExecutableBound = region.Start;
-                _maxExecutableBound = region.End;
-            }
-
-            SetStartAddress(aStartAddr);
-
-            SetBreakpointObservers();
-
             // Loop until we are instructed to halt.
             while (!IsHalted)
             {
@@ -291,44 +307,29 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Step the virtual machine forward a single CPU cycle with the current binary.
+        /// Step the virtual machine forward a single CPU cycle
+        /// with the currently loaded binary.
         /// </summary>
-        /// <param name="aMemSeqID">The sequence ID for the memory region containing the code.</param>
-        /// <param name="aStartAddr">The address from which the execution should commence.</param>
-        public void Step(int aMemSeqID, int aStartAddr = 0)
+        /// <returns>
+        /// The data for the instruction that was executed.
+        /// </returns>
+        public InstructionData Step()
         {
-            MemExecutableSeqID = aMemSeqID;
-
-            if (_minExecutableBound == -1)
-            {
-                if (_canSwapMemoryRegions)
-                {
-                    _minExecutableBound = 0;
-                    _maxExecutableBound = VM.Memory.Length;
-                }
-                else
-                {
-                    var region =
-                        VM.Memory.GetMemoryRegion(aMemSeqID);
-                    _minExecutableBound = region.Start;
-                    _maxExecutableBound = region.End;
-                }
-            }
-
-            SetStartAddress(aStartAddr);
-
-            SetBreakpointObservers();
-
             if (!IsHalted)
             {
-                FetchExecuteNextInstruction();
+                return FetchExecuteNextInstruction();
             }
+
+            return null;
         }
 
         /// <summary>
         /// Fetch, decode and execute the next instruction.
         /// </summary>
-        public void FetchExecuteNextInstruction()
+        /// <returns>
+        /// The data for the instruction that was executed.
+        /// </returns>
+        public InstructionData FetchExecuteNextInstruction()
         {
             var pos = Registers[_ipUserTuple];
             var opCodeStartPos = pos;
@@ -417,8 +418,9 @@ namespace VMCore.VM
             if (pos >= _maxExecutableBound)
             {
                 SetHaultedState(true);
-                return;
             }
+
+            return asmIns;
         }
 
         /// <summary>

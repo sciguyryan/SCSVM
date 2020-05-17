@@ -113,7 +113,7 @@ namespace VMCore.VM
         /// <param name="aType">The type of the data being written.</param>
         /// <param name="aData">An object representing the data to be written.</param>
         /// <param name="aBw">The binary writer into which the data will be written.</param>
-        /// <exception>NotSupportedException if the specified type is currently not supported.</exception>
+        /// <exception cref="NotSupportedException">Thrown if the specified type is currently not supported.</exception>
         public static void WriteDataByType(Type aType,
                                            object aData,
                                            BinaryWriter aBw)

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using VMCore;
 using VMCore.VM;
 using VMCore.Assembler;
+using System.Linq;
 
 namespace TestConsole
 {
@@ -15,58 +16,47 @@ namespace TestConsole
             int stackCapacity = 100;
             int stackStart = mainMemoryCapacity;
 
-            var program = new List<QuickIns>
+            var program = new QuickIns[]
             {
-                /*// XOR flag testing.
-                new QuickIns(OpCode.MOV_REG_REG, new object[] { Registers.R1, Registers.R2 }),
-                new QuickIns(OpCode.XOR_REG_REG, new object[] { Registers.R1, Registers.R2 }),*/
-
-                new QuickIns(OpCode.MOV_LIT_MEM, new object[] { 3141, 13 }),
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 5, Registers.R1 }),
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 2, Registers.R2 }),
-                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "(R1 * R2) + $3", Registers.R3 }),
-                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "(5 * 2) + 3", Registers.R4 }),
+                /*new QuickIns(OpCode.MOV_LIT_MEM,
+                 *             new object[] { 3141, 13 }),
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 5, Registers.R1 }),
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 2, Registers.R2 }),
+                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG,
+                             new object[] { "(R1 * R2) + $3", Registers.R3 }),
+                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG
+                             new object[] { "(5 * 2) + 3", Registers.R4 }),
                 new QuickIns(OpCode.HLT),
                 // Does not execute but should show is the disassembly
                 // output.
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x13, Registers.R1 }),
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 0x13, Registers.R1 }),
+                new QuickIns(OpCode.HLT),*/
+
+                // Jump testing.
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 100, Registers.R1 }),
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 100, Registers.R2 }),
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 100, Registers.R3 }),           // ACC check against R3.
+                new QuickIns(OpCode.ADD_REG_REG,
+                             new object[] { Registers.R1, Registers.R2 }),  // ACC == 200
+
+                new QuickIns(OpCode.JNE_REG,
+                             new object[] { Registers.R3, 0 },
+                             new AsmLabel("GOOD", 1)),                      // Jump to #1
+
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 314159, Registers.R4 }),
+                new QuickIns(OpCode.HLT),
+                new QuickIns(OpCode.LABEL, new object[] { "GOOD" }),                    
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 951431, Registers.R4 }),        // #1
                 new QuickIns(OpCode.HLT),
             };
-
-            /*ass.Add(OpCode.LOAD, (int)Registers.DR1, 0x12);                 // mov 0x12, DR1
-            ass.Add(OpCode.INC, (int)Registers.DR1);                        // inc DR1
-
-            ass.Add(OpCode.LOAD, (int)Registers.DR2, 0x12);                 // mov 0x13, DR2
-
-            ass.Add(OpCode.EQUAL, (int)Registers.DR1, (int)Registers.DR2);  // eq DR1, DR2
-                                                                            // jmpe "BAD"        (does not specify a jump destination address directly)
-                                                                            //                   (argument 0 is bound to the BAD label).
-            var badLabelBind = new Dictionary<int, string>() { { 0, "BAD" } };
-            ass.AddWithLabel(OpCode.JMPE, badLabelBind, -1);
-
-            //ass.CreateLabel("GOOD");
-
-            string good = "Good!\n\n";
-            foreach (var c in good)
-            {
-                ass.Add(OpCode.PUSHL, c);
-                ass.Add(OpCode.OUT,
-                        (int)DeviceSockets.ConsoleControl, 
-                        (int)ConsoleDevice.ControlCodes.WriteChar);         // out 0xDEF0, character
-            }
-
-            ass.Add(OpCode.HLT);                                            // hlt
-
-            ass.CreateLabel("BAD");
-
-            string bad = "Bad!\n\n";
-            foreach (var c in bad)
-            {
-                ass.Add(OpCode.PUSHL, c);
-                ass.Add(OpCode.OUT,
-                        (int)DeviceSockets.ConsoleControl,
-                        (int)ConsoleDevice.ControlCodes.WriteChar);         // out 0xDEF0, character
-            }*/
 
             var vm = 
                 new VirtualMachine(mainMemoryCapacity,
@@ -95,9 +85,7 @@ namespace TestConsole
             // Enable CPU debug logging.
             vm.CPU.SetLoggingEnabled(true);
 
-            var programBytes = 
-                Utils.QuickRawCompile(program.ToArray(),
-                                      true);
+            var programBytes = Utils.QuickRawCompile(program, true);
             //File.WriteAllBytes(@"D:\Downloads\test.bin", programBytes);
 
             /*Stopwatch sw = new Stopwatch();
@@ -130,7 +118,8 @@ namespace TestConsole
             Console.WriteLine();
 
             Console.WriteLine("----------[Disassembly]----------");
-            foreach (var s in vm.CPU.Disassemble(vm.CPU.MemExecutableSeqID, true))
+            foreach (var s in 
+                     vm.CPU.Disassemble(vm.CPU.MemExecutableSeqID, true))
             {
                 Console.WriteLine(s);
             }

@@ -47,8 +47,9 @@ namespace VMCore
             CPU = new CPU(this, aCanCPUSwapMemoryRegions);
             Debugger = new Debugger(this);
 
-            // The final memory size is equal to the base memory capacity
-            // plus the stack capacity multiplied by the size of an integer.
+            // The final memory size is equal to the base memory
+            // capacity plus the stack capacity multiplied by
+            // the size of an integer.
             var finalMemorySize = 
                 aMainMemoryCapacity + (aStackCapacity * sizeof(int));
             Memory = new Memory(finalMemorySize);
@@ -82,34 +83,29 @@ namespace VMCore
         }
 
         /// <summary>
-        /// Run the currently loaded binary file to completion.
+        /// Load a binary into memory and initialize the CPU.
         /// </summary>
-        /// <param name="aStartAddr">The starting address from which to begin execution of the program.</param>
-        public void Run(int aStartAddr = 0)
-        {
-            if (Assembly == null)
-            {
-                throw new Exception("Run: no assembly file loaded.");
-            }
-
-            CPU.Reset();
-
-            Run(Assembly[BinSections.Code].Raw, aStartAddr);
-        }
-
-        /// <summary>
-        /// Run a bytecode program to completion.
-        /// </summary>
-        /// <param name="aRaw">The raw bytecode data representing the program.</param>
-        /// <param name="aStartAddr">The starting address from which to begin execution of the program.</param>
-        /// <param name="aCanSwapMemoryRegions">A boolean, true if the CPU will be permitted to swap between executable memory regions, false otherwise.</param>
-        public void Run(byte[] aRaw,
-                        int aStartAddr = 0,
-                        bool aCanSwapMemoryRegions = true)
+        /// <param name="aRaw">
+        /// The raw bytecode data representing the program.
+        /// </param>
+        /// <param name="aStartAddr">
+        /// The starting address from which to begin 
+        /// the execution of the program.
+        /// </param>
+        /// <param name="aCanSwapMemoryRegions">
+        /// A boolean, true if the CPU will be permitted to swap between
+        /// executable memory regions, false otherwise.
+        /// </param>
+        /// <returns>
+        /// The sequence ID of the executable memory region.
+        /// </returns>
+        public int LoadAndInitialize(byte[] aRaw,
+                                     int aStartAddr = 0,
+                                     bool aCanSwapMemoryRegions = true)
         {
             if (aRaw.Length == 0)
             {
-                throw new Exception("Run: no byte code provided.");
+                throw new Exception("Initialize: no byte code provided.");
             }
 
             // In case we have used this virtual machine
@@ -130,7 +126,32 @@ namespace VMCore
             (_, _, int seqid) =
                 Memory.AddExMemory(aRaw);
 
-            CPU.Run(seqid, 0);
+            CPU.Initialize(seqid, aStartAddr);
+
+            return seqid;
+        }
+
+        /// <summary>
+        /// Run a bytecode program to completion.
+        /// </summary>
+        /// <param name="aRaw">
+        /// The raw bytecode data representing the program.
+        /// </param>
+        /// <param name="aStartAddr">
+        /// The starting address from which to begin 
+        /// the execution of the program.
+        /// </param>
+        /// <param name="aCanSwapMemoryRegions">
+        /// A boolean, true if the CPU will be permitted to swap between
+        /// executable memory regions, false otherwise.
+        /// </param>
+        public void Step(byte[] aRaw,
+                         int aStartAddr = 0,
+                         bool aCanSwapMemoryRegions = true)
+        {
+            LoadAndInitialize(aRaw, aStartAddr, aCanSwapMemoryRegions);
+
+            CPU.Step();
 
             /*System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             
@@ -139,6 +160,42 @@ namespace VMCore
             for (int i = 0; i < 1_000_000; i++)
             {
                 CPU.Run(seqid, 0);
+            }
+
+            sw.Stop();
+
+            System.Diagnostics.Debug.WriteLine("Elapsed={0}", sw.Elapsed);*/
+        }
+
+        /// <summary>
+        /// Run a bytecode program to completion.
+        /// </summary>
+        /// <param name="aRaw">
+        /// The raw bytecode data representing the program.
+        /// </param>
+        /// <param name="aStartAddr">
+        /// The starting address from which to begin 
+        /// the execution of the program.
+        /// </param>
+        /// <param name="aCanSwapMemoryRegions">
+        /// A boolean, true if the CPU will be permitted to swap between
+        /// executable memory regions, false otherwise.
+        /// </param>
+        public void Run(byte[] aRaw,
+                        int aStartAddr = 0,
+                        bool aCanSwapMemoryRegions = true)
+        {
+            LoadAndInitialize(aRaw, aStartAddr, aCanSwapMemoryRegions);
+
+            CPU.Run();
+
+            /*System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            
+            sw.Start();
+            
+            for (int i = 0; i < 1_000_000; i++)
+            {
+                CPU.Run();
             }
 
             sw.Stop();

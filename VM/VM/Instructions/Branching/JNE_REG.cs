@@ -25,6 +25,11 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "jne";
 
+        public override bool CanBindToLabel(int aArgumentID)
+        {
+            return (aArgumentID == 1);
+        }
+
         public override bool Execute(InstructionData aData, CPU aCpu)
         {
             if (aCpu.Registers[Registers.AC] !=

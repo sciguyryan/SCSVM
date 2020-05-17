@@ -13,12 +13,11 @@ namespace Runner
                 return;
             }
 
-            var vm = new VirtualMachine
-            {
-                Assembly = BinFile.Load(File.ReadAllBytes(args[0]))
-            };
+            var vm = new VirtualMachine();
 
-            vm.Run();
+            var bin = BinFile.Load(File.ReadAllBytes(args[0]));
+
+            vm.Run(bin[BinSections.Code].Raw);
         }
     }
 }

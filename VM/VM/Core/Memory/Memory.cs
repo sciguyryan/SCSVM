@@ -464,7 +464,7 @@ namespace VMCore.VM.Core.Mem
         /// <param name="aContext">The security context for this request.</param>
         /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
         /// <returns>A single byte from memory.</returns>
-        /// <exception>MemoryAccessViolationException if the specified permission flag is not set for the memory region.</exception>
+        /// <exception cref="MemoryAccessViolationException">Thrown if the specified permission flag is not set for the memory region.</exception>
         public byte GetValue(int aPos,
                              SecurityContext aContext,
                              bool aExec)
@@ -486,7 +486,7 @@ namespace VMCore.VM.Core.Mem
         /// <param name="aContext">The security context for this request.</param>
         /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
         /// <returns>An array of bytes from memory.</returns>
-        /// <exception>MemoryAccessViolationException if the specified permission flag is not set for the memory region.</exception>
+        /// <exception cref="MemoryAccessViolationException">Thrown if the specified permission flag is not set for the memory region.</exception>
         public byte[] GetValueRange(int aPos,
                                     int aLength,
                                     SecurityContext aContext,
@@ -508,7 +508,7 @@ namespace VMCore.VM.Core.Mem
         /// <param name="aValue">The value of the byte to be set.</param>
         /// <param name="aContext">The security context for this request.</param>
         /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
-        /// <exception>MemoryAccessViolationException is the specified permission flag is not set for the memory region.</exception>
+        /// <exception cref="MemoryAccessViolationException">Thrown if the specified permission flag is not set for the memory region.</exception>
         public void SetValue(int aPos,
                              byte aValue,
                              SecurityContext aContext,
@@ -530,7 +530,7 @@ namespace VMCore.VM.Core.Mem
         /// <param name="aBytes">The value of the byte to be set.</param>
         /// <param name="aContext">The security context for this request.</param>
         /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
-        /// <exception>MemoryAccessViolationException is the specified permission flag is not set for the memory region.</exception>
+        /// <exception cref="MemoryAccessViolationException">Thrown if the specified permission flag is not set for the memory region.</exception>
         public void SetValueRange(int aPos,
                                   byte[] aBytes,
                                   SecurityContext aContext,
@@ -572,8 +572,8 @@ namespace VMCore.VM.Core.Mem
         /// <param name="aContext">The security context for this request.</param>
         /// <param name="aType">The data access type to check.</param>
         /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
-        /// <exception>MemoryAccessViolationException if the specified permissions are not valid to perform the operation on the memory region.</exception>
-        /// <exception>MemoryOutOfRangeException if the specified position falls outside of the valid memory bounds.</exception>
+        /// <exception cref="MemoryAccessViolationException">Thrown if the specified permissions are not valid to perform the operation on the memory region.</exception>
+        /// <exception cref="MemoryOutOfRangeException">Thrown if the specified position falls outside of the valid memory bounds.</exception>
         private void ValidateAccess(int aStart,
                                     int aEnd,
                                     DataAccessType aType,

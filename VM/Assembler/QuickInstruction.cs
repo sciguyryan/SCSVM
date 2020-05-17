@@ -33,14 +33,14 @@ namespace VMCore.Assembler
                 OpCode = Op
             };
 
-            for (var i = 0; i < Args.Length; i++)
+            foreach (var arg in Args)
             {
-                var arg = new InstructionArg
+                var insArg = new InstructionArg
                 {
-                    Value = Args[i]
+                    Value = arg
                 };
 
-                opIns.Args.Add(arg);
+                opIns.Args.Add(insArg);
             }
 
             return ReflectionUtils.InstructionCache[Op].ToString(opIns);

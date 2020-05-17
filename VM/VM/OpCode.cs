@@ -3,6 +3,11 @@
     public enum OpCode
     {
         /// <summary>
+        /// Label - a pseudo-opcode used to identify a labels position.
+        /// </summary>
+        LABEL = -1,
+
+        /// <summary>
         /// No Operation - a non-operation instruction. No action to be performed.
         /// </summary>
         NOP,
@@ -176,10 +181,14 @@
 
         JMP_NOT_EQ,
         /// <summary>
-        /// Jump If Not Equal Register - jump to an address equal to the sum of the value of the register
-        /// and the main memory base size (e.g. offset within the program memory space),
-        /// if the value is not equal to the accumulator.
+        /// Jump If Not Equal Register - if the accumulator is not equal
+        /// to the value of the register then jump to an address given by
+        /// the literal.
         /// </summary>
+        /// <remarks>
+        /// This address is treated as being relative to the base address
+        /// of the executable memory region in which the program resides.
+        /// </remarks>
         JNE_REG,
         JEQ_REG,
         JEQ_LIT,

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using VMCore.VM.Core;
 
-namespace VMCore.VM.Core
+namespace VMCore.VM.Instructions
 {
     public abstract class Instruction
     {

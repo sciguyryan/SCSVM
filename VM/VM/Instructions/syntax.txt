@@ -18,3 +18,19 @@ mov R1, [R2+R3]
 move the value from R1 into memory.
 The memory address given by the expression:
 	value of R1 plus the value of R2.
+
+jne R1, $100
+if the accumulator is not equal to the value
+of register R1 then jump to the address $100
+(offset by the base address of the program region
+within memory).
+
+The base size of the memory plus the literal
+equals the absolute memory address, so the literal
+is treated an address relative within the program
+memory region.
+
+jne R1, :GOOD
+if the accumulator is not equal to the value
+of register R1 then jump to the address specified by
+the label "GOOD".

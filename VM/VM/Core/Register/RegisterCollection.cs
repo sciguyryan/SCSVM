@@ -20,7 +20,7 @@ namespace VMCore.VM.Core.Reg
         {
             CPU = aCpu;
 
-            RegisterAccessCache.BuildCache();
+            RegAccessCache.BuildCache();
 
             // Initialization here is done manually as, if I ever
             // decide to re-add the shadow registers this will be important.

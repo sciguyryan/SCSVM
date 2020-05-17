@@ -149,7 +149,7 @@ namespace VMCore.VM.Core.Reg
         {
             return
                 Utils.IsBitSet((int)aFlags,
-                               RegisterAccessCache.FlagIndicies[aFlag]);
+                               RegAccessCache.FlagIndicies[aFlag]);
         }
 
         /// <summary>

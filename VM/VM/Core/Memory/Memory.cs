@@ -9,6 +9,9 @@ namespace VMCore.VM.Core.Mem
 {
     public class Memory
     {
+        /// <summary>
+        /// The total size of the memory in bytes.
+        /// </summary>
         public int Length
         {
             get
@@ -17,13 +20,17 @@ namespace VMCore.VM.Core.Mem
             }
         }
 
+        /// <summary>
+        /// The base size of the main memory block.
+        /// This is the size of the memory that does
+        /// not include any executable regions.
+        /// </summary>
         public int BaseMemorySize { get; private set; }
 
         /// <summary>
         /// The byte array representing the system memory.
         /// </summary>
-        private byte[] Data { get; set; }
-            = new byte[0];
+        private byte[] Data { get; set; } = new byte[0];
 
         /// <summary>
         /// A list of memory regions and their associated permissions.
@@ -36,13 +43,6 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         private int _seqID = 0;
 
-        /// <summary>
-        /// A dictionary mapping the access flags to their respective position
-        /// within the enum. Used for bitshifting.
-        /// </summary>
-        private Dictionary<MemoryAccess, int> _flagIndicies
-            = new Dictionary<MemoryAccess, int>();
-
         public Memory(int aCapacity = 2048)
         {
             BaseMemorySize = aCapacity;
@@ -51,23 +51,21 @@ namespace VMCore.VM.Core.Mem
             // it can fail.
             Data = new byte[aCapacity];
 
-            // By default the read and write permissions are set
-            // for the entire memory block.
+            // Read and write permissions are set
+            // for the entire root memory block.
             AddMemoryRegion(0,
-                            aCapacity-1,
+                            aCapacity - 1,
                             MemoryAccess.R | MemoryAccess.W);
 
-            var flags = (MemoryAccess[])Enum.GetValues(typeof(MemoryAccess));
-            for (var i = 0; i < flags.Length; i++)
-            {
-                _flagIndicies.Add(flags[i], i);
-            }
+            MemAccessCache.BuildCache();
         }
 
         /// <summary>
         /// Load a pre-populated memory block into the system memory.
         /// </summary>
-        /// <param name="aPayload">The byte array used to represent the system memory.</param>
+        /// <param name="aPayload">
+        /// The byte array used to represent the system memory.
+        /// </param>
         public Memory(byte[] aPayload)
         {
             Data = aPayload;
@@ -82,10 +80,18 @@ namespace VMCore.VM.Core.Mem
         }
 
         /// <summary>
-        /// Remove any executable regions of memory that have been allocated.
+        /// Remove any executable regions of memory that have
+        /// been allocated.
         /// </summary>
         public void RemoveExecutableRegions()
         {
+            // We only have the original memory regions
+            // so we can fast path return here.
+            if (_memoryRegions.Count == 2)
+            {
+                return;
+            }
+
             // Resize the memory back to the original.
             // This will get rid of any executable
             // memory blocks that would come at the end.
@@ -108,10 +114,12 @@ namespace VMCore.VM.Core.Mem
         /// Create an executable memory region and load
         /// the provided binary data into it.
         /// </summary>
-        /// <param name="aData">The bytecode data to be loaded into the memory region.</param>
+        /// <param name="aData">
+        /// The bytecode data to be loaded into the memory region.
+        /// </param>
         /// <returns>
-        /// A tuple of the start and end addresses of the executable region
-        /// and the unique sequence ID for the memory region.
+        /// A tuple of the start and end addresses of the executable
+        /// region and the unique sequence ID for the memory region.
         /// </returns>
         public (int start, int end, int seqID) AddExMemory(byte[] aData)
         {
@@ -143,10 +151,18 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Add a memory region to the memory region permission list.
         /// </summary>
-        /// <param name="aStart">The starting position of the memory region.</param>
-        /// <param name="aEnd">The ending position of the memory region. </param>
-        /// <param name="aAccess">The access flags to be applied to the region.</param>
-        /// <returns>The sequence ID that uniquely represents the memory region.</returns>
+        /// <param name="aStart">
+        /// The starting position of the memory region.
+        /// </param>
+        /// <param name="aEnd">
+        /// The ending position of the memory region.
+        /// </param>
+        /// <param name="aAccess">
+        /// The access flags to be applied to the region.
+        /// </param>
+        /// <returns>
+        /// The sequence ID that uniquely represents the memory region.
+        /// </returns>
         public int AddMemoryRegion(int aStart,
                                    int aEnd,
                                    MemoryAccess aAccess)
@@ -165,7 +181,9 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Gets a memory region with a given sequence identifier.
         /// </summary>
-        /// <param name="aSeqID">The sequence identifier to be checked.</param>
+        /// <param name="aSeqID">
+        /// The sequence identifier to be located.
+        /// </param>
         public MemoryRegion GetMemoryRegion(int aSeqID)
         {
             for (var i = 0; i < _memoryRegions.Count; i++)
@@ -180,11 +198,17 @@ namespace VMCore.VM.Core.Mem
         }
 
         /// <summary>
-        /// Remove a region or regions of memory that contain a given position.
+        /// Remove a region or regions of memory that
+        /// intersect with a given position.
         /// The root memory region (seqID == 0) will not be removed.
         /// </summary>
-        /// <param name="aPoint">The position within memory to target.</param>
-        /// <param name="aRemoveAll">A boolean, true if all matching memory regions should be removed, false otherwise.</param>
+        /// <param name="aPoint">
+        /// The position within memory to target.
+        /// </param>
+        /// <param name="aRemoveAll">
+        /// A boolean, true if all matching memory regions
+        /// should be removed, false otherwise.
+        /// </param>
         public void RemoveMemoryRegion(int aPoint,
                                        bool aRemoveAll = false)
         {
@@ -194,8 +218,9 @@ namespace VMCore.VM.Core.Mem
             MemoryRegion region;
             var regionID = _memoryRegions.Count - 1;
 
-            // We never want to remove the root memory region.
-            while (regionID >= 1)
+            // We do not want to remove the stack
+            // or root memory regions.
+            while (regionID >= 2)
             {
                 region = _memoryRegions[regionID];
                 if (aPoint >= region.Start && aPoint <= region.End)
@@ -218,10 +243,14 @@ namespace VMCore.VM.Core.Mem
         /// Remove a memory region with a given sequence identifier.
         /// The root memory region (seqID == 0) cannot be removed.
         /// </summary>
-        /// <param name="aSeqID">The sequence identifier to be checked.</param>
+        /// <param name="aSeqID">
+        /// The sequence identifier to be checked.
+        /// </param>
         public void RemoveMemoryRegion(int aSeqID)
         {
-            if (aSeqID == 0)
+            // We do not want to remove the stack
+            // or root memory regions.
+            if (aSeqID <= 1)
             {
                 return;
             }
@@ -232,12 +261,19 @@ namespace VMCore.VM.Core.Mem
         }
 
         /// <summary>
-        /// Directly get a range of bytes from memory. Do not use in anything other than 
-        /// internal code that does not need to take account of memory permissions!
+        /// Directly get a range of bytes from memory.
+        /// Do not use in anything other than internal
+        /// code that does not need to take account of memory permissions!
         /// </summary>
-        /// <param name="aStart">The start of the memory region range.</param>
-        /// <param name="aEnd">The end of the memory region range.</param>
-        /// <returns>An array of bytes representing the bytes extracted from memory.</returns>
+        /// <param name="aStart">
+        /// The start of the memory region range.
+        /// </param>
+        /// <param name="aEnd">
+        /// The end of the memory region range.
+        /// </param>
+        /// <returns>
+        /// An array of bytes representing the bytes extracted from memory.
+        /// </returns>
         public byte[] DirectGetMemoryRaw(int aStart, int aEnd)
         {
             return Data[aStart..aEnd];
@@ -246,9 +282,16 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Gets the permissions for a specified memory region.
         /// </summary>
-        /// <param name="aStart">The start of the memory region range.</param>
-        /// <param name="aEnd">The end of the memory region range.</param>
-        /// <returns>An array of the regions within which the memory range will fall.</returns>
+        /// <param name="aStart">
+        /// The start of the memory region range.
+        /// </param>
+        /// <param name="aEnd">
+        /// The end of the memory region range.
+        /// </param>
+        /// <returns>
+        /// An array of the regions that intersect with the
+        /// specified address range.
+        /// </returns>
         public MemoryRegion[] GetMemoryPermissions(int aStart, int aEnd)
         {
             var regions = _memoryRegions.ToArray();
@@ -287,17 +330,37 @@ namespace VMCore.VM.Core.Mem
 
             // This cannot happen with any valid address as
             // the root memory region will always match a valid address.
-            throw new MemoryAccessViolationException($"GetMemoryPermissions: attempted to access a memory region that does not exist. Start = {aStart}, End = {aEnd}.");
+            throw new MemoryAccessViolationException
+            (
+                $"GetMemoryPermissions: attempted to access a memory " +
+                $"region that does not exist. " +
+                $"Start = {aStart}, End = {aEnd}."
+            );
         }
 
         #region Integer IO
         /// <summary>
         /// Read an integer from memory.
         /// </summary>
-        /// <param name="aStartPos">The location of the first byte of data to be read.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
-        /// <returns>An integer derived from the value read from memory.</returns>
+        /// <param name="aStartPos">
+        /// The location of the first byte to retrieve.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <returns>A single byte from memory.</returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public int GetInt(int aStartPos,
                           SecurityContext aContext,
                           bool aExec)
@@ -311,10 +374,28 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Writes an integer to memory.
         /// </summary>
-        /// <param name="aStartPos">The location of the first byte of data to be written.</param>
-        /// <param name="aValue">The integer value to be written to memory.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        /// <param name="aStartPos">
+        /// The location of the first byte to retrieve.
+        /// </param>
+        /// <param name="aValue">
+        /// The integer value to be written to memory.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <returns>A single byte from memory.</returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public void SetInt(int aStartPos,
                            int aValue,
                            SecurityContext aContext,
@@ -331,10 +412,25 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Read an opcode from memory.
         /// </summary>
-        /// <param name="aStartPos">The location of the first byte of data to be read.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
-        /// <returns>An opcode derived from the value read from memory.</returns>
+        /// <param name="aStartPos">
+        /// The location of the first byte to retrieve.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <returns>A single byte from memory.</returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public OpCode GetOpCode(int aStartPos,
                                 SecurityContext aContext,
                                 bool aExec)
@@ -345,10 +441,28 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Writes an opcode to memory.
         /// </summary>
-        /// <param name="aStartPos">The location of the first byte of data to be written.</param>
-        /// <param name="aValue">The opcode to be written to memory.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        /// <param name="aStartPos">
+        /// The location of the first byte to retrieve.
+        /// </param>
+        /// <param name="aValue">
+        /// The integer value to be written to memory.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <returns>A single byte from memory.</returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public void SetOpCode(int aStartPos,
                               OpCode aValue,
                               SecurityContext aContext,
@@ -365,10 +479,25 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Read a register identifier from memory.
         /// </summary>
-        /// <param name="aStartPos">The location of the first byte of data to be read.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
-        /// <returns>A register identifier derived from the value read from memory.</returns>
+        /// <param name="aStartPos">
+        /// The location of the first byte to retrieve.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <returns>A single byte from memory.</returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public Registers GetRegisterIdent(int aStartPos,
                                           SecurityContext aContext,
                                           bool aExec)
@@ -379,10 +508,28 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Writes a register identifier to memory.
         /// </summary>
-        /// <param name="aStartPos">The location of the first byte of data to be written.</param>
-        /// <param name="aValue">The register identifier to be written to memory.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        /// <param name="aStartPos">
+        /// The location of the first byte to retrieve.
+        /// </param>
+        /// <param name="aValue">
+        /// The integer value to be written to memory.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <returns>A single byte from memory.</returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public void SetRegisterIdent(int aStartPos,
                                      Registers aValue,
                                      SecurityContext aContext,
@@ -396,14 +543,29 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Read a string from memory.
         /// </summary>
-        /// <param name="aStartPos">The location of the first byte of data to be read.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        /// <param name="aStartPos">
+        /// The location of the first byte to retrieve.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
         /// <returns>
-        /// A tuple giving. The first value indicating how many bytes in total
-        /// were read in order to construct the string.
+        /// A tuple giving. The first value indicating how many bytes
+        /// in total were read in order to construct the string.
         /// The second value being the string that was read from memory.
         /// </returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public (int, string) GetString(int aStartPos,
                                        SecurityContext aContext,
                                        bool aExec)
@@ -433,10 +595,27 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Writes a string to memory.
         /// </summary>
-        /// <param name="aStartPos">The location of the first byte of data to be written.</param>
-        /// <param name="aValue">The string to be written to memory.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        /// <param name="aStartPos">
+        /// The location of the first byte to retrieve.
+        /// </param>
+        /// <param name="aValue">
+        /// The integer value to be written to memory.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public void SetString(int aStartPos,
                               string aValue,
                               SecurityContext aContext,
@@ -460,11 +639,25 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Read a single byte from memory.
         /// </summary>
-        /// <param name="aPos">The location of the byte to retrieve.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        /// <param name="aPos">
+        /// The location of the byte to retrieve.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
         /// <returns>A single byte from memory.</returns>
-        /// <exception cref="MemoryAccessViolationException">Thrown if the specified permission flag is not set for the memory region.</exception>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public byte GetValue(int aPos,
                              SecurityContext aContext,
                              bool aExec)
@@ -481,12 +674,28 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Reads a range of bytes from memory.
         /// </summary>
-        /// <param name="aPos">The location of the first byte to retrieve.</param>
-        /// <param name="aLength">The number of bytes to retrieve.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
+        /// <param name="aPos">
+        /// The location of the first byte to retrieve.
+        /// </param>
+        /// <param name="aLength">
+        /// The number of bytes to retrieve.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
         /// <returns>An array of bytes from memory.</returns>
-        /// <exception cref="MemoryAccessViolationException">Thrown if the specified permission flag is not set for the memory region.</exception>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public byte[] GetValueRange(int aPos,
                                     int aLength,
                                     SecurityContext aContext,
@@ -504,11 +713,28 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Sets a single byte in memory.
         /// </summary>
-        /// <param name="aPos">The location of the byte to set.</param>
-        /// <param name="aValue">The value of the byte to be set.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
-        /// <exception cref="MemoryAccessViolationException">Thrown if the specified permission flag is not set for the memory region.</exception>
+        /// <param name="aPos">
+        /// The location of the byte to set.
+        /// </param>
+        /// <param name="aValue">
+        /// The value of the byte to be set.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <returns>An array of bytes from memory.</returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public void SetValue(int aPos,
                              byte aValue,
                              SecurityContext aContext,
@@ -526,11 +752,28 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Sets a range of bytes in memory.
         /// </summary>
-        /// <param name="aPos">The location of the first byte to be written.</param>
-        /// <param name="aBytes">The value of the byte to be set.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
-        /// <exception cref="MemoryAccessViolationException">Thrown if the specified permission flag is not set for the memory region.</exception>
+        /// <param name="aPos">
+        /// The location of the first byte to be written.
+        /// </param>
+        /// <param name="aBytes">
+        /// The value of the byte to be set.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <returns>An array of bytes from memory.</returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         public void SetValueRange(int aPos,
                                   byte[] aBytes,
                                   SecurityContext aContext,
@@ -552,28 +795,52 @@ namespace VMCore.VM.Core.Mem
         /// <summary>
         /// Check if a given flag is set.
         /// </summary>
-        /// <param name="aFlags">The flag value to be checked against.</param>
-        /// <param name="aFlag">The flag ID to be checked.</param>
-        /// <returns>A boolean, true if the flag is set, false otherwise.</returns>
+        /// <param name="aFlags">
+        /// The flag value to be checked against.
+        /// </param>
+        /// <param name="aFlag">
+        /// The flag ID to be checked.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if the flag is set,
+        /// false otherwise.
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsFlagSet(MemoryAccess aFlags, MemoryAccess aFlag)
         {
             return
                 Utils.IsBitSet((int)aFlags,
-                               _flagIndicies[aFlag]);
+                               MemAccessCache.FlagIndicies[aFlag]);
         }
 
         /// <summary>
         /// Checks if a given range of memory has a flag set.
-        /// Using a system-level security context will always grant access.
         /// </summary>
-        /// <param name="aStart">The starting location of the memory region.</param>
-        /// <param name="aEnd">The ending location of the memory region.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <param name="aType">The data access type to check.</param>
-        /// <param name="aExec">A boolean indicating if this value must be within an executable memory region.</param>
-        /// <exception cref="MemoryAccessViolationException">Thrown if the specified permissions are not valid to perform the operation on the memory region.</exception>
-        /// <exception cref="MemoryOutOfRangeException">Thrown if the specified position falls outside of the valid memory bounds.</exception>
+        /// <param name="aStart">
+        /// The starting location of the memory region.
+        /// </param>
+        /// <param name="aEnd">
+        /// The ending location of the memory region.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aType">
+        /// The data access type to check.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <returns>An array of bytes from memory.</returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if the specified permission flag is not
+        /// set for the memory region.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
         private void ValidateAccess(int aStart,
                                     int aEnd,
                                     DataAccessType aType,
@@ -583,7 +850,11 @@ namespace VMCore.VM.Core.Mem
             if (aStart < 0 || aStart > Data.Length ||
                 aEnd < 0 || aEnd > Data.Length)
             {
-                throw new MemoryOutOfRangeException($"ValidateAccess: the specified memory location is outside of the memory bounds.");
+                throw new MemoryOutOfRangeException
+                (
+                    $"ValidateAccess: the specified memory location is " +
+                    $"outside of the memory bounds."
+                );
             }
 
             // If we have an address range that intersects one or more
@@ -634,12 +905,22 @@ namespace VMCore.VM.Core.Mem
             }
             else
             {
-                throw new NotSupportedException($"ValidateAccess: attempted to check a non-valid data access type.");
+                throw new NotSupportedException
+                (
+                    $"ValidateAccess: attempted to check a " +
+                    $"non-valid data access type."
+                );
             }
 
             if (!hasFlags)
             {
-                throw new MemoryAccessViolationException($"ValidateAccess: attempted to access a memory without the correct security context or access flags. Access Type = {aType}, Executable = {aExec}, flags = {flags}");
+                throw new MemoryAccessViolationException
+                (
+                    $"ValidateAccess: attempted to access a memory" +
+                    $"without the correct security context or access " +
+                    $"flags. Access Type = {aType}, Executable = " +
+                    $"{aExec}, flags = {flags}."
+                );
             }
         }
 

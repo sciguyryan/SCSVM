@@ -242,6 +242,15 @@
         /// of the executable memory region in which the program resides.
         /// </remarks>
         JEQ_LIT,
+        /// <summary>
+        /// Jump If Less Than Register - if the accumulator is less than
+        /// the value of the register then jump to an address given by
+        /// the literal.
+        /// </summary>
+        /// <remarks>
+        /// This address is treated as being relative to the base address
+        /// of the executable memory region in which the program resides.
+        /// </remarks>
         JLT_REG,
         JLT_LIT,
         JGT_REG,

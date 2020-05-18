@@ -223,6 +223,15 @@
         /// of the executable memory region in which the program resides.
         /// </remarks>
         JNE_REG,
+        /// <summary>
+        /// Jump If Equal Register - if the accumulator is equal to the
+        /// value of the register then jump to an address given by
+        /// the literal.
+        /// </summary>
+        /// <remarks>
+        /// This address is treated as being relative to the base address
+        /// of the executable memory region in which the program resides.
+        /// </remarks>
         JEQ_REG,
         JEQ_LIT,
         JLT_REG,

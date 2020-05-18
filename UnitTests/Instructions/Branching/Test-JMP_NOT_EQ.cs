@@ -27,6 +27,7 @@ namespace UnitTests.Instructions
             var r2 = Registers.R2;
             const int expected = 0x123;
 
+            // This is calculated as follows.
             // sizeof(OpCode) * 4 for the number of
             // instructions to skip.
             // sizeof(int) * 4 for the number of integer

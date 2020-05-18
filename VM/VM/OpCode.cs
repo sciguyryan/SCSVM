@@ -233,6 +233,14 @@
         /// of the executable memory region in which the program resides.
         /// </remarks>
         JEQ_REG,
+        /// <summary>
+        /// Jump If Equal To Literal - if the accumulator is equal to the
+        /// literal A then jump to an address given by the literal B.
+        /// </summary>
+        /// <remarks>
+        /// This address is treated as being relative to the base address
+        /// of the executable memory region in which the program resides.
+        /// </remarks>
         JEQ_LIT,
         JLT_REG,
         JLT_LIT,

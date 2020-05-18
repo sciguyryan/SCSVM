@@ -9,6 +9,8 @@ namespace VMCore.VM.Core.Mem
 {
     public class Memory
     {
+        #region Public Properties
+
         /// <summary>
         /// The total size of the memory in bytes.
         /// </summary>
@@ -27,6 +29,10 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         public int BaseMemorySize { get; private set; }
 
+        #endregion region // Public Properties
+
+        #region Private Properties
+
         /// <summary>
         /// The byte array representing the system memory.
         /// </summary>
@@ -43,6 +49,8 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         private int _seqID = 0;
 
+        #endregion // Private Properties
+
         public Memory(int aCapacity = 2048)
         {
             BaseMemorySize = aCapacity;
@@ -56,8 +64,6 @@ namespace VMCore.VM.Core.Mem
             AddMemoryRegion(0,
                             aCapacity - 1,
                             MemoryAccess.R | MemoryAccess.W);
-
-            MemAccessCache.BuildCache();
         }
 
         /// <summary>
@@ -85,23 +91,24 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         public void RemoveExecutableRegions()
         {
-            // We only have the original memory regions
-            // so we can fast path return here.
+            // Resize the memory back to the original.
+            // This will get rid of any executable
+            // memory space that would usually
+            // come after the main memory regions.
+            Data = new byte[BaseMemorySize];
+
+            // If we only have the original memory regions
+            // then we can fast path return here.
             if (_memoryRegions.Count == 2)
             {
                 return;
             }
 
-            // Resize the memory back to the original.
-            // This will get rid of any executable
-            // memory blocks that would come at the end.
-            Data = new byte[BaseMemorySize];
-
             // Remove any executable memory regions.
             var tmp = _memoryRegions.ToArray();
             foreach (var item in tmp)
             {
-                if (IsFlagSet(item.Access, MemoryAccess.EX))
+                if (item.Access.HasFlag(MemoryAccess.EX))
                 {
                     _memoryRegions.Remove(item);
                 }
@@ -793,27 +800,6 @@ namespace VMCore.VM.Core.Mem
         }
 
         /// <summary>
-        /// Check if a given flag is set.
-        /// </summary>
-        /// <param name="aFlags">
-        /// The flag value to be checked against.
-        /// </param>
-        /// <param name="aFlag">
-        /// The flag ID to be checked.
-        /// </param>
-        /// <returns>
-        /// A boolean, true if the flag is set,
-        /// false otherwise.
-        /// </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsFlagSet(MemoryAccess aFlags, MemoryAccess aFlag)
-        {
-            return
-                Utils.IsBitSet((int)aFlags,
-                               MemAccessCache.FlagIndicies[aFlag]);
-        }
-
-        /// <summary>
         /// Checks if a given range of memory has a flag set.
         /// </summary>
         /// <param name="aStart">
@@ -872,7 +858,7 @@ namespace VMCore.VM.Core.Mem
                 // If we have requested an executable memory
                 // region and this region is not executable
                 // then we cannot have a match.
-                if (aExec && !IsFlagSet(r.Access, MemoryAccess.EX))
+                if (aExec && !r.Access.HasFlag(MemoryAccess.EX))
                 {
                     // In this instance we will now allow the
                     // operation to continue.
@@ -892,15 +878,15 @@ namespace VMCore.VM.Core.Mem
             if (aType == DataAccessType.Read)
             {
                 hasFlags &=
-                    IsFlagSet(flags, MemoryAccess.R) ||
-                    (IsFlagSet(flags, MemoryAccess.PR) &&
+                    flags.HasFlag(MemoryAccess.R) ||
+                    (flags.HasFlag(MemoryAccess.PR) &&
                      aContext == SecurityContext.System);
             }
             else if (aType == DataAccessType.Write)
             {
                 hasFlags &=
-                    IsFlagSet(flags, MemoryAccess.W) ||
-                    (IsFlagSet(flags, MemoryAccess.PW) &&
+                    flags.HasFlag(MemoryAccess.W) ||
+                    (flags.HasFlag(MemoryAccess.PW) &&
                      aContext == SecurityContext.System);
             }
             else

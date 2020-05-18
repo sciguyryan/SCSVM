@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
-using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
-using VMCore.VM.Core.Mem;
 using VMCore.VM.Core.Reg;
 using VMCore.VM.Instructions;
 
-namespace VMCore.VM
+namespace VMCore.VM.Core
 {
     public class CPU
     {
+        #region Public Properties
+
         /// <summary>
         /// The memory region sequence ID that this CPU
         /// instance was assigned to begin executing.
@@ -34,6 +33,10 @@ namespace VMCore.VM
         /// </summary>
         public VirtualMachine VM { get; private set; }
 
+        #endregion // Public Properties
+
+        #region Private Properties
+
         /// <summary>
         /// A cached of the opcodes to their instruction instances.
         /// </summary>
@@ -52,11 +55,6 @@ namespace VMCore.VM
 #endif
 
         /// <summary>
-        /// An internal binary reader, for populating the bytecode data above.
-        /// </summary>
-        //private BinaryReader _br;
-
-        /// <summary>
         /// An internal indicator of if an IP breakpoint has been triggered.
         /// </summary>
         private bool _hasIPBreakpoint = false;
@@ -65,13 +63,6 @@ namespace VMCore.VM
         /// An internal indicator of if a PC breakpoint has been triggered.
         /// </summary>
         private bool _hasPCBreakpoint = false;
-
-        /// <summary>
-        /// A dictionary mapping the CPU flags to their respective position
-        /// within the enum. Used for bitshifting.
-        /// </summary>
-        private Dictionary<CPUFlags, int> _flagIndicies
-            = new Dictionary<CPUFlags, int>();
 
         /// <summary>
         /// A shorthand for the user security context.
@@ -114,22 +105,23 @@ namespace VMCore.VM
         /// </summary>
         private bool _canSwapMemoryRegions;
 
+        #endregion // Private Properties
+
         /// <summary>
         /// Create a new CPU instance.
         /// </summary>
-        /// <param name="aVm">The virtual machine instance to which this CPU belongs.</param>
-        /// <param name="aCanSwapMemoryRegions">A boolean, true if the CPU will be permitted to swap between executable memory regions, false otherwise.</param>
+        /// <param name="aVm">
+        /// The virtual machine instance to which this CPU belongs.
+        /// </param>
+        /// <param name="aCanSwapMemoryRegions">
+        /// A boolean, true if the CPU will be permitted to swap
+        /// between executable memory regions, false otherwise.
+        /// </param>
         public CPU(VirtualMachine aVm,
                    bool aCanSwapMemoryRegions = false)
         {
             VM = aVm;
             Registers = new RegisterCollection(this);
-
-            var flags = (CPUFlags[])Enum.GetValues(typeof(CPUFlags));
-            for (var i = 0; i < flags.Length; i++)
-            {
-                _flagIndicies.Add(flags[i], i);
-            }
 
             _canSwapMemoryRegions = aCanSwapMemoryRegions;
         }
@@ -175,8 +167,7 @@ namespace VMCore.VM
 
         /// <summary>
         /// Execute a reset on the CPU. 
-        /// Reset various registers and clear the halted state of
-        /// the CPU.
+        /// Reset various registers and clear the halted state of the CPU.
         /// </summary>
         public void Reset()
         {
@@ -187,7 +178,7 @@ namespace VMCore.VM
             Registers[_pcSystemTuple] = 0;
 
             // Reset the flags register.
-            Registers[(VMCore.Registers.FL, _sysCtx)] = 0;
+            Registers[VMCore.Registers.FL] = 0;
 
             // TODO - reset stack pointer here.
 
@@ -198,77 +189,83 @@ namespace VMCore.VM
         /// Sets the state of the flag to the specified state.
         /// </summary>
         /// <param name="aFlag">The flag to be set or cleared.</param>
-        /// <param name="aState">The state to which the flag should be set.</param>
+        /// <param name="aState">
+        /// The state to which the flag should be set.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetFlagState(CPUFlags aFlag, bool aState)
         {
-            Registers[VMCore.Registers.FL] = 
-                Utils.SetBitState(Registers[VMCore.Registers.FL],
-                                  _flagIndicies[aFlag],
-                                  aState ? 1 : 0);
+            var flags = 
+                ((CPUFlags)Registers[VMCore.Registers.FL])
+                & ~aFlag;
+
+            if (aState)
+            {
+                flags |= aFlag;
+            }
+
+            Registers[VMCore.Registers.FL] = (int)flags;
         }
 
         /// <summary>
-        /// Clear or sets the result flag pair based on the result of an operation.
+        /// Clear or sets the result flag pair based on the 
+        /// result of an operation.
         /// </summary>
-        /// <param name="aResult">The result of the last operation performed.</param>
+        /// <param name="aResult">
+        /// The result of the last operation performed.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetResultFlagPair(int aResult)
         {
-            // I have intentionally chosen not to use the flags
-            // feature of enums as it is slower than bit shifting.
-            // See:
-            // https://stackoverflow.com/questions/7368652/what-is-it-that-makes-enum-hasflag-so-slow
-            // If this ever improved then this can be rewritten
-            // to make use of it.
-
-            var maskSign = 1 << _flagIndicies[CPUFlags.S];
-            var maskZero = 1 << _flagIndicies[CPUFlags.Z];
-
-            // Clear the signed and zero flags
-            // as these will always need to be
-            // cleared.
-            var flags = Registers[VMCore.Registers.FL] 
-                & ~maskSign & ~maskZero;
+            var flags = (CPUFlags)Registers[VMCore.Registers.FL];
+            flags &= ~CPUFlags.S & ~CPUFlags.Z;
 
             if (aResult < 0)
             {
-                flags |= (1 << _flagIndicies[CPUFlags.S]) & maskSign;
+                flags |= CPUFlags.S;
             }
             else if (aResult == 0)
             {
-                flags |= (1 << _flagIndicies[CPUFlags.Z]) & maskZero;
+                flags |= CPUFlags.Z;
             }
 
-            Registers[VMCore.Registers.FL] = flags;
+            Registers[VMCore.Registers.FL] = (int)flags;
         }
 
         /// <summary>
         /// Check if a given flag is set within the CPUs flag register.
         /// </summary>
-        /// <param name="aFlag">The flag ID to be checked.</param>
-        /// <returns>A boolean, true if the flag is set, false otherwise.</returns>
+        /// <param name="aFlag">
+        /// The flag ID to be checked.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if the flag is set, false otherwise.
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsFlagSet(CPUFlags aFlag)
         {
-            return 
-                Utils.IsBitSet(Registers[VMCore.Registers.FL],
-                               _flagIndicies[aFlag]);
+            return
+                ((CPUFlags)Registers[VMCore.Registers.FL])
+                .HasFlag(aFlag);
         }
 
         /// <summary>
         /// Enable or disable logging within the CPU.
         /// </summary>
-        /// <param name="aEnabled">The logging state of the CPU.</param>
+        /// <param name="aEnabled"
+        /// >The logging state of the CPU.
+        /// </param>
         public void SetLoggingEnabled(bool aEnabled)
         {
             _isLoggingEnabled = aEnabled;
         }
 
         /// <summary>
-        /// Set the address from which the execution of the binary should commence.
+        /// Set the address from which the execution of
+        /// the binary should commence.
         /// </summary>
-        /// <param name="aStartAddr">The address from which the execution should commence.</param>
+        /// <param name="aStartAddr"
+        /// >The address from which the execution should commence.
+        /// </param>
         public void SetStartAddress(int aStartAddr)
         {
             // Offset the starting address by the base
@@ -276,10 +273,13 @@ namespace VMCore.VM
             // containing the system memory and stack.
             int offsetAddress = aStartAddr + VM.Memory.BaseMemorySize;
 
-            //if (aStartAddress < 0 || aStartAddress >= _data.Length)
             if (offsetAddress < 0 || offsetAddress >= VM.Memory.Length)
             {
-                throw new IndexOutOfRangeException("SetStartAddress: starting position is outside of the data bounds.");
+                throw new IndexOutOfRangeException
+                (
+                    "SetStartAddress: starting position is outside of " +
+                    "the data bounds."
+                );
             }
 
             // Set the instruction pointer register to the
@@ -315,12 +315,7 @@ namespace VMCore.VM
         /// </returns>
         public InstructionData Step()
         {
-            if (!IsHalted)
-            {
-                return FetchExecuteNextInstruction();
-            }
-
-            return null;
+            return (!IsHalted) ? FetchExecuteNextInstruction() : null;
         }
 
         /// <summary>
@@ -346,11 +341,19 @@ namespace VMCore.VM
                 throw ex switch
                 {
                     MemoryAccessViolationException _
-                        => new MemoryAccessViolationException($"FetchExecuteNextInstruction: instruction at position {opCodeStartPos} attempted to access memory with insufficient permissions. {ex.Message}"),
+                        => new MemoryAccessViolationException
+                        (
+                            $"FetchExecuteNextInstruction: instruction " +
+                            $"at position {opCodeStartPos} attempted " +
+                            $"to access memory with insufficient " +
+                            $"permissions. {ex.Message}"),
 
                     // I do not know how this can happen, but just to be safe.
                     _
-                        => new Exception($"FetchExecuteNextInstruction: {ex.Message}"),
+                        => new Exception
+                        (
+                            $"FetchExecuteNextInstruction: {ex.Message}"
+                        ),
                 };
             }
 
@@ -358,7 +361,12 @@ namespace VMCore.VM
                                                out Instruction ins))
             {
                 SetHaultedState(true);
-                throw new InvalidDataException($"FetchExecuteNextInstruction: Invalid opcode ID '{opCode}' detected at position {opCodeStartPos}.");
+                throw new InvalidDataException
+                (
+                    $"FetchExecuteNextInstruction: Invalid opcode " +
+                    $"ID '{opCode}' detected at position " +
+                    $"{opCodeStartPos}."
+                );
             }
 
             // Advance the instruction pointer by the number of bytes
@@ -392,16 +400,30 @@ namespace VMCore.VM
 
                 throw ex switch
                 {
-                    // There was not enough data to provide the required number of arguments.
-                    EndOfStreamException _  
-                        => new EndOfStreamException($"FetchExecuteNextInstruction: Expected number of arguments for opcode '{asmIns.OpCode}' is {argTypes.Length}, got {asmIns.Args.Count}."),
+                    EndOfStreamException _ 
+                        => new EndOfStreamException
+                        (
+                            $"FetchExecuteNextInstruction: expected " +
+                            $"number of arguments for opcode " +
+                            $"'{asmIns.OpCode}' is " +
+                            $"{argTypes.Length}, got {asmIns.Args.Count}."
+                        ),
 
                     MemoryAccessViolationException _
-                        => new MemoryAccessViolationException($"FetchExecuteNextInstruction: instruction at position {opCodeStartPos} attempted to access memory with insufficient permissions. {ex.Message}"),
+                        => new MemoryAccessViolationException
+                        (
+                            $"FetchExecuteNextInstruction: instruction " +
+                            $"at position {opCodeStartPos} attempted " +
+                            $"to access memory with insufficient " +
+                            $"permissions. {ex.Message}"
+                        ),
 
                     // I do not know how this can happen, but just to be safe.
                     _                       
-                        => new Exception($"FetchExecuteNextInstruction: {ex.Message}"),
+                        => new Exception
+                        (
+                            $"FetchExecuteNextInstruction: {ex.Message}"
+                        ),
                 };
             }
 
@@ -424,11 +446,18 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Executes an opcode instruction against a given instruction instance.
+        /// Executes an opcode instruction against a given 
+        /// instruction instance.
         /// </summary>
-        /// <param name="aIns">The instruction instance against which the opcode instruction should be executed.</param>
+        /// <param name="aIns">
+        /// The instruction instance against which the opcode 
+        /// instruction should be executed.
+        /// </param>
         /// <param name="aInsData">The opcode instruction.</param>
-        /// <returns>A boolean indicating if the CPU should halt execution after completing this instruction.</returns>
+        /// <returns>
+        /// A boolean indicating if the CPU should halt execution
+        /// after completing this instruction.
+        /// </returns>
         public bool ExecuteInstruction(Instruction aIns,
                                        InstructionData aInsData)
         {
@@ -436,7 +465,8 @@ namespace VMCore.VM
             {
                 var ret = aIns.Execute(aInsData, this);
 
-                // With each successful instruction execution, increment the program counter.
+                // With each successful instruction execution,
+                // increment the program counter.
                 ++Registers[_pcSystemTuple];
 
                 return ret;
@@ -450,22 +480,58 @@ namespace VMCore.VM
                 throw ex switch
                 {
                     MemoryAccessViolationException _
-                        => new MemoryAccessViolationException($"ExecuteInstruction: instruction at position {opCodeStartPos} attempted to access memory with insufficient permissions. {ex.Message}"),
+                        => new MemoryAccessViolationException
+                        (
+                            $"ExecuteInstruction: instruction at " +
+                            $"position {opCodeStartPos} attempted " +
+                            $"to access memory with insufficient " +
+                            $"permissions. {ex.Message}"
+                        ),
 
                     MemoryOutOfRangeException _
-                        => new MemoryOutOfRangeException($"ExecuteInstruction: instruction at position {opCodeStartPos} failed to access the specified memory location as it falls outside of the bounds of the memory region."),
+                        => new MemoryOutOfRangeException
+                        (
+                            $"ExecuteInstruction: instruction at " +
+                            $"position {opCodeStartPos} failed to " +
+                            $"access the specified memory location " +
+                            $"as it falls outside of the bounds of " +
+                            $"the memory region."
+                        ),
                     
                     RegisterAccessViolationException _ 
-                        => new RegisterAccessViolationException($"ExecuteInstruction: instruction at position {opCodeStartPos} encountered a permission error when trying to operate on a register. {ex.Message}"),
+                        => new RegisterAccessViolationException
+                        (
+                            $"ExecuteInstruction: instruction at " +
+                            $"position {opCodeStartPos} encountered " +
+                            $"a permission error when trying to " +
+                            $"operate on a register. {ex.Message}"
+                        ),
                     
                     KeyNotFoundException _
-                        => new InvalidRegisterException($"ExecuteInstruction: instruction at position {opCodeStartPos} failed to access the register specified: the specified register does not exist."),
+                        => new InvalidRegisterException
+                        (
+                            $"ExecuteInstruction: instruction at " +
+                            $"position {opCodeStartPos} failed " +
+                            $"to access the register specified: " +
+                            $"the specified register does not exist."
+                        ),
                     
                     DivideByZeroException _
-                        => new DivideByZeroException($"ExecuteInstruction: instruction at position {opCodeStartPos} triggered a division by zero exception."),
+                        => new DivideByZeroException
+                        (
+                            $"ExecuteInstruction: instruction " +
+                            $"at position {opCodeStartPos} " +
+                            $"triggered a division by zero " +
+                            $"exception."
+                        ),
                     
                     _
-                        => new Exception($"ExecuteInstruction: failed to execute the CPU instruction at position {opCodeStartPos}. {ex.Message} {aInsData}"),
+                        => new Exception
+                        (
+                            $"ExecuteInstruction: failed to execute " +
+                            $"the CPU instruction at position " +
+                            $"{opCodeStartPos}. {ex.Message}"
+                        ),
                 };
             }
         }
@@ -475,10 +541,18 @@ namespace VMCore.VM
         /// This will skip any exceptions that would otherwise be thrown
         /// when executing this code.
         /// </summary>
-        /// <param name="aMemSeqID">The sequence ID for the memory region containing the code.</param>
-        /// <param name="aShowLocation">If the binary locations of the commands should be shown.</param>
-        /// <param name="aStartAddr">The address from which the execution should commence.</param>
-        /// <returns>A string array containing one instruction per entry.</returns>
+        /// <param name="aMemSeqID">
+        /// The sequence ID for the memory region containing the code.
+        /// </param>
+        /// <param name="aShowLocation">
+        /// If the binary locations of the commands should be shown.
+        /// </param>
+        /// <param name="aStartAddr">
+        /// The address from which the execution should commence.
+        /// </param>
+        /// <returns>
+        /// A string array containing one instruction per entry.
+        /// </returns>
         public string[] Disassemble(int aMemSeqID,
                                     bool aShowLocation = false,
                                     int aStartAddr = 0)
@@ -517,9 +591,16 @@ namespace VMCore.VM
         /// <summary>
         /// Read an opcode instruction argument from memory.
         /// </summary>
-        /// <param name="pos">The position in memory from which to begin reading the argument.</param>
-        /// <param name="t">The type of the argument to be read.</param>
-        /// <returns>An object containing the opcode instruction data.</returns>
+        /// <param name="pos">
+        /// The position in memory from which to begin 
+        /// reading the argument.
+        /// </param>
+        /// <param name="t"
+        /// >The type of the argument to be read.
+        /// </param>
+        /// <returns>
+        /// An object containing the opcode instruction data.
+        /// </returns>
         private object GetNextInstructionArgument(ref int pos, Type t)
         {
             object arg;
@@ -553,7 +634,12 @@ namespace VMCore.VM
                     break;
 
                 default:
-                    throw new NotSupportedException($"GetNextInstructionArgument: the type {t} was passed as an argument type, but no support has been provided for that type.");
+                    throw new NotSupportedException
+                    (
+                        $"GetNextInstructionArgument: the type {t} was " +
+                        $"passed as an argument type, but no support " +
+                        $"has been provided for that type."
+                    );
                     break;
             }
 
@@ -624,8 +710,13 @@ namespace VMCore.VM
         /// Essentially a clone of FetchExecuteNextInstruction
         /// but without the exception throwing code.
         /// </summary>
-        // <param name="pos">The position in memory from which to begin reading the instruction.</param>
-        /// <returns>A string giving the disassembly of the next instruction.</returns>
+        /// <param name="pos">
+        /// The position in memory from which to begin 
+        /// reading the instruction.
+        /// </param>
+        /// <returns>
+        /// A string giving the disassembly of the next instruction.
+        /// </returns>
         private string DisassembleNextInstruction(ref int pos)
         {
             OpCode opCode = OpCode.NOP;
@@ -704,7 +795,9 @@ namespace VMCore.VM
         /// <summary>
         /// Enable or disable the halted state of the CPU.
         /// </summary>
-        /// <param name="aState">The halt state to apply to the CPU.</param>
+        /// <param name="aState">
+        /// The halt state to apply to the CPU.
+        /// </param>
         private void SetHaultedState(bool aState)
         {
             IsHalted = aState;

@@ -1,5 +1,5 @@
 ﻿using System;
-using VMCore.VM;
+using VMCore.VM.Core;
 
 namespace VMCore.Expressions
 {

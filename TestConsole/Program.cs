@@ -5,6 +5,7 @@ using VMCore;
 using VMCore.VM;
 using VMCore.Assembler;
 using System.Linq;
+using VMCore.VM.Core;
 
 namespace TestConsole
 {
@@ -88,18 +89,28 @@ namespace TestConsole
             var programBytes = Utils.QuickRawCompile(program, true);
             //File.WriteAllBytes(@"D:\Downloads\test.bin", programBytes);
 
-            /*Stopwatch sw = new Stopwatch();
+            /*Stopwatch sw1 = new Stopwatch();
+            Stopwatch sw2 = new Stopwatch();
 
-            sw.Start();
+            sw1.Start();
 
             for (int i = 0; i < 1_000_000; i++)
             {
-                vm.Run(programBytes);
             }
 
-            sw.Stop();
+            sw1.Stop();
 
-            Console.WriteLine("Elapsed={0}", sw.Elapsed);*/
+            sw2.Start();
+
+            for (int i = 0; i < 1_000_000; i++)
+            {
+            }
+
+            sw2.Stop();
+
+            Console.WriteLine("Elapsed 1 = {0}", sw1.Elapsed);
+            Console.WriteLine("Elapsed 2 = {0}", sw2.Elapsed);
+            return;*/
 
             vm.Run(programBytes);
 

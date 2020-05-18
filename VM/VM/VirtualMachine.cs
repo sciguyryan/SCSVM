@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using VMCore.VM;
 using VMCore.Assembler;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Mem;
 
 namespace VMCore
@@ -73,7 +74,7 @@ namespace VMCore
 
             // Set the default stack pointer position to be at the very
             // end of our allocated memory block.
-            CPU.Registers[(VMCore.Registers.SP, SecurityContext.System)] =
+            CPU.Registers[(Registers.SP, SecurityContext.System)] =
                 finalMemorySize;
 
             // Build our instruction cache and apply and

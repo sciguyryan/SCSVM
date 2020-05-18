@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using VMCore.VM.Core.Exceptions;
 
 namespace VMCore.VM.Core.Reg
@@ -25,14 +23,14 @@ namespace VMCore.VM.Core.Reg
         // TODO - would a security violation hook be useful?
 
         /// <summary>
-        /// The hook that should be fired when the value of this register is
-        /// changed.
+        /// The hook that should be fired when the value of this register
+        /// is changed.
         /// </summary>
         public Action<int> OnChange;
 
         /// <summary>
-        /// The hook that should be fired when the value of this register is
-        /// read.
+        /// The hook that should be fired when the value of this register
+        /// is read.
         /// </summary>
         public Action<int> OnRead;
 
@@ -57,7 +55,9 @@ namespace VMCore.VM.Core.Reg
         private Registers _registerID;
 
         /// <summary>
-        /// The internal enum instance for the flag type of this register, can be null.
+        /// The internal enum instance for the flag type of
+        /// this register. Will be null if the register
+        /// is not a flag-type register.
         /// </summary>
         private Type _flagType;
 
@@ -71,9 +71,12 @@ namespace VMCore.VM.Core.Reg
         }
 
         /// <summary>
-        /// Set the internal ID of this register. Mainly used for debugging.
+        /// Set the internal ID of this register.
+        /// Mainly used for debugging.
         /// </summary>
-        /// <param name="aId">The ID to be applied to this register.</param>
+        /// <param name="aId">
+        /// The ID to be applied to this register.
+        /// </param>
         public void SetID(Registers aId)
         {
             _registerID = aId;
@@ -82,8 +85,12 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// Gets the value from register.
         /// </summary>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <exception>RegisterAccessViolationException is the specified permission flag is not set for the register.</exception>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <exception cref="RegisterAccessViolationException">
+        /// Thrown if the permission flag is not set for the register.
+        /// </exception>
         public int GetValue(SecurityContext aContext)
         {
             ValidateAccess(DataAccessType.Read, aContext);
@@ -96,9 +103,15 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// Sets the value of the register.
         /// </summary>
-        /// <param name="aValue">The value to which the register should be set.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <exception>RegisterAccessViolationException is the specified permission flag is not set for the register.</exception>
+        /// <param name="aValue">
+        /// The value to which the register should be set.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <exception cref="RegisterAccessViolationException">
+        /// Thrown if the permission flag is not set for the register.
+        /// </exception>
         public void SetValue(int aValue, SecurityContext aContext)
         {
             ValidateAccess(DataAccessType.Write, aContext);
@@ -110,7 +123,10 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// If this register is a flag-type register.
         /// </summary>
-        /// <returns>A boolean, true indicating that this register is a flag-type register, false otherwise.</returns>
+        /// <returns>
+        /// A boolean, true indicating that this register is a 
+        /// flag-type register, false otherwise.
+        /// </returns>
         public bool IsFlagRegister()
         {
             return _flagType != null;
@@ -139,26 +155,16 @@ namespace VMCore.VM.Core.Reg
         }
 
         /// <summary>
-        /// Check if a given flag is set.
-        /// </summary>
-        /// <param name="aFlags">The flag value to be checked against.</param>
-        /// <param name="aFlag">The flag ID to be checked.</param>
-        /// <returns>A boolean, true if the flag is set, false otherwise.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsFlagSet(RegisterAccess aFlags, RegisterAccess aFlag)
-        {
-            return
-                Utils.IsBitSet((int)aFlags,
-                               RegAccessCache.FlagIndicies[aFlag]);
-        }
-
-        /// <summary>
         /// Checks if the register can be accessed in a specified way.
         /// Using a system-level security context will always grant access.
         /// </summary>
         /// <param name="aType">The data access type to check.</param>
-        /// <param name="aContext">The security context for this request.</param>
-        /// <exception>RegisterAccessViolationException if the specified permission flag is not set for the register.</exception>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <exception cref="RegisterAccessViolationException">
+        /// Thrown if the permission flag is not set for the register.
+        /// </exception>
         private void ValidateAccess(DataAccessType aType,
                                     SecurityContext aContext)
         {
@@ -166,25 +172,34 @@ namespace VMCore.VM.Core.Reg
             if (aType == DataAccessType.Read)
             {
                 hasFlags =
-                    IsFlagSet(AccessFlags, RegisterAccess.R) ||
-                    (IsFlagSet(AccessFlags, RegisterAccess.PR) &&
+                    AccessFlags.HasFlag(RegisterAccess.R) ||
+                    (AccessFlags.HasFlag(RegisterAccess.PR) &&
                      aContext == SecurityContext.System);
             }
             else if (aType == DataAccessType.Write)
             {
                 hasFlags =
-                    IsFlagSet(AccessFlags, RegisterAccess.W) ||
-                    (IsFlagSet(AccessFlags, RegisterAccess.PW) &&
+                    AccessFlags.HasFlag(RegisterAccess.W) ||
+                    (AccessFlags.HasFlag(RegisterAccess.PW) &&
                      aContext == SecurityContext.System);
             }
             else
             {
-                throw new NotSupportedException($"ValidateAccess: attempted to check a non-valid data access type.");
+                throw new NotSupportedException
+                (
+                    $"ValidateAccess: attempted to check a non-valid " +
+                    $"data access type."
+                );
             }
 
             if (!hasFlags)
             {
-                throw new RegisterAccessViolationException($"ValidateAccess: attempted to access a register without the correct security context or access flags. Access Type = {aType}, AccessFlags = {AccessFlags}");
+                throw new RegisterAccessViolationException
+                (
+                    $"ValidateAccess: attempted to access a register without " +
+                    $"the correct security context or access flags. " +
+                    $"Access Type = {aType}, AccessFlags = {AccessFlags}"
+                );
             }
         }
     }

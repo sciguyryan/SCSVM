@@ -205,8 +205,8 @@
 
         /// <summary>
         /// Jump If Not Equal To Literal - if the accumulator is not equal
-        /// to the literal A then jump to an address given
-        /// by the literal B.
+        /// to the literal A then jump to an address specified by the 
+        /// literal B.
         /// </summary>
         /// <remarks>
         /// This address is treated as being relative to the base address
@@ -244,7 +244,7 @@
         JEQ_LIT,
         /// <summary>
         /// Jump If Less Than Register - if the value of the register
-        /// is less than the accumulator then jump to an address given
+        /// is less than the accumulator then jump to an address specified
         /// by the literal.
         /// </summary>
         /// <remarks>
@@ -254,7 +254,8 @@
         JLT_REG,
         /// <summary>
         /// Jump If Less Than Literal - if literal A is less than the
-        /// accumulator then jump to an address given by the literal B.
+        /// the accumulator then jump to an address specified by
+        /// the literal B.
         /// </summary>
         /// <remarks>
         /// This address is treated as being relative to the base address
@@ -271,6 +272,15 @@
         /// of the executable memory region in which the program resides.
         /// </remarks>
         JGT_REG,
+        /// <summary>
+        /// Jump If Greater Than Literal - if literal A is greater than
+        /// the accumulator then jump to an address specified by
+        /// the literal B.
+        /// </summary>
+        /// <remarks>
+        /// This address is treated as being relative to the base address
+        /// of the executable memory region in which the program resides.
+        /// </remarks>
         JGT_LIT,
         JLE_REG,
         JLE_LIT,

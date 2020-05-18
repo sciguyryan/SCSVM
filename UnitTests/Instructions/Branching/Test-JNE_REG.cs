@@ -146,7 +146,7 @@ namespace UnitTests.Instructions
         }
 
         /// <summary>
-        /// Test JNE with invalid label. As the label
+        /// Test jump with invalid label. As the label
         /// name is missing then an exception should 
         /// be thrown at compile time.
         /// </summary>
@@ -195,7 +195,7 @@ namespace UnitTests.Instructions
         }
 
         /// <summary>
-        /// Test JNE with invalid destination. This will crash
+        /// Test jump with invalid destination. This will crash
         /// as soon as an attempt is made to fetch and execute
         /// the next instruction as the instruction will be read
         /// from non-executable memory.

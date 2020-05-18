@@ -207,14 +207,11 @@ namespace VMCore
 #if DEBUG
         private void LoadRegisterTestData()
         {
-            /*CPU.Registers[(VMCore.Registers.R1, SecurityContext.System)] 
-                = _dbgMainMemoryCapacity;
+            /*CPU.Registers[Registers.R1] = _dbgMainMemoryCapacity;
 
-            CPU.Registers[(VMCore.Registers.R2, SecurityContext.System)] 
-                = _dbgMainMemoryCapacity - 1;
+            CPU.Registers[Registers.R2] = _dbgMainMemoryCapacity - 1;
 
-            CPU.Registers[(VMCore.Registers.R3, SecurityContext.System)] 
-                = sizeof(int);*/
+            CPU.Registers[Registers.R3] = sizeof(int);*/
         }
 #endif
 

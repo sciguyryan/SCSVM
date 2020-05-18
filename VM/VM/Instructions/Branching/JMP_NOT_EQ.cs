@@ -3,13 +3,13 @@ using VMCore.VM.Core;
 
 namespace VMCore.VM.Instructions
 {
-    internal class JNE_REG
+    internal class JMP_NOT_EQ
         : Instruction
     {
         public override Type[] ArgumentTypes =>
             new Type[]
             {
-                typeof(Registers),
+                typeof(int),
                 typeof(int)
             };
 
@@ -21,7 +21,7 @@ namespace VMCore.VM.Instructions
             };
 
         public override OpCode OpCode =>
-            OpCode.JNE_REG;
+            OpCode.JMP_NOT_EQ;
 
         public override string AsmName => "jne";
 
@@ -32,8 +32,7 @@ namespace VMCore.VM.Instructions
 
         public override bool Execute(InstructionData aData, CPU aCpu)
         {
-            if (aCpu.Registers[Registers.AC] !=
-                aCpu.Registers[(Registers)aData[0]])
+            if (aCpu.Registers[Registers.AC] != (int)aData[0])
             {
                 // Offset the address by current base size of the memory.
                 // This is the bound of the memory outside of the 
@@ -47,11 +46,11 @@ namespace VMCore.VM.Instructions
 
         public override string ToString(InstructionData aData)
         {
-            var fromReg = (Registers)aData[0];
+            var literal = (int)aData[0];
             var address = (int)aData[1];
 
-            // jne R1, $ADDRESS
-            return $"{AsmName} {fromReg}, ${address:X}";
+            // jne $LITERAL, $ADDRESS
+            return $"{AsmName} ${literal:X}, ${address:X}";
         }
     }
 }

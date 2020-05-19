@@ -4,7 +4,6 @@ using System.Diagnostics;
 using VMCore;
 using VMCore.VM;
 using VMCore.Assembler;
-using System.Linq;
 using VMCore.VM.Core;
 
 namespace TestConsole

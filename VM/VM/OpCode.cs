@@ -292,10 +292,19 @@
         /// of the executable memory region in which the program resides.
         /// </remarks>
         JLE_REG,
+        /// <summary>
+        /// Jump If Less Than Or Equal To Literal - if literal A is less
+        /// than or equal to the accumulator then jump to an address
+        /// specified by the literal B.
+        /// </summary>
+        /// <remarks>
+        /// This address is treated as being relative to the base address
+        /// of the executable memory region in which the program resides.
+        /// </remarks>
         JLE_LIT,
         /// <summary>
         /// Jump If Greater Than Or Equal To Register - if the value of
-        /// the register is greater than  or equal to the accumulator
+        /// the register is greater than or equal to the accumulator
         /// then jump to an address given by the literal.
         /// </summary>
         /// <remarks>

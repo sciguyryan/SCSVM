@@ -295,8 +295,7 @@ namespace VMCore.VM.Core
         }
 
         /// <summary>
-        /// Run the virtual machine with the current binary
-        /// to completion.
+        /// Run the virtual machine with the current binary to completion.
         /// </summary>
         public void Run()
         {

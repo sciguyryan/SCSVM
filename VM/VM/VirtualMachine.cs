@@ -48,34 +48,18 @@ namespace VMCore
             CPU = new CPU(this, aCanCPUSwapMemoryRegions);
             Debugger = new Debugger(this);
 
-            // The final memory size is equal to the base memory
-            // capacity plus the stack capacity multiplied by
-            // the size of an integer.
-            var finalMemorySize = 
-                aMainMemoryCapacity + (aStackCapacity * sizeof(int));
-            Memory = new Memory(finalMemorySize);
+            Memory = new Memory(aMainMemoryCapacity, aStackCapacity);
 
 #if DEBUG
             _dbgMainMemoryCapacity = aMainMemoryCapacity;
             _dbgStackCapacity = aStackCapacity;
-            _dbgFinalMemorySize = finalMemorySize;
+            _dbgFinalMemorySize = Memory.BaseMemorySize;
 #endif
-
-            // The region directly after the main memory
-            // is reserved for the stack memory.
-            // The stack memory region should be marked
-            // as no read/write as the only methods
-            // accessing or modifying it should be system only.
-            var stackStart = aMainMemoryCapacity;
-            var stackEnd = finalMemorySize - 1;
-            Memory.AddMemoryRegion(stackStart,
-                                   stackEnd,
-                                   MemoryAccess.PR | MemoryAccess.PW);
 
             // Set the default stack pointer position to be at the very
             // end of our allocated memory block.
             CPU.Registers[(Registers.SP, SecurityContext.System)] =
-                finalMemorySize;
+                Memory.StackEnd;
 
             // Build our instruction cache and apply and
             // hooks that we might need to use in the
@@ -214,10 +198,5 @@ namespace VMCore
             CPU.Registers[Registers.R3] = sizeof(int);*/
         }
 #endif
-
-        private List<byte[]> GetStackRange(int aStart, int aCount)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

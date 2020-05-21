@@ -62,6 +62,10 @@ namespace TestConsole
                 new VirtualMachine(mainMemoryCapacity,
                                    stackCapacity);
 
+            //Console.WriteLine(vm.Memory.StackPopInt());
+            //Console.WriteLine(vm.Memory.StackPopInt());
+            //Console.WriteLine(vm.Memory.StackPopInt());
+
             // Break point stuff for experimenting.
             /*Breakpoint.BreakpointAction ipBP = delegate (int x)
             {
@@ -113,10 +117,14 @@ namespace TestConsole
 
             vm.Run(programBytes);
 
+            vm.Memory.StackPushInt(0x999);
+            vm.Memory.StackPushInt(0x666);
+
             Console.WriteLine("----------[Registers]----------");
             vm.CPU.Registers.PrintRegisters();
 
-            // TODO - show stack memory here when stack is done.
+            Console.WriteLine("----------[Stack]----------");
+            vm.Memory.PrintStack();
 
             Console.WriteLine("----------[Raw Memory]----------");
             var mem = vm.Memory.DirectGetMemoryRaw(0, 0x20);

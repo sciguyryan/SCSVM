@@ -251,8 +251,8 @@ namespace VMCore.VM.Core
         /// <summary>
         /// Enable or disable logging within the CPU.
         /// </summary>
-        /// <param name="aEnabled"
-        /// >The logging state of the CPU.
+        /// <param name="aEnabled">
+        /// The logging state of the CPU.
         /// </param>
         public void SetLoggingEnabled(bool aEnabled)
         {

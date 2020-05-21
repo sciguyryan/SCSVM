@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.VM.Core.Exceptions;
+using VMCore.VM.Core.Utilities;
 
 namespace VMCore.VM.Core.Mem
 {
@@ -29,6 +30,11 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         public int BaseMemorySize { get; private set; }
 
+        public Stack<Type> StackTypes = new Stack<Type>();
+        public int StackStart;
+        public int StackEnd;
+        public int StackPointer;
+
         #endregion region // Public Properties
 
         #region Private Properties
@@ -49,21 +55,49 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         private int _seqID = 0;
 
+#if DEBUG
+        private bool _isDebuggingEnabled { get; set; } = true;
+#else
+        private bool _isDebuggingEnabled { get; set; } = false;
+#endif
+
         #endregion // Private Properties
 
-        public Memory(int aCapacity = 2048)
+        public Memory(int aMainMemorySize = 2048,
+                      int aStackCapacity = 100)
         {
-            BaseMemorySize = aCapacity;
+            var stackSize = (aStackCapacity * sizeof(int));
+
+            // The final memory size is equal to the base memory
+            // capacity plus the stack capacity.
+            var memoryCapacity =
+                aMainMemorySize + stackSize;
+
+            BaseMemorySize = memoryCapacity;
 
             // TODO - this needs to be in a try-catch as
             // it can fail.
-            Data = new byte[aCapacity];
+            Data = new byte[memoryCapacity];
 
             // Read and write permissions are set
             // for the entire root memory block.
             AddMemoryRegion(0,
-                            aCapacity - 1,
+                            memoryCapacity - 1,
                             MemoryAccess.R | MemoryAccess.W);
+
+            // The region directly after the main memory
+            // is reserved for the stack memory.
+            // The stack memory region should be marked
+            // as no read/write as the only methods
+            // accessing or modifying it should be system only.
+            StackStart = aMainMemorySize;
+            StackEnd = memoryCapacity - 1;
+            AddMemoryRegion(StackStart,
+                            StackEnd,
+                            MemoryAccess.PR | MemoryAccess.PW);
+
+            // We always start the stack at the bottom.
+            StackPointer = StackEnd;
         }
 
         /// <summary>
@@ -75,6 +109,18 @@ namespace VMCore.VM.Core.Mem
         public Memory(byte[] aPayload)
         {
             Data = aPayload;
+        }
+
+        /// <summary>
+        /// Enable or disable debugging functionality within
+        /// this memory instance.
+        /// </summary>
+        /// <param name="aEnabled">
+        /// The debugging state of this memory instance.
+        /// </param>
+        public void SetDebuggingEnabled(bool aEnabled)
+        {
+            _isDebuggingEnabled = aEnabled;
         }
 
         /// <summary>
@@ -345,7 +391,192 @@ namespace VMCore.VM.Core.Mem
             );
         }
 
+        #region Stack Methods
+
+        /// <summary>
+        /// Push an integer value to the stack.
+        /// </summary>
+        /// <param name="aValue">
+        /// The value to be pushed to the stack.
+        /// </param>
+        /// <exception cref="StackOutOfRangeException">
+        /// Thrown if there is insufficient space within the stack for
+        /// the integer value to be pushed.
+        /// </exception>
+        public void StackPushInt(int aValue)
+        {
+            var maxPos = StackPointer;
+            var minPos = StackPointer - sizeof(int);
+
+            // We do not have enough room to write this
+            // value to the stack.
+            if (minPos > StackEnd)
+            {
+                throw new StackOutOfRangeException();
+            }
+
+            // Write the value to stack memory region.
+            SetInt(minPos, aValue, SecurityContext.System, false);
+
+            if (_isDebuggingEnabled)
+            {
+                StackTypes.Push(typeof(int));
+            }
+
+            // Move the stack pointer to the new location.
+            // We move this forwards by the size of an integer.
+            // As the stack operates in reverse, we move it closer
+            // to the start of the stack memory region.
+            StackPointer -= sizeof(int);
+        }
+
+        /// <summary>
+        /// Pop an integer from the stack.
+        /// </summary>
+        /// <returns>
+        /// The last integer popped from the stack.
+        /// </returns>
+        /// <exception cref="StackOutOfRangeException">
+        /// Thrown if there is no value to be popped from the stack.
+        /// </exception>
+        public int StackPopInt()
+        {
+            var maxPos = StackPointer;
+            var minPos = StackPointer - sizeof(int);
+
+            // We do not have enough room to read this
+            // value from the stack.
+            if (maxPos < StackStart)
+            {
+                throw new StackOutOfRangeException();
+            }
+
+            // Read the value from the memory region.
+            var value = GetInt(maxPos, SecurityContext.System, false);
+
+            if (_isDebuggingEnabled)
+            {
+                _ = StackTypes.Pop();
+            }
+
+            // Move the stack pointer to the new location.
+            // We move this forwards by the size of an integer.
+            // As the stack operates in reverse, we move it away
+            // from the start of the stack memory region.
+            StackPointer += sizeof(int);
+
+            return value;
+        }
+
+        /// <summary>
+        /// Print the contents of the stack.
+        /// </summary>
+        public void PrintStack()
+        {
+            // We can do something a bit fancier if
+            // we have access to the type information.
+            if (_isDebuggingEnabled)
+            {
+                PrintStackDebug();
+                return;
+            }
+
+            // If the stack pointer is currently at
+            // the end of the stack region then there
+            // are no values to be read.
+            if (StackPointer == StackEnd)
+            {
+                return;
+            }
+
+            var index = 0;
+            var curStackPos = StackPointer;
+            while (curStackPos < StackEnd)
+            {
+                // Things are always reverse here.
+                // We need to jump to the "start" of the
+                // value before we read it.
+                var value =
+                    GetInt(curStackPos,
+                           SecurityContext.System,
+                           false);
+
+                Console.WriteLine("{0,5}{1,10:X8}",
+                                  index,
+                                  value);
+
+                curStackPos += sizeof(int);
+                ++index;
+            }
+        }
+
+        /// <summary>
+        /// Print the contents of the stack, with additional
+        /// debugging information.
+        /// </summary>
+        public void PrintStackDebug()
+        {
+            if (!_isDebuggingEnabled)
+            {
+                return;
+            }
+
+            // If the stack pointer is currently at
+            // the end of the stack region then there
+            // are no values to be read.
+            if (StackPointer == StackEnd)
+            {
+                return;
+            }
+
+            // Clone stack that specifies which types
+            // were stored.
+            Type[] types = StackTypes.ToArray();
+
+            var i = 0;
+            var curStackPos = StackPointer;
+            while (curStackPos < StackEnd)
+            {
+                Type t = types[i];
+
+                // Things are always reverse here.
+                // We need to jump to the "start" of the
+                // value before we read it.
+                object value;
+                int offset;
+                switch (t)
+                {
+                    case Type _ when t == typeof(int):
+                        value = GetInt(curStackPos,
+                                       SecurityContext.System,
+                                       false);
+                        offset = sizeof(int);
+                        break;
+
+                    default:
+                        throw new NotSupportedException
+                        (
+                            $"PrintStackDebug: the type {t} was passed " +
+                            $"specified as the stack type, but no " +
+                            $"support has been provided for that type."
+                        );
+                        break;
+                };
+
+                Console.WriteLine("{0,5}{1,10}{2,10:X8}",
+                                  i,
+                                  t.GetFriendlyName(),
+                                  value);
+
+                curStackPos += offset;
+                ++i;
+            }
+        }
+
+        #endregion // Stack Methods
+
         #region Integer IO
+
         /// <summary>
         /// Read an integer from memory.
         /// </summary>

@@ -227,7 +227,7 @@ namespace VMCore.VM.Core.Reg
                 var reg = Enum.GetName(typeof(Registers), kvp.Key);
                 var val = kvp.Value.GetValue(SecurityContext.System);
 
-                Console.Write("{0,10}{1,10:X8}", reg, val);
+                Console.Write("{0,5}{1,10:X8}", reg, val);
 
                 if (!kvp.Value.IsFlagRegister())
                 {

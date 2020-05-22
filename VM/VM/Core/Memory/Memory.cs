@@ -91,7 +91,7 @@ namespace VMCore.VM.Core.Mem
             // as no read/write as the only methods
             // accessing or modifying it should be system only.
             StackStart = aMainMemorySize;
-            StackEnd = memoryCapacity - 1;
+            StackEnd = memoryCapacity;
             AddMemoryRegion(StackStart,
                             StackEnd,
                             MemoryAccess.PR | MemoryAccess.PW);
@@ -410,7 +410,7 @@ namespace VMCore.VM.Core.Mem
 
             // We do not have enough room to write this
             // value to the stack.
-            if (minPos > StackEnd)
+            if (minPos < StackStart)
             {
                 throw new StackOutOfRangeException();
             }
@@ -436,7 +436,7 @@ namespace VMCore.VM.Core.Mem
         /// <returns>
         /// The last integer popped from the stack.
         /// </returns>
-        /// <exception cref="StackOutOfRangeException">
+        /// <exception cref="InvalidOperationException">
         /// Thrown if there is no value to be popped from the stack.
         /// </exception>
         public int StackPopInt()
@@ -446,9 +446,9 @@ namespace VMCore.VM.Core.Mem
 
             // We do not have enough room to read this
             // value from the stack.
-            if (maxPos < StackStart)
+            if (maxPos >= StackEnd)
             {
-                throw new StackOutOfRangeException();
+                throw new InvalidOperationException();
             }
 
             // Read the value from the memory region.

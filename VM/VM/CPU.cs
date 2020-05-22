@@ -290,8 +290,7 @@ namespace VMCore.VM.Core
             // It is down to the user to ensure that this is
             // correct.
             // This will default to index zero if not set.
-            Registers[_ipUserTuple] =
-                offsetAddress;
+            Registers[_ipUserTuple] = offsetAddress;
         }
 
         /// <summary>

@@ -21,10 +21,12 @@ namespace VMCore.VM.Core.Reg
             CPU = aCpu;
 
             // Initialization here is done manually as, if I ever
-            // decide to re-add the shadow registers this will be important.
-            // Auto-initializing by enumerating over the enum is cleaner but
-            // will add registers such as AX, which is a shadow register for
-            // EAX and cannot be counted as a separate register.
+            // decide to re-add the shadow registers this
+            // will be important.
+            // Auto-initializing by enumerating over the enum is
+            // cleaner but will add registers such as AX, which
+            // is a shadow register for EAX and cannot be counted
+            // as a separate register.
 
             const RegisterAccess rw = 
                 RegisterAccess.R | RegisterAccess.W;
@@ -76,8 +78,13 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// Get or set a register with a security context.
         /// </summary>
-        /// <param name="regTuple">A tuple of the register identifier and the security context.</param>
-        /// <returns>The value of the register if accessed via get, nothing otherwise.</returns>
+        /// <param name="regTuple">
+        /// A tuple of the register identifier and the security context.
+        /// </param>
+        /// <returns>
+        /// The value of the register if accessed via get,
+        /// nothing otherwise.
+        /// </returns>
         public int this[(Registers r, SecurityContext c) regTuple]
         {
             get
@@ -93,8 +100,13 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// Get or set a register with a security context.
         /// </summary>
-        /// <param name="regTuple">A tuple of the register ID and the security context.</param>
-        /// <returns>The value of the register if accessed via get, nothing otherwise.</returns>
+        /// <param name="regTuple">
+        /// A tuple of the register ID and the security context.
+        /// </param>
+        /// <returns>
+        /// The value of the register if accessed via get,
+        /// nothing otherwise.
+        /// </returns>
         public int this[(int rID, SecurityContext c) regTuple]
         {
             get
@@ -111,9 +123,13 @@ namespace VMCore.VM.Core.Reg
         }
 
         /// <summary>
-        /// Short hand get or set a register with a default (user) security context.
+        /// Short hand get or set a register with a default (user)
+        /// security context.
         /// </summary>
-        /// <returns>The value of the register if accessed via get, nothing otherwise.</returns>
+        /// <returns>
+        /// The value of the register if accessed via get,
+        /// nothing otherwise.
+        /// </returns>
         public int this[Registers r]
         {
             get
@@ -127,9 +143,13 @@ namespace VMCore.VM.Core.Reg
         }
 
         /// <summary>
-        /// Short hand get or set a register with a default (user) security context.
+        /// Short hand get or set a register with a default (user)
+        /// security context.
         /// </summary>
-        /// <returns>The value of the register if accessed via get, nothing otherwise.</returns>
+        /// <returns>
+        /// The value of the register if accessed via get,
+        /// nothing otherwise.
+        /// </returns>
         public int this[int rID]
         {
             get
@@ -195,9 +215,15 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// Apply a hook to a register.
         /// </summary>
-        /// <param name="reg">The register to which the hook should be applied.</param>
-        /// <param name="aHook">The hook to be executed when the hook is triggered.</param>
-        /// <param name="aHookType">The type of hook to be applied.</param>
+        /// <param name="reg">
+        /// The register to which the hook should be applied.
+        /// </param>
+        /// <param name="aHook">
+        /// The hook to be executed when the hook is triggered.
+        /// </param>
+        /// <param name="aHookType">
+        /// The type of hook to be applied.
+        /// </param>
         public void Hook(Registers aReg,
                          Action<int> aHook,
                          Register.HookTypes aHookType)
@@ -218,7 +244,8 @@ namespace VMCore.VM.Core.Reg
         }
 
         /// <summary>
-        /// Print a formated list registers and their contents directly to the console.
+        /// Print a formated list registers and their
+        /// contents directly to the console.
         /// </summary>
         public void PrintRegisters()
         {
@@ -235,7 +262,8 @@ namespace VMCore.VM.Core.Reg
                 }
                 else
                 {
-                    Console.WriteLine(" (" + kvp.Value.ToFlagStateString() + ")");
+                    var fs = kvp.Value.ToFlagStateString();
+                    Console.WriteLine(" (" + fs + ")");
                 }
             }
         }

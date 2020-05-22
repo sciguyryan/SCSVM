@@ -49,8 +49,8 @@ namespace VMCore.VM.Instructions
             var literal = (int)aData[0];
             var address = (int)aData[1];
 
-            // jlt $LITERAL, $ADDRESS
-            return $"{AsmName} ${literal:X}, ${address:X}";
+            // jlt $LITERAL, &ADDRESS
+            return $"{AsmName} ${literal:X}, &{address:X}";
         }
     }
 }

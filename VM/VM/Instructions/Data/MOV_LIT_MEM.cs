@@ -43,8 +43,8 @@ namespace VMCore.VM.Instructions
             var literal = (int)aData[0];
             var toAddr = (int)aData[1];
 
-            // mov $LITERAL, [$MEMORY ADDR]
-            return $"{AsmName} ${literal:X}, [${toAddr:X}]";
+            // mov $LITERAL, &MEMORY ADDR
+            return $"{AsmName} ${literal:X}, &{toAddr:X}";
         }
     }
 }

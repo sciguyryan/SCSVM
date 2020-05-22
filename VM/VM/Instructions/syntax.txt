@@ -6,7 +6,7 @@ copies the literal 0x42 into R1.
 mov R1, R2
 copies the value from R1 to R2.
 
-mov R1, [$0]
+mov R1, &0
 move the value from R1 into memory starting at address literal 0x0.
 
 mov [R1*R2], R3
@@ -19,7 +19,7 @@ move the value from R1 into memory.
 The memory address given by the expression:
 	value of R1 plus the value of R2.
 
-jne R1, $100
+jne R1, &100
 if the accumulator is not equal to the value
 of register R1 then jump to the address $100
 (offset by the base address of the program region

@@ -50,8 +50,8 @@ namespace VMCore.VM.Instructions
             var fromReg = (Registers)aData[0];
             var address = (int)aData[1];
 
-            // jle R1, $ADDRESS
-            return $"{AsmName} {fromReg}, ${address:X}";
+            // jle R1, &ADDRESS
+            return $"{AsmName} {fromReg}, &{address:X}";
         }
     }
 }

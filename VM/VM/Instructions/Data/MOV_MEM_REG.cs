@@ -39,8 +39,8 @@ namespace VMCore.VM.Instructions
             var memoryAddr = (int)aData[0];
             var toReg = (Registers)aData[1];
 
-            // mov [$MEMORY ADDR], R1
-            return $"{AsmName} [${memoryAddr:X}], {toReg}";
+            // mov &MEMORY ADDR, R1
+            return $"{AsmName} &{memoryAddr:X}, {toReg}";
         }
     }
 }

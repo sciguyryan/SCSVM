@@ -30,9 +30,26 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         public int BaseMemorySize { get; private set; }
 
+        /// <summary>
+        /// A list of the types of data currently held
+        /// within the stack.
+        /// </summary>
         public Stack<Type> StackTypes = new Stack<Type>();
+
+        /// <summary>
+        /// The starting point (in memory) of the stack memory region.
+        /// </summary>
         public int StackStart;
+
+        /// <summary>
+        /// The end point (in memory) of the stack memory region.
+        /// </summary>
         public int StackEnd;
+
+        /// <summary>
+        /// The next point in memory available for writing
+        /// data.
+        /// </summary>
         public int StackPointer;
 
         #endregion region // Public Properties
@@ -83,7 +100,8 @@ namespace VMCore.VM.Core.Mem
             // for the entire root memory block.
             AddMemoryRegion(0,
                             memoryCapacity - 1,
-                            MemoryAccess.R | MemoryAccess.W);
+                            MemoryAccess.R | MemoryAccess.W,
+                            "Root");
 
             // The region directly after the main memory
             // is reserved for the stack memory.
@@ -94,9 +112,11 @@ namespace VMCore.VM.Core.Mem
             StackEnd = memoryCapacity;
             AddMemoryRegion(StackStart,
                             StackEnd,
-                            MemoryAccess.PR | MemoryAccess.PW);
+                            MemoryAccess.PR | MemoryAccess.PW,
+                            "Stack");
 
-            // We always start the stack at the bottom.
+            // We always start working with the stack at
+            // the bottom of the memory range.
             StackPointer = StackEnd;
         }
 
@@ -192,7 +212,8 @@ namespace VMCore.VM.Core.Mem
             var seqID = 
                 AddMemoryRegion(memLen,
                                 newMemLen,
-                                flags);
+                                flags,
+                                $"Executable");
 
             Array.Copy(aData, 0, Data, memLen, aData.Length);
 
@@ -213,15 +234,19 @@ namespace VMCore.VM.Core.Mem
         /// <param name="aAccess">
         /// The access flags to be applied to the region.
         /// </param>
+        /// <param name="aName">
+        /// The name of the memory region.
+        /// </param>
         /// <returns>
         /// The sequence ID that uniquely represents the memory region.
         /// </returns>
         public int AddMemoryRegion(int aStart,
                                    int aEnd,
-                                   MemoryAccess aAccess)
+                                   MemoryAccess aAccess,
+                                   string aName)
         {
             var region = 
-                new MemoryRegion(aStart, aEnd, aAccess, _seqID);
+                new MemoryRegion(aStart, aEnd, aAccess, _seqID, aName);
             _memoryRegions.Add(region);
 
             ResizeRootMemoryRegion();
@@ -1165,17 +1190,33 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         private void DebugMemoryRegions()
         {
-            Debug.WriteLine(new string('-', 68));
-            foreach (var r in _memoryRegions)
+            var regionCount = _memoryRegions.Count;
+            var lines = new string[regionCount + 2];
+
+            for (var i = 0; i < regionCount; i++)
             {
-                var s =
-                    String.Format("|{0,20} | {1,20} | {2,20}|",
+                var r = _memoryRegions[i];
+
+                lines[i + 1] =
+                    String.Format("|{0,20} | {1,15} | {2,10} | {3, 15}|",
                                   $"{r.Start},{r.End}",
                                   r.Access,
-                                  r.SeqID);
-                Debug.WriteLine(s);
+                                  r.SeqID,
+                                  r.Name);
             }
-            Debug.WriteLine(new string('-', 68));
+
+            var lineLen = lines[1].Length;
+
+            foreach (var l in lines)
+            {
+                if (string.IsNullOrEmpty(l))
+                {
+                    Debug.WriteLine(new string('-', lineLen));
+                    continue;
+                }
+
+                Debug.WriteLine(l);
+            }
         }
     }
 }

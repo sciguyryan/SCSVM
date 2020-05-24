@@ -21,41 +21,50 @@ namespace VMCore.AsmParser
         /// to use here as the virtual machine parent will always
         /// have called the method to build these caches.
         /// </remarks>
-        private Dictionary<OpCode, Instruction> _instructionCache =
-            ReflectionUtils.InstructionCache;
+        private readonly Dictionary<OpCode, Instruction> _insCache;
 
         public AsmParser()
         {
+            // We need to do this just in case the cache
+            // has not already been built.
+            ReflectionUtils.BuildCachesAndHooks(true);
+
+            // Load the instruction cache.
+            _insCache = ReflectionUtils.InstructionCache;
         }
 
         /// <summary>
-        /// Initiate a full parse of the input string.
+        /// Parse a complete input string.
         /// </summary>
+        /// <param name="aInput">The input string to be parsed.</param>
+        /// <returns>
+        /// An array of instructions representing the input data.
+        /// </returns>
         public QuickIns[] Parse(string aInput)
         {
-            var instructions = new List<QuickIns>();
-
             var lines =
                 aInput.Split(new[] { Environment.NewLine },
                              StringSplitOptions.RemoveEmptyEntries );
 
-            foreach (var line in lines)
-            {
-                // If this is null then the line was likely a comment.
-                var ins = ParseLine(line);
-                if (ins != null)
-                {
-                    instructions.Add(ins);
-                }
-            }
-
-            return instructions.ToArray();
+            return 
+                lines
+                    .Select(ParseLine)
+                    .Where(aIns => aIns != null)
+                    .ToArray();
         }
 
-        public QuickIns ParseLine(string aData)
+        /// <summary>
+        /// Parse a single instruction line.
+        /// </summary>
+        /// <param name="aLine">The input string to be parsed.</param>
+        /// <returns>
+        /// A QuickIns object representing the parsed data.
+        /// This can be null if there was no instruction to output.
+        /// </returns>
+        public QuickIns ParseLine(string aLine)
         {
             // Fast path return for lines that are comments.
-            if (aData[0] == ';')
+            if (aLine[0] == ';')
             {
                 return null;
             }
@@ -64,12 +73,12 @@ namespace VMCore.AsmParser
             var segments = new List<string>();
 
             var skipNext = false;
-            var inBrackets = false;
+            var inBracket = false;
             var inString = false;
             var skipUntilEnd = false;
-            var pushBufferContents = false;
+            var pushBuffer = false;
 
-            foreach (var c in aData)
+            foreach (var c in aLine)
             {
                 switch (c)
                 {
@@ -82,38 +91,41 @@ namespace VMCore.AsmParser
                         break;
 
                     case '[':
-                        inBrackets = true;
+                        inBracket = true;
                         break;
 
                     case ']':
-                        if (!inBrackets)
+                        if (!inBracket)
                         {
                             throw new AsmParserException("melon");
                         }
 
-                        inBrackets = false;
+                        inBracket = false;
                         break;
 
                     case ',':
                         skipNext = !inString;
-                        pushBufferContents = !inString;
+                        pushBuffer = !inString;
                         break;
 
                     case char _ when char.IsWhiteSpace(c):
-                        pushBufferContents = (segments.Count == 0);
+                        pushBuffer = (segments.Count == 0);
                         skipNext = true;
                         break;
                 }
 
-                if (pushBufferContents)
+                // Do we need to push the contents of the buffer
+                // into the segment list?
+                if (pushBuffer)
                 {
+                    // We never want to push an empty buffer.
                     if (buffer.Length > 0)
                     {
                         segments.Add(buffer.ToString());
                         buffer.Clear();
                     }
 
-                    pushBufferContents = false;
+                    pushBuffer = false;
                 }
 
                 // We should append this character to the buffer provided
@@ -136,9 +148,17 @@ namespace VMCore.AsmParser
                 throw new AsmParserException("watermelon");
             }
 
+            if (inBracket)
+            {
+                // We have an unmatched bracket, this will throw an
+                // exception as we cannot be sure of the validity of
+                // the parsed data.
+                throw new AsmParserException("lemon");
+            }
+
             // Push whatever is left in the buffer into the segment
-            // list. This will always need to happen as the last segment
-            // will never be pushed.
+            // list. This will always need to happen as the last
+            // segment will never be pushed.
             if (buffer.Length > 0)
             {
                 segments.Add(buffer.ToString());
@@ -147,6 +167,19 @@ namespace VMCore.AsmParser
             return BuildInstruction(segments.ToArray());
         }
 
+        /// <summary>
+        /// Build a QuickIns object based on the parsed data. 
+        /// </summary>
+        /// <param name="aSegments">
+        /// An array of strings representing the segments of the
+        /// instruction. The first segment will always be the
+        /// instruction mnemonic, any additional segments will
+        /// represent the arguments provided to the instruction.
+        /// </param>
+        /// <returns>
+        /// A QuickIns object representing the parsed data.
+        /// This can be null if there was no instruction to output.
+        /// </returns>
         private QuickIns BuildInstruction(string[] aSegments)
         {
             // The line was likely a comment line.
@@ -173,107 +206,14 @@ namespace VMCore.AsmParser
                                  new object[] { asmName[1..] });
             }
 
-            // This instruction has no arguments, no ambiguity
-            // so very easy to resolve.
-            if (aSegments.Length == 1)
-            {
-                return ParseSimpleInstruction(asmName.ToLower());
-            }
-
-            // We have arguments, this is a little more complex
-            // as we have to do some validation.
-            var data = ParseArguments(args);
-
-            return
-                ParseComplexInstruction(asmName.ToLower(),
-                                        data.Arguments,
-                                        data.ArgRefTypes,
-                                        data.BoundLabels);
-        }
-
-        private ParInstructionData ParseArguments(string[] args)
-        {
-            var len = args.Length;
-            var parsed = new object[len];
-            var refTypes = new InsArgTypes[len];
-            var labels = new string[len];
-
-            for (var i = 0; i < len; i++)
-            {
-                var arg = args[i];
-
-                if (arg[0] == '[')
-                {
-                    // This is an expression, these are always left
-                    // as strings. The compiler will need to check
-                    // them to see if anything clever can be done
-                    // with them.
-                    parsed[i] = arg[1..^1];
-                    refTypes[i] = InsArgTypes.Expression;
-
-                    continue;
-                }
-                else if (arg[0] == '$')
-                {
-                    // This is a literal. These can be hexadecimal
-                    // (donated by an 0x prefix) or a decimal (anything
-                    // without one).
-                    parsed[i] = ParseIntegerLiteral(arg[1..]);
-                    refTypes[i] = InsArgTypes.LiteralInteger;
-
-                    continue;
-                }
-                else if (arg[0] == '&')
-                {
-                    // This is an address pointer.
-                    if (arg[1] == '$')
-                    {
-                        // This is a literal address pointer and so
-                        // can be treated as a normal integer
-                        // argument.
-                        parsed[i] = ParseIntegerLiteral(arg[2..]);
-                        refTypes[i] = InsArgTypes.LiteralPointer;
-
-                        continue;
-                    }
-
-                    // This is a register argument pointer so we need
-                    // to parse this as a register identifier instead.
-                    if (!ParseRegister(arg[1..], out Registers regPtr))
-                    {
-                        throw new AsmParserException("plum");
-                    }
-
-                    parsed[i] = regPtr;
-                    refTypes[i] = InsArgTypes.RegisterPointer;
-
-                    continue;
-                }
-                else if (arg[0] == '@')
-                {
-                    // This is a label. We need to add a dummy
-                    // value here.
-                    parsed[i] = 0;
-                    refTypes[i] = InsArgTypes.LiteralPointer;
-                    labels[i] = ParseLabel(arg[1..]);
-
-                    continue;
-                }
-
-                if (ParseRegister(arg, out Registers reg))
-                {
-                    parsed[i] = reg;
-                    refTypes[i] = InsArgTypes.Register;
-
-                    continue;
-                }
-                else
-                {
-                    throw new AsmParserException("kiwi");
-                }
-            }
-
-            return new ParInstructionData(parsed, refTypes, labels);
+            // If the instruction has no arguments then it is simple to
+            // identify the opcode for the instruction belonging to it. 
+            // If it has arguments then the job is more difficult as we
+            // will have to perform validation on the number of arguments,
+            // their types, etc. to find the best match.
+            return aSegments.Length == 1 ? 
+                ParseSimpleInstruction(asmName) :
+                ParseComplexInstruction(asmName, args);
         }
 
         private QuickIns ParseSimpleInstruction(string aName)
@@ -286,56 +226,140 @@ namespace VMCore.AsmParser
             return new QuickIns(op);
         }
 
-        private QuickIns ParseComplexInstruction(string aInsName,
-                                                 object[] aArgs,
-                                                 InsArgTypes[] aRefTypes,
-                                                 string[] aLabels)
+        private ParInstructionData ParseArgs(IReadOnlyList<string> aArgs)
         {
-            var insName = aInsName.ToLower();
-
-            var len = aArgs.Length;
-            var argTypes = new Type[len];
-
-            AsmLabel asmLabel = null;
+            var len = aArgs.Count;
+            var values = new object[len];
+            var refTypes = new InsArgTypes[len];
+            var labels = new string[len];
 
             for (var i = 0; i < len; i++)
             {
-                argTypes[i] = aArgs[i].GetType();
+                var arg = aArgs[i];
 
-                if (!string.IsNullOrEmpty(aLabels[i]))
+                switch (arg[0])
                 {
-                    if (asmLabel != null)
-                    {
-                        // We cannot have more than one bound label
-                        // to an instruction.
-                        throw new AsmParserException("peach");
-                    }
+                    case '[':
+                        // This is an expression, these are always left
+                        // as strings. The compiler will need to check
+                        // them to see if they are valid or can be 
+                        // simplified.
+                        values[i] = arg[1..^1];
+                        refTypes[i] = InsArgTypes.Expression;
+                        continue;
 
-                    asmLabel = new AsmLabel(aLabels[i], i);
+                    case '$':
+                        // This is a literal.
+                        // These can be any of the following:
+                        // * binary (donated by an 0b prefix)
+                        // * hexadecimal (donated by an 0x prefix)
+                        // * octal (donated by an 0 prefix)
+                        // * or a decimal (anything else).
+                        values[i] = ParseIntegerLiteral(arg[1..]);
+                        refTypes[i] = InsArgTypes.LiteralInteger;
+                        continue;
+
+                    case '&' when arg[1] == '$':
+                        // This is a literal address pointer.
+                        // This can be treated as a normal
+                        // integer argument.
+                        values[i] = ParseIntegerLiteral(arg[2..]);
+                        refTypes[i] = InsArgTypes.LiteralPointer;
+                        continue;
+
+                    case '&':
+                        {
+                            // This is a register argument pointer so we need
+                            // to parse this as a register identifier instead.
+                            if (!TryParseRegister(arg[1..],
+                                                  out var regPtr))
+                            {
+                                throw new AsmParserException("plum");
+                            }
+
+                            values[i] = regPtr;
+                            refTypes[i] = InsArgTypes.RegisterPointer;
+                            continue;
+                        }
+
+                    case '@':
+                        // This is a label.
+                        // We need to add a dummy value here. This will be
+                        // updated at compile time.
+                        values[i] = 0;
+                        refTypes[i] = InsArgTypes.LiteralPointer;
+                        labels[i] = ParseLabel(arg[1..]);
+                        continue;
                 }
 
-                //Debug.WriteLine($"{argTypes[i].GetFriendlyName()} {argTypes[i]}");
+                // We have not found one of the easy to identify
+                // indicators of the type.
+                // Currently the only thing that we have left to
+                // check if a register identifier.
+                if (TryParseRegister(arg, out var reg))
+                {
+                    // This is a register identifier.
+                    values[i] = reg;
+                    refTypes[i] = InsArgTypes.Register;
+
+                    continue;
+                }
+
+                // We did not find a valid argument type so the data
+                // is likely invalid.
+                throw new AsmParserException("kiwi");
+            }
+
+            return new ParInstructionData(values, refTypes, labels);
+        }
+
+        private QuickIns ParseComplexInstruction(string aInsName,
+                                                 string[] aRawArgs)
+        {
+            var args = ParseArgs(aRawArgs);
+            var insName = aInsName.ToLower();
+
+            var len = args.Arguments.Length;
+            var argTypes = new Type[len];
+
+            AsmLabel asmLabel = null;
+            for (var i = 0; i < len; i++)
+            {
+                argTypes[i] = args.Arguments[i].GetType();
+
+                if (string.IsNullOrEmpty(args.BoundLabels[i]))
+                {
+                    continue;
+                }
+
+                if (asmLabel != null)
+                {
+                    // We cannot have more than one bound label
+                    // to an instruction currently.
+                    throw new AsmParserException("peach");
+                }
+
+                asmLabel = new AsmLabel(args.BoundLabels[i], i);
             }
 
             OpCode? op = null;
 
             // Iterate over our cached list of instructions
             // to find the one that best matches.
-            foreach (var insKVP in _instructionCache)
+            foreach (var insPair in _insCache)
             {
-                var ins = insKVP.Value;
+                var ins = insPair.Value;
 
-                if (ins.AsmName != insName)
+                if (ins.AsmName != insName ||
+                    !argTypes.SequenceEqual(ins.ArgumentTypes) ||
+                    !args.ArgRefTypes.SequenceEqual(ins.ArgumentRefTypes))
                 {
-                    // The ASM name does not match.
-                    continue;
-                }
-
-                if (!argTypes.SequenceEqual(ins.ArgumentTypes) ||
-                    !aRefTypes.SequenceEqual(ins.ArgumentRefTypes))
-                {
-                    // The number, type or reference types of the
-                    // arguments do not match.
+                    // One (or more) of the following do not match:
+                    // * the mnemonic (ASM) name;
+                    // * the number or type of the arguments;
+                    // * the number of ref type of the arguments;
+                    // This instruction cannot be a match based
+                    // on our data.
                     continue;
                 }
 
@@ -351,10 +375,10 @@ namespace VMCore.AsmParser
                 throw new AsmParserException("mushrooms");
             }
 
-            return new QuickIns((OpCode)op, aArgs, asmLabel);
+            return new QuickIns((OpCode)op, args.Arguments, asmLabel);
         }
 
-        private string ParseLabel(string aData)
+        private static string ParseLabel(string aData)
         {
             // A valid label is any one or more
             // alpha numeric characters.
@@ -373,26 +397,39 @@ namespace VMCore.AsmParser
             return label.ToString();
         }
 
-        private int ParseIntegerLiteral(string aData)
+        private static int ParseIntegerLiteral(string aData)
         {
             var result = 0;
             var success = false;
 
-            if (aData[0..2] == "0x")
+            switch (aData[0..2])
             {
-                success = TryParseHexInt(aData[2..], out result);
-            }
-            else if (aData[0..2] == "0b")
-            {
-                success = TryParseBinInt(aData[2..], out result);
-            }
-            else if (aData[0] == '0')
-            {
-                success = TryParseOctInt(aData[1..], out result);
-            }
-            else
-            {
-                success = TryParseInt(aData, out result);
+                case "0b":
+                    // A binary literal.
+                    success = TryParseBinInt(aData[2..], out result);
+                    break;
+
+                case "0x":
+                    // A hexadecimal literal.
+                    success = TryParseHexInt(aData[2..], out result);
+                    break;
+
+                default:
+                {
+                    if (aData[0] == '0')
+                    {
+                        // An octal literal.
+                        success = TryParseOctInt(aData[1..], out result);
+                    }
+                    else
+                    {
+                        // If all else fails, we will try a normal integer
+                        // parse.
+                        success = TryParseInt(aData, out result);
+                    }
+
+                    break;
+                }
             }
 
             if (!success)
@@ -403,26 +440,22 @@ namespace VMCore.AsmParser
             return result;
         }
 
-        private bool ParseRegister(string aData, out Registers reg)
-        {
-            return Enum.TryParse(aData, out reg);
-        }
-
         /// <summary>
-        /// Attempt to parse the integer contained in a string
-        /// as an integer.
+        /// Attempt to parse a string as a register identifier.
         /// </summary>
         /// <param name="aStr">The string to be parsed.</param>
-        /// <param name="aNum">
-        /// An integer representing the parsed value.
+        /// <param name="aReg">
+        /// An identifier within the Registers enum representing
+        /// the string.
         /// </param>
         /// <returns>
-        /// A boolean, true if the parsing yielded a valid integer,
-        /// false otherwise.
+        /// A boolean, true parsing the string yielded a valid
+        /// Register identifier, false otherwise.
         /// </returns>
-        private bool TryParseInt(string aStr, out int aNum)
+        private static bool TryParseRegister(string aStr,
+                                             out Registers aReg)
         {
-            return int.TryParse(aStr, out aNum);
+            return Enum.TryParse(aStr, out aReg);
         }
 
         /// <summary>
@@ -433,10 +466,10 @@ namespace VMCore.AsmParser
         /// An integer representing the parsed value.
         /// </param>
         /// <returns>
-        /// A boolean, true if the parsing yielded a valid integer,
-        /// false otherwise.
+        /// A boolean, true if parsing the string yielded a
+        /// valid integer, false otherwise.
         /// </returns>
-        private bool TryParseBinInt(string aStr, out int aNum)
+        private static bool TryParseBinInt(string aStr, out int aNum)
         {
             try
             {
@@ -458,10 +491,10 @@ namespace VMCore.AsmParser
         /// An integer representing the parsed value.
         /// </param>
         /// <returns>
-        /// A boolean, true if the parsing yielded a valid integer,
-        /// false otherwise.
+        /// A boolean, true if parsing the string yielded a
+        /// valid integer, false otherwise.
         /// </returns>
-        private bool TryParseOctInt(string aStr, out int aNum)
+        private static bool TryParseOctInt(string aStr, out int aNum)
         {
             try
             {
@@ -483,32 +516,32 @@ namespace VMCore.AsmParser
         /// An integer representing the parsed value.
         /// </param>
         /// <returns>
-        /// A boolean, true if the parsing yielded a valid integer,
-        /// false otherwise.
+        /// A boolean, true if parsing the string yielded a
+        /// valid integer, false otherwise.
         /// </returns>
-        private bool TryParseHexInt(string aStr, out int aNum)
+        private static bool TryParseHexInt(string aStr, out int aNum)
         {
             return
                 int.TryParse(aStr,
-                             NumberStyles.HexNumber,
-                             CultureInfo.CurrentCulture,
-                             out aNum);
+                    NumberStyles.HexNumber,
+                    CultureInfo.CurrentCulture,
+                    out aNum);
         }
-    }
 
-    internal class ParInstructionData
-    {
-        public object[] Arguments;
-        public InsArgTypes[] ArgRefTypes;
-        public string[] BoundLabels;
-
-        public ParInstructionData(object[] aArgs,
-                                  InsArgTypes[] aRefTypes,
-                                  string[] aLabels)
+        /// <summary>
+        /// Attempt to parse a string as a decimal integer.
+        /// </summary>
+        /// <param name="aStr">The string to be parsed.</param>
+        /// <param name="aNum">
+        /// An integer representing the parsed value.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if parsing the string yielded a
+        /// valid integer, false otherwise.
+        /// </returns>
+        private static bool TryParseInt(string aStr, out int aNum)
         {
-            Arguments = aArgs;
-            ArgRefTypes = aRefTypes;
-            BoundLabels = aLabels;
+            return int.TryParse(aStr, out aNum);
         }
     }
 }

@@ -1,40 +1,37 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using VMCore;
 using VMCore.VM;
 using VMCore.AsmParser;
-using VMCore.Assembler;
-using VMCore.VM.Core;
 
 namespace TestConsole
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static void Main()
         {
-            int mainMemoryCapacity = 2048;
-            int stackCapacity = 100;
-            int stackStart = mainMemoryCapacity;
+            var mainMemoryCapacity = 2048;
+            var stackCapacity = 100;
+            var stackStart = mainMemoryCapacity;
 
-            var program = new QuickIns[]
+            /*var program = new QuickIns[]
             {
-                /*new QuickIns(OpCode.MOV_LIT_MEM,
-                 *             new object[] { 3141, 13 }),
-                new QuickIns(OpCode.MOV_LIT_REG,
-                             new object[] { 5, Registers.R1 }),
-                new QuickIns(OpCode.MOV_LIT_REG,
-                             new object[] { 2, Registers.R2 }),
-                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG,
-                             new object[] { "(R1 * R2) + $3", Registers.R3 }),
-                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG
-                             new object[] { "(5 * 2) + 3", Registers.R4 }),
-                new QuickIns(OpCode.HLT),
-                // Does not execute but should show is the disassembly
-                // output.
-                new QuickIns(OpCode.MOV_LIT_REG,
-                             new object[] { 0x13, Registers.R1 }),
-                new QuickIns(OpCode.HLT),*/
+                //new QuickIns(OpCode.MOV_LIT_MEM,
+                //              new object[] { 3141, 13 }),
+                //new QuickIns(OpCode.MOV_LIT_REG,
+                //             new object[] { 5, Registers.R1 }),
+                //new QuickIns(OpCode.MOV_LIT_REG,
+                //             new object[] { 2, Registers.R2 }),
+                //new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG,
+                //             new object[] { "(R1 * R2) + $3", Registers.R3 }),
+                //new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG,
+                //             new object[] { "(5 * 2) + 3", Registers.R4 }),
+                //new QuickIns(OpCode.HLT),
+                //// Does not execute but should show is the disassembly
+                //// output.
+                //new QuickIns(OpCode.MOV_LIT_REG,
+                //             new object[] { 0x13, Registers.R1 }),
+                //new QuickIns(OpCode.HLT),
 
                 // Jump testing.
                 new QuickIns(OpCode.MOV_LIT_REG,
@@ -57,7 +54,7 @@ namespace TestConsole
                 new QuickIns(OpCode.MOV_LIT_REG,
                              new object[] { 951431, Registers.R4 }),        // #1
                 new QuickIns(OpCode.HLT),
-            };
+            };*/
 
             var vm = 
                 new VirtualMachine(mainMemoryCapacity,
@@ -86,26 +83,28 @@ namespace TestConsole
             // Enable CPU debug logging.
             vm.CPU.SetLoggingEnabled(true);
 
-            string[] lines = new string[]
+            var lines = new string[]
             {
                 "mov $0x10, R1",
                 "mov $0x11, R2",
                 "mov $0x100, R3",
                 "add R1, R2",
                 "jne R3, @GOOD",
-                "mov $314159, R4",
+                "mov $0x3141, R4",
                 "hlt",
                 "@GOOD",
-                "mov $951431, R4",
+                "mov $0x1413, R4",
                 "hlt"
             };
 
-            var progText = string.Join(Environment.NewLine, lines);
+            var progText = 
+                string.Join(Environment.NewLine, lines);
 
-            AsmParser p = new AsmParser();
+            var p = new AsmParser();
 
             var programBytes = 
-                Utils.QuickRawCompile(p.Parse(progText), true);
+                Utils.QuickRawCompile(p.Parse(progText),
+                                      true);
 
             //var programBytes = Utils.QuickRawCompile(program, true);
             //File.WriteAllBytes(@"D:\Downloads\test.bin", programBytes);

@@ -13,6 +13,13 @@ namespace VMCore.VM.Instructions
                 typeof(int)
             };
 
+        public override InsArgTypes[] ArgumentRefTypes =>
+            new InsArgTypes[]
+            {
+                InsArgTypes.Register,
+                InsArgTypes.LiteralPointer,
+            };
+
         public override Type[] ExpressionArgumentTypes =>
             new Type[]
             {
@@ -43,8 +50,10 @@ namespace VMCore.VM.Instructions
             var fromReg = (Registers)aData[0];
             var memoryAddr = (int)aData[1];
 
-            // mov R1, &MEMORY ADDR
-            return $"{AsmName} {fromReg}, &{memoryAddr:X}";
+            // mov R1, &ADDRESS
+            return (OutputLiteralsAsHex) ?
+                $"{AsmName} {fromReg}, &0x{memoryAddr:X}" :
+                $"{AsmName} {fromReg}, &{memoryAddr}";
         }
     }
 }

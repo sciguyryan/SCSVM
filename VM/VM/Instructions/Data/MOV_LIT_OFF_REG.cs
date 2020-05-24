@@ -14,6 +14,14 @@ namespace VMCore.VM.Instructions
                 typeof(Registers)
             };
 
+        public override InsArgTypes[] ArgumentRefTypes =>
+            new InsArgTypes[]
+            {
+                InsArgTypes.LiteralInteger,
+                InsArgTypes.RegisterPointer,
+                InsArgTypes.Register,
+            };
+
         public override Type[] ExpressionArgumentTypes =>
             new Type[]
             {
@@ -46,8 +54,10 @@ namespace VMCore.VM.Instructions
             var fromReg = (int)aData[1];
             var toReg = (Registers)aData[2];
 
-            // mov [$LITERAL + R1], R2
-            return $"{AsmName} [${literal:X} + {fromReg}], {toReg}";
+            // mov $LITERAL, &R1, R2
+            return (OutputLiteralsAsHex) ?
+                $"{AsmName} $0x{literal:X}, &{fromReg}, {toReg}" :
+                $"{AsmName} ${literal}, &{fromReg}, {toReg}";
         }
     }
 }

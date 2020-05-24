@@ -13,6 +13,13 @@ namespace VMCore.VM.Instructions
                 typeof(Registers)
             };
 
+        public override InsArgTypes[] ArgumentRefTypes =>
+            new InsArgTypes[]
+            {
+                InsArgTypes.RegisterPointer,
+                InsArgTypes.Register,
+            };
+
         public override Type[] ExpressionArgumentTypes =>
             new Type[]
             {
@@ -41,8 +48,8 @@ namespace VMCore.VM.Instructions
             var fromReg = (Registers)aData[0];
             var toReg = (Registers)aData[1];
 
-            // mov *R1, R2
-            return $"{AsmName} *{fromReg}, {toReg}";
+            // mov &R1, R2
+            return $"{AsmName} &{fromReg}, {toReg}";
         }
     }
 }

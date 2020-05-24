@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using VMCore;
 using VMCore.VM;
+using VMCore.AsmParser;
 using VMCore.Assembler;
 using VMCore.VM.Core;
 
@@ -85,7 +86,28 @@ namespace TestConsole
             // Enable CPU debug logging.
             vm.CPU.SetLoggingEnabled(true);
 
-            var programBytes = Utils.QuickRawCompile(program, true);
+            string[] lines = new string[]
+            {
+                "mov $0x10, R1",
+                "mov $0x11, R2",
+                "mov $0x100, R3",
+                "add R1, R2",
+                "jne R3, @GOOD",
+                "mov $314159, R4",
+                "hlt",
+                "@GOOD",
+                "mov $951431, R4",
+                "hlt"
+            };
+
+            var progText = string.Join(Environment.NewLine, lines);
+
+            AsmParser p = new AsmParser();
+
+            var programBytes = 
+                Utils.QuickRawCompile(p.Parse(progText), true);
+
+            //var programBytes = Utils.QuickRawCompile(program, true);
             //File.WriteAllBytes(@"D:\Downloads\test.bin", programBytes);
 
             /*Stopwatch sw1 = new Stopwatch();

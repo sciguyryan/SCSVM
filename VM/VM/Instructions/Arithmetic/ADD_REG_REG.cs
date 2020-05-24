@@ -13,6 +13,13 @@ namespace VMCore.VM.Instructions
                 typeof(Registers)
             };
 
+        public override InsArgTypes[] ArgumentRefTypes =>
+            new InsArgTypes[]
+            {
+                InsArgTypes.Register,
+                InsArgTypes.Register
+            };
+
         public override Type[] ExpressionArgumentTypes =>
             new Type[]
             {

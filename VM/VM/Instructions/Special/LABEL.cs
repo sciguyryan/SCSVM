@@ -18,6 +18,13 @@ namespace VMCore.VM.Instructions
                 null,
             };
 
+        public override InsArgTypes[] ArgumentRefTypes =>
+            new InsArgTypes[]
+            {
+                InsArgTypes.String
+            };
+
+
         public override OpCode OpCode => 
             OpCode.LABEL;
 

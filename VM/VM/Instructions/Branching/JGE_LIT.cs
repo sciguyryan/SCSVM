@@ -13,6 +13,13 @@ namespace VMCore.VM.Instructions
                 typeof(int)
             };
 
+        public override InsArgTypes[] ArgumentRefTypes =>
+            new InsArgTypes[]
+            {
+                InsArgTypes.LiteralInteger,
+                InsArgTypes.LiteralPointer,
+            };
+
         public override Type[] ExpressionArgumentTypes =>
             new Type[]
             {
@@ -50,7 +57,9 @@ namespace VMCore.VM.Instructions
             var address = (int)aData[1];
 
             // jge $LITERAL, &ADDRESS
-            return $"{AsmName} ${literal:X}, &{address:X}";
+            return (OutputLiteralsAsHex) ?
+                $"{AsmName} $0x{literal:X}, &0x{address:X}" :
+                $"{AsmName} ${literal}, &{address}";
         }
     }
 }

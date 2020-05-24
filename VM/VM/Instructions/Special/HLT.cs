@@ -12,6 +12,9 @@ namespace VMCore.VM.Instructions
         public override Type[] ExpressionArgumentTypes =>
             new Type[] { };
 
+        public override InsArgTypes[] ArgumentRefTypes =>
+            new InsArgTypes[] { };
+
         public override OpCode OpCode => 
             OpCode.HLT;
 

@@ -13,6 +13,13 @@ namespace VMCore.VM.Instructions
                 typeof(Registers)
             };
 
+        public override InsArgTypes[] ArgumentRefTypes =>
+            new InsArgTypes[]
+            {
+                InsArgTypes.LiteralInteger,
+                InsArgTypes.Register,
+            };
+
         public override Type[] ExpressionArgumentTypes =>
             new Type[]
             {
@@ -44,7 +51,9 @@ namespace VMCore.VM.Instructions
             var fromReg = (Registers)aData[1];
 
             // bit $LITERAL, R1
-            return $"{AsmName} ${bit:X}, {fromReg}";
+            return (OutputLiteralsAsHex) ?
+                $"{AsmName} $0x{bit:X}, {fromReg}" :
+                $"{AsmName} ${bit}, {fromReg}";
         }
     }
 }

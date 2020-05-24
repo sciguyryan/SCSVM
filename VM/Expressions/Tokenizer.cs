@@ -220,7 +220,7 @@ namespace VMCore.Expressions
 
         /// <summary>
         /// Attempt to parse the string contained in a string builder
-        /// as a integer.
+        /// as a hexadecimal integer.
         /// </summary>
         /// <param name="aSb">The string builder containing the input string.</param>
         /// <param name="aNum">An integer representing the parsed value.</param>

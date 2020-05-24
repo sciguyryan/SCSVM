@@ -8,6 +8,12 @@ namespace VMCore.VM.Instructions
     public abstract class Instruction
     {
         /// <summary>
+        /// If the ToString methods should display literal values
+        /// in hexadecimal.
+        /// </summary>
+        public bool OutputLiteralsAsHex = true;
+
+        /// <summary>
         /// The security context to be used when executing this instruction. Defaults to user.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -20,6 +26,12 @@ namespace VMCore.VM.Instructions
         /// The list of the argument types expected for this instruction.
         /// </summary>
         public abstract Type[] ArgumentTypes { get; }
+
+        /// <summary>
+        /// The list of the argument reference type specifiers for
+        /// this instruction.
+        /// </summary>
+        public abstract InsArgTypes[] ArgumentRefTypes { get; }
 
         /// <summary>
         /// The number of bytes required to store the arguments.

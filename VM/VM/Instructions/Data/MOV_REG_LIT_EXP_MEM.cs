@@ -14,6 +14,13 @@ namespace VMCore.VM.Instructions
                 typeof(string)
             };
 
+        public override InsArgTypes[] ArgumentRefTypes =>
+            new InsArgTypes[]
+            {
+                InsArgTypes.Register,
+                InsArgTypes.Expression,
+            };
+
         public override Type[] ExpressionArgumentTypes =>
             new Type[]
             {
@@ -37,9 +44,9 @@ namespace VMCore.VM.Instructions
             // region or not.
             aCpu.VM.Memory
                 .SetInt(pos,
-                          aCpu.Registers[(Registers)aData[0]],
-                          GetSecurityContext(),
-                          false);
+                        aCpu.Registers[(Registers)aData[0]],
+                        GetSecurityContext(),
+                        false);
 
             return false;
         }
@@ -47,10 +54,9 @@ namespace VMCore.VM.Instructions
         public override string ToString(InstructionData aData)
         {
             var fromReg = (Registers)aData[0];
-            var memoryAddr = (int)aData[1];
 
             // mov R1, [EXPRESSION]
-            return $"{AsmName} {fromReg}, ${memoryAddr:X}";
+            return $"{AsmName} {fromReg}, [{aData[1]}]";
         }
     }
 }

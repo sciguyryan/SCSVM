@@ -10,9 +10,56 @@ namespace TestConsole
     {
         private static void Main()
         {
-            var mainMemoryCapacity = 2048;
-            var stackCapacity = 100;
-            var stackStart = mainMemoryCapacity;
+            const int mainMemoryCapacity = 2048;
+            const int stackCapacity = 100;
+
+            var lines = new string[]
+            {
+                "mov $0x10, R1",
+                "mov $0x11, R2",
+                "mov $0x100, R3",
+                "add R1, R2",
+                "jne R3, @GOOD",
+                "mov $0x3141, R4",
+                "hlt",
+                "@GOOD",
+                "mov $0x1413, R4",
+                "hlt"
+            };
+
+            var progText =
+                string.Join(Environment.NewLine, lines);
+
+            var p = new AsmParser();
+
+            /*var sw1 = new Stopwatch();
+            var sw2 = new Stopwatch();
+            const int iterations = 100_000;
+
+            sw1.Start();
+
+            for (var i = 0; i < iterations; i++)
+            {
+                p.Parse(progText);
+            }
+
+            sw1.Stop();
+
+            sw2.Start();
+
+            for (var i = 0; i < iterations; i++)
+            {
+            }
+
+            sw2.Stop();
+
+            Console.WriteLine("Elapsed 1 = {0}, {1} per iteration",
+                              sw1.Elapsed,
+                              sw1.Elapsed / iterations);
+            Console.WriteLine("Elapsed 2 = {0}, {1} per iteration",
+                              sw2.Elapsed,
+                              sw2.Elapsed / iterations);
+            return;*/
 
             /*var program = new QuickIns[]
             {
@@ -83,54 +130,12 @@ namespace TestConsole
             // Enable CPU debug logging.
             vm.CPU.SetLoggingEnabled(true);
 
-            var lines = new string[]
-            {
-                "mov $0x10, R1",
-                "mov $0x11, R2",
-                "mov $0x100, R3",
-                "add R1, R2",
-                "jne R3, @GOOD",
-                "mov $0x3141, R4",
-                "hlt",
-                "@GOOD",
-                "mov $0x1413, R4",
-                "hlt"
-            };
-
-            var progText = 
-                string.Join(Environment.NewLine, lines);
-
-            var p = new AsmParser();
-
             var programBytes = 
                 Utils.QuickRawCompile(p.Parse(progText),
                                       true);
 
             //var programBytes = Utils.QuickRawCompile(program, true);
             //File.WriteAllBytes(@"D:\Downloads\test.bin", programBytes);
-
-            /*Stopwatch sw1 = new Stopwatch();
-            Stopwatch sw2 = new Stopwatch();
-
-            sw1.Start();
-
-            for (int i = 0; i < 1_000_000; i++)
-            {
-            }
-
-            sw1.Stop();
-
-            sw2.Start();
-
-            for (int i = 0; i < 1_000_000; i++)
-            {
-            }
-
-            sw2.Stop();
-
-            Console.WriteLine("Elapsed 1 = {0}", sw1.Elapsed);
-            Console.WriteLine("Elapsed 2 = {0}", sw2.Elapsed);
-            return;*/
 
             vm.Run(programBytes);
 

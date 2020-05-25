@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using VMCore.Assembler;
+using VMCore.Expressions;
 using VMCore.VM;
 using VMCore.VM.Core;
 using VMCore.VM.Instructions;
@@ -42,26 +44,82 @@ namespace VMCore.AsmParser
         /// </returns>
         public QuickIns[] Parse(string aInput)
         {
-            var lines =
-                aInput.Split(new[] { Environment.NewLine },
-                             StringSplitOptions.RemoveEmptyEntries );
+            var newLineSkip =
+                Environment.NewLine.Length - 1;
 
-            return 
-                lines
-                    .Select(ParseLine)
-                    .Where(aIns => aIns != null)
-                    .ToArray();
+            var insList = new List<QuickIns>();
+
+            var isLine = false;
+            var inString = false;
+
+            var skipChars = 0;
+            var startPos = 0;
+            var endPos = 0;
+            var span = new ReadOnlySpan<char>(aInput.ToCharArray());
+
+            var len = span.Length;
+            for (var i = 0; i < len; i++)
+            {
+                var c = span[i];
+
+                // Do we have a string?
+                if (c == '"')
+                {
+                    // Yes, ensure that new lines are not treated as
+                    // separators while we are within it.
+                    inString = !inString;
+                }
+
+                // Do we have a line delimiter?
+                if (!inString && c == '\n')
+                {
+                    // Yes, update the end point of our range
+                    // to account for it.
+                    endPos = i - 1;
+                    skipChars = newLineSkip;
+                    isLine = true;
+                }
+
+                // Are we are the end of the string?
+                if (i == len - 1)
+                {
+                    if (inString)
+                    {
+                        // We have an unmatched string, this will throw an
+                        // exception as we cannot be sure of the validity of
+                        // the parsed data.
+                        throw new ParserException("tomato");
+                    }
+
+                    // Always ensure that we take the contents of the
+                    // last line.
+                    endPos = i + 1;
+                    isLine = true;
+                }
+
+                // We do not have a line.
+                // Move on to the next character.
+                if (!isLine)
+                {
+                    continue;
+                }
+
+                // We have a line. Pass the span into
+                // the next stage of the parser.
+                var ins = ParseLine(span[startPos..endPos]);
+                if (ins != null)
+                {
+                    insList.Add(ins);
+                }
+
+                startPos = i + skipChars;
+                isLine = false;
+            }
+
+            return insList.ToArray();
         }
 
-        /// <summary>
-        /// Parse a single instruction line.
-        /// </summary>
-        /// <param name="aLine">The input string to be parsed.</param>
-        /// <returns>
-        /// A QuickIns object representing the parsed data.
-        /// This can be null if there was no instruction to output.
-        /// </returns>
-        public QuickIns ParseLine(string aLine)
+        public QuickIns ParseLine(ReadOnlySpan<char> aLine)
         {
             // Fast path return for lines that are comments.
             if (aLine[0] == ';')
@@ -69,17 +127,21 @@ namespace VMCore.AsmParser
                 return null;
             }
 
-            var buffer = new StringBuilder();
             var segments = new List<string>();
+
+            var startPos = 0;
+            var endPos = 0;
 
             var skipNext = false;
             var inBracket = false;
             var inString = false;
             var skipUntilEnd = false;
-            var pushBuffer = false;
+            var pushString = false;
 
-            foreach (var c in aLine)
+            var len = aLine.Length;
+            for (var i = 0; i < len; i++)
             {
+                var c = aLine[i];
                 switch (c)
                 {
                     case '"':
@@ -105,39 +167,48 @@ namespace VMCore.AsmParser
 
                     case ',':
                         skipNext = !inString;
-                        pushBuffer = !inString;
+                        pushString = !inString;
                         break;
 
                     case char _ when char.IsWhiteSpace(c):
-                        pushBuffer = (segments.Count == 0);
+                        pushString = (segments.Count == 0);
                         skipNext = true;
                         break;
                 }
 
+                // Always ensure that we push the last
+                // segment to the list.
+                if (i == len - 1)
+                {
+                    endPos = i + 1;
+                    pushString = true;
+                }
+
                 // Do we need to push the contents of the buffer
                 // into the segment list?
-                if (pushBuffer)
+                if (pushString)
                 {
-                    // We never want to push an empty buffer.
-                    if (buffer.Length > 0)
+                    // We never want to push an empty string.
+                    if (endPos - startPos > 0)
                     {
-                        segments.Add(buffer.ToString());
-                        buffer.Clear();
+                        segments.Add(aLine[startPos..endPos].ToString());
+                        startPos = i;
+                        endPos = i + 1;
                     }
 
-                    pushBuffer = false;
+                    pushString = false;
                 }
 
                 // We should append this character to the buffer provided
                 // that we have not been told to skip.
                 if (!skipNext && !skipUntilEnd)
                 {
-                    buffer.Append(c);
+                    ++endPos;
+                    continue;
                 }
-                else
-                {
-                    skipNext = false;
-                }
+
+                ++startPos;
+                skipNext = false;
             }
 
             if (inString)
@@ -154,14 +225,6 @@ namespace VMCore.AsmParser
                 // exception as we cannot be sure of the validity of
                 // the parsed data.
                 throw new AsmParserException("lemon");
-            }
-
-            // Push whatever is left in the buffer into the segment
-            // list. This will always need to happen as the last
-            // segment will never be pushed.
-            if (buffer.Length > 0)
-            {
-                segments.Add(buffer.ToString());
             }
 
             return BuildInstruction(segments.ToArray());
@@ -201,9 +264,15 @@ namespace VMCore.AsmParser
             // then we are done.
             if (asmName[0] == '@')
             {
+                var label = asmName[1..];
+                if (string.IsNullOrEmpty(label))
+                {
+                    throw new ParserException("blackberry");
+                }
+
                 return
                     new QuickIns(OpCode.LABEL,
-                                 new object[] { asmName[1..] });
+                                 new object[] { label });
             }
 
             // If the instruction has no arguments then it is simple to
@@ -211,14 +280,24 @@ namespace VMCore.AsmParser
             // If it has arguments then the job is more difficult as we
             // will have to perform validation on the number of arguments,
             // their types, etc. to find the best match.
-            return aSegments.Length == 1 ? 
-                ParseSimpleInstruction(asmName) :
-                ParseComplexInstruction(asmName, args);
+            return aSegments.Length == 1 ?
+                ParseSimple(asmName) :
+                ParseComplex(asmName, args);
         }
 
-        private QuickIns ParseSimpleInstruction(string aName)
+        /// <summary>
+        /// Parse a simple instruction - an instruction that has
+        /// no arguments.
+        /// </summary>
+        /// <param name="aInsName">
+        /// The mnemonic of the instruction.
+        /// </param>
+        /// <returns>
+        /// A QuickIns object containing the parsed data.
+        /// </returns>
+        private QuickIns ParseSimple(string aInsName)
         {
-            if (!Enum.TryParse(aName.ToUpper(), out OpCode op))
+            if (!Enum.TryParse(aInsName.ToUpper(), out OpCode op))
             {
                 throw new AsmParserException("dragon fruit");
             }
@@ -226,6 +305,16 @@ namespace VMCore.AsmParser
             return new QuickIns(op);
         }
 
+        /// <summary>
+        /// Parse the arguments to be passed to a complex instruction.
+        /// </summary>
+        /// <param name="aArgs">
+        /// An array containing the data for the arguments to be parsed.
+        /// </param>
+        /// <returns>
+        /// A ParInstructionData object containing the data parsed from
+        /// the arguments.
+        /// </returns>
         private ParInstructionData ParseArgs(IReadOnlyList<string> aArgs)
         {
             var len = aArgs.Count;
@@ -288,7 +377,7 @@ namespace VMCore.AsmParser
                         // updated at compile time.
                         values[i] = 0;
                         refTypes[i] = InsArgTypes.LiteralPointer;
-                        labels[i] = ParseLabel(arg[1..]);
+                        labels[i] = TryParseLabel(arg[1..]);
                         continue;
                 }
 
@@ -301,7 +390,6 @@ namespace VMCore.AsmParser
                     // This is a register identifier.
                     values[i] = reg;
                     refTypes[i] = InsArgTypes.Register;
-
                     continue;
                 }
 
@@ -313,8 +401,21 @@ namespace VMCore.AsmParser
             return new ParInstructionData(values, refTypes, labels);
         }
 
-        private QuickIns ParseComplexInstruction(string aInsName,
-                                                 string[] aRawArgs)
+        /// <summary>
+        /// Parse a complex instruction - an instruction that has one
+        /// or more arguments.
+        /// </summary>
+        /// <param name="aInsName">
+        /// The mnemonic name of the instruction.
+        /// </param>
+        /// <param name="aRawArgs">
+        /// The name of the instruction.
+        /// </param>
+        /// <returns>
+        /// A QuickIns object containing the parsed data.
+        /// </returns>
+        private QuickIns ParseComplex(string aInsName,
+                                      IReadOnlyList<string> aRawArgs)
         {
             var args = ParseArgs(aRawArgs);
             var insName = aInsName.ToLower();
@@ -351,8 +452,8 @@ namespace VMCore.AsmParser
                 var ins = insPair.Value;
 
                 if (ins.AsmName != insName ||
-                    !argTypes.SequenceEqual(ins.ArgumentTypes) ||
-                    !args.ArgRefTypes.SequenceEqual(ins.ArgumentRefTypes))
+                    !FastTypeArrayEqual(argTypes, ins.ArgumentTypes) ||
+                    !FastArgRefTypeEqual(args.ArgRefTypes, ins.ArgumentRefTypes))
                 {
                     // One (or more) of the following do not match:
                     // * the mnemonic (ASM) name;
@@ -372,13 +473,22 @@ namespace VMCore.AsmParser
             // We did not find a valid match.
             if (op == null)
             {
-                throw new AsmParserException("mushrooms");
+                throw new AsmParserException("lime");
             }
 
             return new QuickIns((OpCode)op, args.Arguments, asmLabel);
         }
 
-        private static string ParseLabel(string aData)
+        /// <summary>
+        /// Parse a label argument.
+        /// </summary>
+        /// <param name="aData">
+        /// A string containing the name of the label.
+        /// </param>
+        /// <returns>
+        /// A string containing the parsed name of the label.
+        /// </returns>
+        private static string TryParseLabel(string aData)
         {
             // A valid label is any one or more
             // alpha numeric characters.
@@ -394,9 +504,23 @@ namespace VMCore.AsmParser
                 label.Append(c);
             }
 
+            if (label.Equals(""))
+            {
+                throw new ParserException("cherry");
+            }
+
             return label.ToString();
         }
 
+        /// <summary>
+        /// Parse an integer literal argument.
+        /// </summary>
+        /// <param name="aData">
+        /// A string containing the integer to be parsed.
+        /// </param>
+        /// <returns>
+        /// An integer containing the parsed value.
+        /// </returns>
         private static int ParseIntegerLiteral(string aData)
         {
             var result = 0;
@@ -415,26 +539,26 @@ namespace VMCore.AsmParser
                     break;
 
                 default:
-                {
-                    if (aData[0] == '0')
                     {
-                        // An octal literal.
-                        success = TryParseOctInt(aData[1..], out result);
-                    }
-                    else
-                    {
-                        // If all else fails, we will try a normal integer
-                        // parse.
-                        success = TryParseInt(aData, out result);
-                    }
+                        if (aData[0] == '0')
+                        {
+                            // An octal literal.
+                            success = TryParseOctInt(aData[1..], out result);
+                        }
+                        else
+                        {
+                            // If all else fails, we will try a normal integer
+                            // parse.
+                            success = TryParseInt(aData, out result);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
             }
 
             if (!success)
             {
-                throw new AsmParserException("parsnip");
+                throw new AsmParserException("guava");
             }
 
             return result;
@@ -523,9 +647,9 @@ namespace VMCore.AsmParser
         {
             return
                 int.TryParse(aStr,
-                    NumberStyles.HexNumber,
-                    CultureInfo.CurrentCulture,
-                    out aNum);
+                             NumberStyles.HexNumber,
+                             CultureInfo.CurrentCulture,
+                             out aNum);
         }
 
         /// <summary>
@@ -542,6 +666,49 @@ namespace VMCore.AsmParser
         private static bool TryParseInt(string aStr, out int aNum)
         {
             return int.TryParse(aStr, out aNum);
+        }
+
+
+        private static bool FastTypeArrayEqual(IReadOnlyList<Type> a1,
+                                               IReadOnlyList<Type> a2)
+        {
+            var len1 = a1.Count;
+
+            if (len1 != a2.Count)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < len1; i++)
+            {
+                if (a1[i] != a2[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool FastArgRefTypeEqual(IReadOnlyList<InsArgTypes> a1,
+                                                IReadOnlyList<InsArgTypes> a2)
+        {
+            var len1 = a1.Count;
+
+            if (len1 != a2.Count)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < len1; i++)
+            {
+                if (a1[i] != a2[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

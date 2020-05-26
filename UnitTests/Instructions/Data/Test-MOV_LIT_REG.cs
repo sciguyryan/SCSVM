@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using VMCore;
 using VMCore.Assembler;
 using VMCore.VM;
-using VMCore.VM.Core.Exceptions;
+using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.Instructions

@@ -1,5 +1,6 @@
 ﻿using System;
 using VMCore.VM.Core.Exceptions;
+using VMCore.VM.Core.Utilities;
 
 namespace VMCore.VM.Core.Reg
 {

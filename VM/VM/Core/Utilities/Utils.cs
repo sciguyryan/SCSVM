@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.Assembler;
 
-namespace VMCore.VM
+namespace VMCore.VM.Core.Utilities
 {
     public class Utils
     {

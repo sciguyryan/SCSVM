@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Reg;
+using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
 
 namespace VMCore.VM.Core

@@ -6,7 +6,7 @@ using VMCore.VM.Core.Interrupts;
 using VMCore.VM.Core.Sockets;
 using VMCore.VM.Instructions;
 
-namespace VMCore.VM
+namespace VMCore.VM.Core.Utilities
 {
     /// <summary>
     /// A set of utility functions to work with reflection.
@@ -21,8 +21,22 @@ namespace VMCore.VM
         /// <summary>
         /// A cached of the opcodes mapped to their instruction instances.
         /// </summary>
-        public static Dictionary<OpCode, Instruction> InstructionCache { get; private set; } =
+        private static bool _isInsCacheGenerated = false;
+        private static readonly Dictionary<OpCode, Instruction> _instructionCache =
             new Dictionary<OpCode, Instruction>();
+
+        public static Dictionary<OpCode, Instruction> InstructionCache
+        {
+            get
+            {
+                if (!_isInsCacheGenerated)
+                {
+                    BuildCachesAndHooks(true);
+                }
+
+                return _instructionCache;
+            }
+        }
 
         /// <summary>
         /// Build the type caches used by this application and applies
@@ -40,10 +54,13 @@ namespace VMCore.VM
 
             // If there is anything in our instruction cache
             // then we do not need to run this again.
-            if (InstructionCache.Count > 0)
+            if (_isInsCacheGenerated)
             {
                 return;
             }
+
+            // Indicate that we have generate the instruction cache.
+            _isInsCacheGenerated = true;
 
             var types = new HashSet<Type>();
             foreach (var t in Assembly.GetExecutingAssembly().GetTypes())
@@ -100,8 +117,8 @@ namespace VMCore.VM
             var instance = 
                 (Instruction)Activator.CreateInstance(aType);
 
-            if (!ReflectionUtils.InstructionCache.TryAdd(instance.OpCode,
-                                                         instance))
+            if (!_instructionCache.TryAdd(instance.OpCode,
+                                          instance))
             {
                 throw new Exception($"HandleInstructionType: failed to add instruction implementation class '{instance.GetType()}' for opcode '{instance.OpCode}'. An implementation has already been found for the given opcode.");
             }
@@ -181,7 +198,8 @@ namespace VMCore.VM
         /// </summary>
         public static void ClearCachesAndHooks()
         {
-            InstructionCache.Clear();
+            _isInsCacheGenerated = false;
+            _instructionCache.Clear();
             InterruptManager.Handlers.Clear();
             SocketDeviceManager.ReadSockets.Clear();
             SocketDeviceManager.WriteSockets.Clear();

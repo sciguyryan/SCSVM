@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using VMCore.Assembler.Optimisations;
-using VMCore.VM;
+using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
 
 namespace VMCore.Assembler
@@ -49,8 +49,6 @@ namespace VMCore.Assembler
 
         public AsmWriter(bool aOptimize)
         {
-            ReflectionUtils.BuildCachesAndHooks(true);
-
             _optimize = aOptimize;
             _ms = new MemoryStream();
             _bw = new BinaryWriter(_ms);

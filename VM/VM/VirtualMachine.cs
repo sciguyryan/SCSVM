@@ -4,6 +4,7 @@ using VMCore.VM;
 using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Mem;
+using VMCore.VM.Core.Utilities;
 
 namespace VMCore
 {

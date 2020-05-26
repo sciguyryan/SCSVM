@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using VMCore;
-using VMCore.VM;
 using VMCore.Assembler;
+using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.Instructions

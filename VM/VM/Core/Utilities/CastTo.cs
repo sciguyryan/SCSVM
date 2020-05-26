@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace VMCore.VM.Core
+namespace VMCore.VM.Core.Utilities
 {
     // This very handy class came from here:
     // https://stackoverflow.com/a/23391746

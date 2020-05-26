@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using VMCore;
-using VMCore.VM;
 using VMCore.AsmParser;
+using VMCore.VM.Core.Utilities;
 
 namespace TestConsole
 {
@@ -15,7 +15,7 @@ namespace TestConsole
 
             var lines = new string[]
             {
-                "mov $0x10, R1",
+                /*"mov $0x10, R1",
                 "mov $0x11, R2",
                 "mov $0x100, R3",
                 "add R1, R2",
@@ -24,7 +24,8 @@ namespace TestConsole
                 "hlt",
                 "@GOOD",
                 "mov $0x1413, R4",
-                "hlt"
+                "hlt"*/
+                "mov $0b10, R1 ; this is a comment"
             };
 
             var progText =

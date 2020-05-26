@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using VMCore;
 using VMCore.Assembler;
-using VMCore.VM;
+using VMCore.VM.Core.Utilities;
 
 namespace UnitTests.Instructions
 {

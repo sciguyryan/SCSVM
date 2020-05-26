@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
-using System.Runtime.Intrinsics.X86;
 using System.Text;
 using VMCore.Assembler;
 using VMCore.Expressions;
-using VMCore.VM;
 using VMCore.VM.Core;
+using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
 
 namespace VMCore.AsmParser
@@ -27,10 +25,6 @@ namespace VMCore.AsmParser
 
         public AsmParser()
         {
-            // We need to do this just in case the cache
-            // has not already been built.
-            ReflectionUtils.BuildCachesAndHooks(true);
-
             // Load the instruction cache.
             _insCache = ReflectionUtils.InstructionCache;
         }
@@ -127,10 +121,8 @@ namespace VMCore.AsmParser
                 return null;
             }
 
+            var buffer = new StringBuilder();
             var segments = new List<string>();
-
-            var startPos = 0;
-            var endPos = 0;
 
             var skipNext = false;
             var inBracket = false;
@@ -139,8 +131,24 @@ namespace VMCore.AsmParser
             var pushString = false;
 
             var len = aLine.Length;
-            for (var i = 0; i < len; i++)
+            for (var i = 0; i <= len; i++)
             {
+                // Always ensure that we push the last segment to
+                // the list.
+                // This needs to be done here as we might end up
+                // skipping the last character in the string,
+                // which would prevent this code being run if
+                // added to the end of the loop.
+                if (i == len)
+                {
+                    if (buffer.Length > 0)
+                    {
+                        segments.Add(buffer.ToString());
+                    }
+
+                    break;
+                }
+
                 var c = aLine[i];
                 switch (c)
                 {
@@ -170,45 +178,35 @@ namespace VMCore.AsmParser
                         pushString = !inString;
                         break;
 
-                    case char _ when char.IsWhiteSpace(c):
-                        pushString = (segments.Count == 0);
-                        skipNext = true;
+                    case ' ':
+                    case '\t':
+                        pushString =
+                            !inString && (segments.Count == 0);
+                        skipNext = !inString;
                         break;
-                }
-
-                // Always ensure that we push the last
-                // segment to the list.
-                if (i == len - 1)
-                {
-                    endPos = i + 1;
-                    pushString = true;
                 }
 
                 // Do we need to push the contents of the buffer
                 // into the segment list?
                 if (pushString)
                 {
-                    // We never want to push an empty string.
-                    if (endPos - startPos > 0)
+                    if (buffer.Length > 0)
                     {
-                        segments.Add(aLine[startPos..endPos].ToString());
-                        startPos = i;
-                        endPos = i + 1;
+                        segments.Add(buffer.ToString());
+                        buffer.Clear();
                     }
-
+                    
                     pushString = false;
                 }
 
-                // We should append this character to the buffer provided
-                // that we have not been told to skip.
-                if (!skipNext && !skipUntilEnd)
+                // Do we need to skip this character?
+                if (skipNext || skipUntilEnd)
                 {
-                    ++endPos;
+                    skipNext = false;
                     continue;
                 }
 
-                ++startPos;
-                skipNext = false;
+                buffer.Append(c);
             }
 
             if (inString)
@@ -264,7 +262,8 @@ namespace VMCore.AsmParser
             // then we are done.
             if (asmName[0] == '@')
             {
-                var label = asmName[1..];
+                var label = TryParseLabel(asmName[1..]);
+
                 if (string.IsNullOrEmpty(label))
                 {
                     throw new ParserException("blackberry");
@@ -451,6 +450,14 @@ namespace VMCore.AsmParser
             {
                 var ins = insPair.Value;
 
+                // If we have a label then checking this will be a
+                // fast path as few instructions can support a label.
+                if (asmLabel != null &&
+                    !ins.CanBindToLabel(asmLabel.BoundArgumentIndex))
+                {
+                    continue;
+                }
+
                 if (ins.AsmName != insName ||
                     !FastTypeArrayEqual(argTypes, ins.ArgumentTypes) ||
                     !FastArgRefTypeEqual(args.ArgRefTypes, ins.ArgumentRefTypes))
@@ -526,39 +533,56 @@ namespace VMCore.AsmParser
             var result = 0;
             var success = false;
 
-            switch (aData[0..2])
+            var isSigned = (aData[0] == '-');
+            var offset = !isSigned ? 0 : 1;
+            var prefix = 
+                !isSigned ? aData[..2] : aData[offset..3];
+
+            switch (prefix)
             {
                 case "0b":
                     // A binary literal.
-                    success = TryParseBinInt(aData[2..], out result);
+                    success = 
+                        TryParseBinInt(aData[(2 + offset)..], out result);
                     break;
 
                 case "0x":
                     // A hexadecimal literal.
-                    success = TryParseHexInt(aData[2..], out result);
+                    success = 
+                        TryParseHexInt(aData[(2 + offset)..], out result);
                     break;
 
                 default:
                     {
-                        if (aData[0] == '0')
+                        var octalChar =
+                            !isSigned ? aData[0] : aData[1];
+
+                        if (octalChar == '0')
                         {
                             // An octal literal.
-                            success = TryParseOctInt(aData[1..], out result);
+                            success = 
+                                TryParseOctInt(aData[(1 + offset)..],
+                                               out result);
                         }
                         else
                         {
-                            // If all else fails, we will try a normal integer
-                            // parse.
-                            success = TryParseInt(aData, out result);
+                            // If all else fails, we will try a normal
+                            // (decimal) integer parse.
+                            success = TryParseInt(aData[offset..],
+                                                  out result);
                         }
-
-                        break;
                     }
+                    break;
             }
 
             if (!success)
             {
                 throw new AsmParserException("guava");
+            }
+
+            if (isSigned)
+            {
+                result *= -1;
             }
 
             return result;
@@ -672,6 +696,11 @@ namespace VMCore.AsmParser
         private static bool FastTypeArrayEqual(IReadOnlyList<Type> a1,
                                                IReadOnlyList<Type> a2)
         {
+            if (a1 == null || a2 == null)
+            {
+                return (a1 == null && a2 == null);
+            }
+
             var len1 = a1.Count;
 
             if (len1 != a2.Count)
@@ -693,6 +722,11 @@ namespace VMCore.AsmParser
         private static bool FastArgRefTypeEqual(IReadOnlyList<InsArgTypes> a1,
                                                 IReadOnlyList<InsArgTypes> a2)
         {
+            if (a1 == null || a2 == null)
+            {
+                return (a1 == null && a2 == null);
+            }
+
             var len1 = a1.Count;
 
             if (len1 != a2.Count)

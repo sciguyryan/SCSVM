@@ -1,6 +1,6 @@
 ﻿using System;
-using VMCore.VM;
 using VMCore.Expressions;
+using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
 
 namespace VMCore.Assembler.Optimisations

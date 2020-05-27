@@ -1,7 +1,7 @@
 ﻿Examples of the assembly syntax:
 
 mov $42, R1
-copies the literal 0x42 into R1.
+copies the literal 42 into R1.
 
 mov R1, R2
 copies the value from R1 to R2.

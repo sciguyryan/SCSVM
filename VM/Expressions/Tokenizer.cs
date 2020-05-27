@@ -135,7 +135,11 @@ namespace VMCore.Expressions
                 return;
             }
 
-            throw new ParserException($"NextToken: failed to parse the string - invalid character {_char} was present in the input string.");
+            throw new ParserException
+            (
+                $"NextToken: failed to parse the string - invalid " +
+                $"character {_char} was present in the input string."
+            );
         }
 
         /// <summary>

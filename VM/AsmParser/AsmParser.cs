@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using VMCore.Assembler;
-using VMCore.Expressions;
 using VMCore.VM.Core;
+using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
 
@@ -16,21 +16,90 @@ namespace VMCore.AsmParser
         /// <summary>
         /// A cached of the opcodes to their instruction instances.
         /// </summary>
-        /// <remarks>
-        /// Since the CPU cannot be run on its own then this is safe
-        /// to use here as the virtual machine parent will always
-        /// have called the method to build these caches.
-        /// </remarks>
-        private readonly Dictionary<OpCode, Instruction> _insCache;
+        private readonly Dictionary<OpCode, Instruction> _insCache =
+            ReflectionUtils.InstructionCache;
+
+        #region EXCEPTIONS
+
+        /// <summary>
+        /// A list of exception IDs used by this class.
+        /// </summary>
+        private enum ExIDs
+        {
+            MismatchedBrackets,
+            InvalidBracketPosition,
+            MismatchedString,
+            InvalidLabel,
+            InvalidIntLiteral,
+            InvalidRegisterIdentifier,
+            InvalidArgumentType,
+            MultipleArgumentLabels,
+            InvalidInstruction,
+        };
+
+        /// <summary>
+        /// A list of the exception messages used by this class.
+        /// </summary>
+        private Dictionary<ExIDs, string> _exMessages = 
+            new Dictionary<ExIDs, string>() 
+        {
+            {
+                ExIDs.MismatchedBrackets,
+                "An unmatched bracket was identified on line {0}, " +
+                "position {1}. The data could not be parsed."
+            },
+            {
+                ExIDs.InvalidBracketPosition,
+                "A bracket was detected at an invalid position " +
+                "on line {0}, position {1}. The data could not " +
+                "be parsed."
+            },
+            {
+                ExIDs.MismatchedString,
+                "An unmatched string was identified on line {0}, " +
+                "position {1}. The data could not be parsed."
+            },
+            {
+                ExIDs.InvalidLabel,
+                "Attempted to parse a label with an invalid or " +
+                "missing identifier."
+            },
+            {
+                ExIDs.InvalidIntLiteral,
+                "Failed to parse an integer literal. " +
+                "Value = '{0}', AllowNegative = {1}."
+            },
+            {
+                ExIDs.InvalidRegisterIdentifier,
+                "The string was not a valid register identifier: '{0}'."
+            },
+            {
+                ExIDs.InvalidArgumentType,
+                "The argument type for the string could not be " +
+                "determined. String = '{0}'."
+            },
+            {
+                ExIDs.MultipleArgumentLabels,
+                "More than one label was provided as arguments to the " +
+                "instruction. This is not currently supported.\n" +
+                "Instruction = '{0}', Arguments = {1}."
+            },
+            {
+                ExIDs.InvalidInstruction,
+                "No matching instruction was found for the input string.\n" +
+                "Instruction = '{0}'\nArguments = {1}\nArgument Types = {2}\n" +
+                "Argument Ref Types = {3}."
+            },
+        };
+
+        #endregion // EXCEPTIONS
 
         public AsmParser()
         {
-            // Load the instruction cache.
-            _insCache = ReflectionUtils.InstructionCache;
         }
 
         /// <summary>
-        /// Parse a complete input string.
+        /// Parse an input string into an array of instructions.
         /// </summary>
         /// <param name="aInput">The input string to be parsed.</param>
         /// <returns>
@@ -43,6 +112,7 @@ namespace VMCore.AsmParser
 
             var insList = new List<QuickIns>();
 
+            var lineNo = 0;
             var isLine = false;
             var inString = false;
 
@@ -77,25 +147,26 @@ namespace VMCore.AsmParser
                 // Are we are the end of the string?
                 if (i == len - 1)
                 {
-                    if (inString)
-                    {
-                        // We have an unmatched string, this will throw an
-                        // exception as we cannot be sure of the validity of
-                        // the parsed data.
-                        throw new ParserException("tomato");
-                    }
-
                     // Always ensure that we take the contents of the
                     // last line.
                     endPos = i + 1;
                     isLine = true;
                 }
 
-                // We do not have a line.
+                // We do not have a complete line yet.
                 // Move on to the next character.
                 if (!isLine)
                 {
                     continue;
+                }
+
+                // We should not be attempting to push a line
+                // that has an unmatched string.
+                if (inString)
+                {
+                    Assert(ExIDs.MismatchedString,
+                           lineNo,
+                           i);
                 }
 
                 // We have a line. Pass the span into
@@ -108,12 +179,21 @@ namespace VMCore.AsmParser
 
                 startPos = i + skipChars;
                 isLine = false;
+                ++lineNo;
             }
 
             return insList.ToArray();
         }
 
-        public QuickIns ParseLine(ReadOnlySpan<char> aLine)
+        /// <summary>
+        /// Parse a string and convert it into an instruction.
+        /// </summary>
+        /// <param name="aLine">The string to be parsed.</param>
+        /// <returns>
+        /// A QuickIns object representing the parsed data.
+        /// This can be null if there was no instruction to output.
+        /// </returns>
+        private QuickIns ParseLine(ReadOnlySpan<char> aLine)
         {
             // Fast path return for lines that are comments.
             if (aLine[0] == ';')
@@ -121,7 +201,8 @@ namespace VMCore.AsmParser
                 return null;
             }
 
-            var buffer = new StringBuilder();
+            var len = aLine.Length;
+            var buffer = new StringBuilder(len);
             var segments = new List<string>();
 
             var skipNext = false;
@@ -130,17 +211,32 @@ namespace VMCore.AsmParser
             var skipUntilEnd = false;
             var pushString = false;
 
-            var len = aLine.Length;
             for (var i = 0; i <= len; i++)
             {
                 // Always ensure that we push the last segment to
                 // the list.
-                // This needs to be done here as we might end up
-                // skipping the last character in the string,
-                // which would prevent this code being run if
-                // added to the end of the loop.
+                // This needs to be done here otherwise we might end
+                // up skipping the entire last segment of the line.
                 if (i == len)
                 {
+                    // We should not be attempting to push a line
+                    // that has a mismatched bracket.
+                    if (inBracket)
+                    {
+                        Assert(ExIDs.MismatchedBrackets,
+                               segments.Count + 1,
+                               i);
+                    }
+
+                    // We should not be attempting to push a line
+                    // that has an unmatched string.
+                    if (inString)
+                    {
+                        Assert(ExIDs.MismatchedString,
+                               segments.Count + 1,
+                               i);
+                    }
+
                     if (buffer.Length > 0)
                     {
                         segments.Add(buffer.ToString());
@@ -161,13 +257,17 @@ namespace VMCore.AsmParser
                         break;
 
                     case '[':
-                        inBracket = true;
+                        inBracket = !inString;
                         break;
 
                     case ']':
-                        if (!inBracket)
+                        // Do we have a closing bracket but no matching
+                        // opening bracket?
+                        if (!inBracket && !inString)
                         {
-                            throw new AsmParserException("melon");
+                            Assert(ExIDs.MismatchedBrackets,
+                                   segments.Count + 1,
+                                   i);
                         }
 
                         inBracket = false;
@@ -178,8 +278,7 @@ namespace VMCore.AsmParser
                         pushString = !inString;
                         break;
 
-                    case ' ':
-                    case '\t':
+                    case char _ when char.IsWhiteSpace(c):
                         pushString =
                             !inString && (segments.Count == 0);
                         skipNext = !inString;
@@ -190,12 +289,21 @@ namespace VMCore.AsmParser
                 // into the segment list?
                 if (pushString)
                 {
+                    // We should not be attempting to push a string
+                    // that has a mismatched bracket within it.
+                    if (inBracket)
+                    {
+                        Assert(ExIDs.InvalidBracketPosition,
+                               segments.Count + 1,
+                               i);
+                    }
+
                     if (buffer.Length > 0)
                     {
                         segments.Add(buffer.ToString());
                         buffer.Clear();
                     }
-                    
+
                     pushString = false;
                 }
 
@@ -207,22 +315,6 @@ namespace VMCore.AsmParser
                 }
 
                 buffer.Append(c);
-            }
-
-            if (inString)
-            {
-                // We have an unmatched string, this will throw an
-                // exception as we cannot be sure of the validity of
-                // the parsed data.
-                throw new AsmParserException("watermelon");
-            }
-
-            if (inBracket)
-            {
-                // We have an unmatched bracket, this will throw an
-                // exception as we cannot be sure of the validity of
-                // the parsed data.
-                throw new AsmParserException("lemon");
             }
 
             return BuildInstruction(segments.ToArray());
@@ -264,9 +356,9 @@ namespace VMCore.AsmParser
             {
                 var label = TryParseLabel(asmName[1..]);
 
-                if (string.IsNullOrEmpty(label))
+                if (string.IsNullOrWhiteSpace(label))
                 {
-                    throw new ParserException("blackberry");
+                    Assert(ExIDs.InvalidLabel);
                 }
 
                 return
@@ -298,7 +390,9 @@ namespace VMCore.AsmParser
         {
             if (!Enum.TryParse(aInsName.ToUpper(), out OpCode op))
             {
-                throw new AsmParserException("dragon fruit");
+                Assert(ExIDs.InvalidInstruction,
+                        aInsName,
+                        "", "", "");
             }
 
             return new QuickIns(op);
@@ -351,7 +445,12 @@ namespace VMCore.AsmParser
                         // This is a literal address pointer.
                         // This can be treated as a normal
                         // integer argument.
-                        values[i] = ParseIntegerLiteral(arg[2..]);
+                        // There is one exception and that is that
+                        // they cannot be signed (negative) as that
+                        // would point to an invalid memory address.
+                        values[i] =
+                            ParseIntegerLiteral(arg[2..],
+                                                false);
                         refTypes[i] = InsArgTypes.LiteralPointer;
                         continue;
 
@@ -362,7 +461,8 @@ namespace VMCore.AsmParser
                             if (!TryParseRegister(arg[1..],
                                                   out var regPtr))
                             {
-                                throw new AsmParserException("plum");
+                                Assert(ExIDs.InvalidRegisterIdentifier,
+                                       arg[1..]);
                             }
 
                             values[i] = regPtr;
@@ -392,9 +492,7 @@ namespace VMCore.AsmParser
                     continue;
                 }
 
-                // We did not find a valid argument type so the data
-                // is likely invalid.
-                throw new AsmParserException("kiwi");
+                Assert(ExIDs.InvalidArgumentType, arg);
             }
 
             return new ParInstructionData(values, refTypes, labels);
@@ -427,7 +525,7 @@ namespace VMCore.AsmParser
             {
                 argTypes[i] = args.Arguments[i].GetType();
 
-                if (string.IsNullOrEmpty(args.BoundLabels[i]))
+                if (string.IsNullOrWhiteSpace(args.BoundLabels[i]))
                 {
                     continue;
                 }
@@ -436,7 +534,9 @@ namespace VMCore.AsmParser
                 {
                     // We cannot have more than one bound label
                     // to an instruction currently.
-                    throw new AsmParserException("peach");
+                    Assert(ExIDs.MultipleArgumentLabels,
+                           aInsName,
+                           string.Join(", ", aRawArgs));
                 }
 
                 asmLabel = new AsmLabel(args.BoundLabels[i], i);
@@ -460,7 +560,8 @@ namespace VMCore.AsmParser
 
                 if (ins.AsmName != insName ||
                     !FastTypeArrayEqual(argTypes, ins.ArgumentTypes) ||
-                    !FastArgRefTypeEqual(args.ArgRefTypes, ins.ArgumentRefTypes))
+                    !FastArgRefTypeEqual(args.ArgRefTypes,
+                                         ins.ArgumentRefTypes))
                 {
                     // One (or more) of the following do not match:
                     // * the mnemonic (ASM) name;
@@ -480,7 +581,11 @@ namespace VMCore.AsmParser
             // We did not find a valid match.
             if (op == null)
             {
-                throw new AsmParserException("lime");
+                Assert(ExIDs.InvalidInstruction,
+                       aInsName,
+                       string.Join(", ", aRawArgs),
+                       string.Join<Type>(", ", argTypes),
+                       string.Join(", ", args.ArgRefTypes));
             }
 
             return new QuickIns((OpCode)op, args.Arguments, asmLabel);
@@ -495,11 +600,11 @@ namespace VMCore.AsmParser
         /// <returns>
         /// A string containing the parsed name of the label.
         /// </returns>
-        private static string TryParseLabel(string aData)
+        private string TryParseLabel(string aData)
         {
             // A valid label is any one or more
             // alpha numeric characters.
-            var label = new StringBuilder();
+            var label = new StringBuilder(aData.Length);
 
             foreach (var c in aData)
             {
@@ -511,9 +616,10 @@ namespace VMCore.AsmParser
                 label.Append(c);
             }
 
+            // We cannot have an empty label.
             if (label.Equals(""))
             {
-                throw new ParserException("cherry");
+                Assert(ExIDs.InvalidLabel);
             }
 
             return label.ToString();
@@ -525,30 +631,64 @@ namespace VMCore.AsmParser
         /// <param name="aData">
         /// A string containing the integer to be parsed.
         /// </param>
+        /// <param name="aAllowNegative">
+        /// If negative values should be permitted during parsing.
+        /// </param>
         /// <returns>
         /// An integer containing the parsed value.
         /// </returns>
-        private static int ParseIntegerLiteral(string aData)
+        private int ParseIntegerLiteral(string aData,
+                                        bool aAllowNegative = true)
         {
+            // An empty string cannot be considered a valid
+            // integer literal.
+            if (string.IsNullOrWhiteSpace(aData))
+            {
+                Assert(ExIDs.InvalidIntLiteral,
+                       aData,
+                       aAllowNegative);
+            }
+
             var result = 0;
             var success = false;
 
-            var isSigned = (aData[0] == '-');
+            var isSigned = aData[0] == '-';
+
+            // Have we been told to reject negative (signed)
+            // integers while parsing?
+            if (isSigned && !aAllowNegative)
+            {
+                Assert(ExIDs.InvalidIntLiteral,
+                       aData,
+                       aAllowNegative);
+            }
+
             var offset = !isSigned ? 0 : 1;
-            var prefix = 
-                !isSigned ? aData[..2] : aData[offset..3];
+            var prefix = "";
+            if (aData.Length >= 2)
+            {
+                prefix = !isSigned ? aData[..2] : aData[offset..3];
+            }
+
+            var tryDecimal = false;
 
             switch (prefix)
             {
+                case "":
+                    // We do not have a prefix. This means
+                    // that the value is likely to be decimal.
+                    tryDecimal = true;
+                    break;
+
                 case "0b":
                     // A binary literal.
-                    success = 
+                    success =
                         TryParseBinInt(aData[(2 + offset)..], out result);
                     break;
 
                 case "0x":
                     // A hexadecimal literal.
-                    success = 
+                    success =
                         TryParseHexInt(aData[(2 + offset)..], out result);
                     break;
 
@@ -560,24 +700,31 @@ namespace VMCore.AsmParser
                         if (octalChar == '0')
                         {
                             // An octal literal.
-                            success = 
+                            success =
                                 TryParseOctInt(aData[(1 + offset)..],
                                                out result);
                         }
                         else
                         {
-                            // If all else fails, we will try a normal
-                            // (decimal) integer parse.
-                            success = TryParseInt(aData[offset..],
-                                                  out result);
+                            tryDecimal = true;
                         }
                     }
                     break;
             }
 
+            if (tryDecimal)
+            {
+                // If all else fails, we will try a normal
+                // (decimal) integer parse.
+                success = TryParseInt(aData[offset..], out result);
+            }
+
+            // Was the input string a successfully parsed?
             if (!success)
             {
-                throw new AsmParserException("guava");
+                Assert(ExIDs.InvalidIntLiteral,
+                       aData,
+                       aAllowNegative);
             }
 
             if (isSigned)
@@ -692,7 +839,15 @@ namespace VMCore.AsmParser
             return int.TryParse(aStr, out aNum);
         }
 
-
+        /// <summary>
+        /// A faster (limited scope) array equality checker.
+        /// </summary>
+        /// <param name="a1">The first Type array to be checked.</param>
+        /// <param name="a2">The first Type array to be checked.</param>
+        /// <returns>
+        /// A boolean, true if both of the arrays are equal,
+        /// false otherwise.
+        /// </returns>
         private static bool FastTypeArrayEqual(IReadOnlyList<Type> a1,
                                                IReadOnlyList<Type> a2)
         {
@@ -717,6 +872,15 @@ namespace VMCore.AsmParser
             }
 
             return true;
+        }
+
+        private void Assert(ExIDs aId,
+                            params object[] aParams)
+        {
+            throw new AsmParserException
+            (
+                string.Format(_exMessages[aId], aParams)
+            );
         }
 
         private static bool FastArgRefTypeEqual(IReadOnlyList<InsArgTypes> a1,

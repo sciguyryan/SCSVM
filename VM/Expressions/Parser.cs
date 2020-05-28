@@ -34,7 +34,7 @@
 
             if (_tokenizer.Token != Tokens.EOF)
             {
-                throw new ParserException("ParseExpression: unexpected characters at end of expression.");
+                throw new ExprParserException("ParseExpression: unexpected characters at end of expression.");
             }
 
             return expr;
@@ -155,7 +155,7 @@
                 return new NodeRegister(name);
             }
 
-            throw new ParserException($"ParseLeaf: unexpected token: {_tokenizer.Token}.");
+            throw new ExprParserException($"ParseLeaf: unexpected token: {_tokenizer.Token}.");
         }
     }
 }

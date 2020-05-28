@@ -2,10 +2,10 @@
 
 namespace VMCore.Expressions
 {
-    public class ParserException
+    public class ExprParserException
         : Exception
     {
-        public ParserException(string aMessage)
+        public ExprParserException(string aMessage)
             : base(aMessage)
         {
         }

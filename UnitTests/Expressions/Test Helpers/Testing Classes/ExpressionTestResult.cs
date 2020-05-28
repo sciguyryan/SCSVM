@@ -1,4 +1,6 @@
-﻿using VMCore;
+﻿using System;
+using System.Diagnostics;
+using VMCore;
 using VMCore.Expressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -35,30 +37,50 @@ namespace UnitTests.Expressions
         public static void RunTests(VirtualMachine aVm, 
                                     ExpressionTestResult[] aTests)
         {
-            for (var i = 0; i < aTests.Length; i++)
+            var len = aTests.Length;
+            for (var i = 0; i < len; i++)
             {
                 var entry = aTests[i];
                 if (entry.RegisterValues != null)
                 {
-                    for (var j = 0; j < entry.RegisterValues.Length; j++)
+                    var regLen = entry.RegisterValues.Length;
+                    for (var j = 0; j < regLen; j++)
                     {
                         aVm.CPU.Registers[(Registers)j] =
                             entry.RegisterValues[j];
                     }
                 }
 
-                int value = new Parser(entry.Input)
-                    .ParseExpression()
-                    .Evaluate(aVm.CPU);
-
-                bool success = entry.Type switch
+                var value = 0;
+                var success = false;
+                try
                 {
-                    ResultTypes.EQUAL   => value == entry.Result,
-                    _                   => false
-                };
+                    value = 
+                        new Parser(entry.Input)
+                            .ParseExpression()
+                            .Evaluate(aVm.CPU);
 
-                Assert.IsTrue(success,
-                              $"Result of test {i} is incorrect. Expected {entry.Result}, got {value}. Expression = '{entry.Input}'.");
+                    success = entry.Type switch
+                    {
+                        ResultTypes.EQUAL => value == entry.Result,
+                        _                 => false
+                    };
+                }
+                catch
+                {
+                    Debug.WriteLine
+                    (
+                        $"An exception occurred when running " +
+                        $"test {i}. Test string = {entry.Input}."
+                    );
+                }
+
+                Assert.IsTrue
+                (
+                    success,
+                    $"Result of test {i} is incorrect. " +
+                    $"Expected {entry.Result}, got {value}. Expression = '{entry.Input}'."
+                );
             }
         }
     }

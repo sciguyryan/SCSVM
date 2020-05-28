@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.Assembler;
 using VMCore.VM.Core;
@@ -162,12 +163,10 @@ namespace VMCore.AsmParser
 
                 // We should not be attempting to push a line
                 // that has an unmatched string.
-                if (inString)
-                {
-                    Assert(ExIDs.MismatchedString,
-                           lineNo,
-                           i);
-                }
+                Assert(inString,
+                       ExIDs.MismatchedString,
+                       lineNo,
+                       i);
 
                 // We have a line. Pass the span into
                 // the next stage of the parser.
@@ -221,21 +220,17 @@ namespace VMCore.AsmParser
                 {
                     // We should not be attempting to push a line
                     // that has a mismatched bracket.
-                    if (inBracket)
-                    {
-                        Assert(ExIDs.MismatchedBrackets,
-                               segments.Count + 1,
-                               i);
-                    }
+                    Assert(inBracket,
+                           ExIDs.MismatchedBrackets,
+                           segments.Count + 1,
+                           i);
 
                     // We should not be attempting to push a line
                     // that has an unmatched string.
-                    if (inString)
-                    {
-                        Assert(ExIDs.MismatchedString,
-                               segments.Count + 1,
-                               i);
-                    }
+                    Assert(inString,
+                           ExIDs.MismatchedString,
+                           segments.Count + 1,
+                           i);
 
                     if (buffer.Length > 0)
                     {
@@ -263,12 +258,10 @@ namespace VMCore.AsmParser
                     case ']':
                         // Do we have a closing bracket but no matching
                         // opening bracket?
-                        if (!inBracket && !inString)
-                        {
-                            Assert(ExIDs.MismatchedBrackets,
-                                   segments.Count + 1,
-                                   i);
-                        }
+                        Assert(!inBracket && !inString,
+                               ExIDs.MismatchedBrackets,
+                               segments.Count + 1,
+                               i);
 
                         inBracket = false;
                         break;
@@ -291,12 +284,10 @@ namespace VMCore.AsmParser
                 {
                     // We should not be attempting to push a string
                     // that has a mismatched bracket within it.
-                    if (inBracket)
-                    {
-                        Assert(ExIDs.InvalidBracketPosition,
-                               segments.Count + 1,
-                               i);
-                    }
+                    Assert(inBracket,
+                           ExIDs.InvalidBracketPosition,
+                           segments.Count + 1,
+                           i);
 
                     if (buffer.Length > 0)
                     {
@@ -356,10 +347,8 @@ namespace VMCore.AsmParser
             {
                 var label = TryParseLabel(asmName[1..]);
 
-                if (string.IsNullOrWhiteSpace(label))
-                {
-                    Assert(ExIDs.InvalidLabel);
-                }
+                Assert(string.IsNullOrWhiteSpace(label),
+                       ExIDs.InvalidLabel);
 
                 return
                     new QuickIns(OpCode.LABEL,
@@ -388,14 +377,16 @@ namespace VMCore.AsmParser
         /// </returns>
         private QuickIns ParseSimple(string aInsName)
         {
-            if (!Enum.TryParse(aInsName.ToUpper(), out OpCode op))
+            if (Enum.TryParse(aInsName.ToUpper(), out OpCode op))
             {
-                Assert(ExIDs.InvalidInstruction,
-                        aInsName,
-                        "", "", "");
+                return new QuickIns(op);
             }
 
-            return new QuickIns(op);
+            Assert(true,
+                   ExIDs.InvalidInstruction,
+                   aInsName,
+                   "", "", "");
+            return null;
         }
 
         /// <summary>
@@ -461,7 +452,8 @@ namespace VMCore.AsmParser
                             if (!TryParseRegister(arg[1..],
                                                   out var regPtr))
                             {
-                                Assert(ExIDs.InvalidRegisterIdentifier,
+                                Assert(true,
+                                       ExIDs.InvalidRegisterIdentifier,
                                        arg[1..]);
                             }
 
@@ -492,7 +484,9 @@ namespace VMCore.AsmParser
                     continue;
                 }
 
-                Assert(ExIDs.InvalidArgumentType, arg);
+                Assert(true,
+                       ExIDs.InvalidArgumentType,
+                       arg);
             }
 
             return new ParInstructionData(values, refTypes, labels);
@@ -530,14 +524,12 @@ namespace VMCore.AsmParser
                     continue;
                 }
 
-                if (asmLabel != null)
-                {
-                    // We cannot have more than one bound label
-                    // to an instruction currently.
-                    Assert(ExIDs.MultipleArgumentLabels,
-                           aInsName,
-                           string.Join(", ", aRawArgs));
-                }
+                // We cannot have more than one bound label
+                // to an instruction currently.
+                Assert(asmLabel != null,
+                       ExIDs.MultipleArgumentLabels,
+                       aInsName,
+                       string.Join(", ", aRawArgs));
 
                 asmLabel = new AsmLabel(args.BoundLabels[i], i);
             }
@@ -578,15 +570,12 @@ namespace VMCore.AsmParser
                 break;
             }
 
-            // We did not find a valid match.
-            if (op == null)
-            {
-                Assert(ExIDs.InvalidInstruction,
-                       aInsName,
-                       string.Join(", ", aRawArgs),
-                       string.Join<Type>(", ", argTypes),
-                       string.Join(", ", args.ArgRefTypes));
-            }
+            Assert(op == null,
+                   ExIDs.InvalidInstruction,
+                   aInsName,
+                   string.Join(", ", aRawArgs),
+                   string.Join<Type>(", ", argTypes),
+                   string.Join(", ", args.ArgRefTypes));
 
             return new QuickIns((OpCode)op, args.Arguments, asmLabel);
         }
@@ -617,10 +606,8 @@ namespace VMCore.AsmParser
             }
 
             // We cannot have an empty label.
-            if (label.Equals(""))
-            {
-                Assert(ExIDs.InvalidLabel);
-            }
+            Assert(label.Equals(""),
+                   ExIDs.InvalidLabel);
 
             return label.ToString();
         }
@@ -642,44 +629,35 @@ namespace VMCore.AsmParser
         {
             // An empty string cannot be considered a valid
             // integer literal.
-            if (string.IsNullOrWhiteSpace(aData))
-            {
-                Assert(ExIDs.InvalidIntLiteral,
-                       aData,
-                       aAllowNegative);
-            }
+            Assert(string.IsNullOrWhiteSpace(aData),
+                   ExIDs.InvalidIntLiteral,
+                   aData,
+                   aAllowNegative);
 
-            var result = 0;
-            var success = false;
+            int result;
+            bool success;
 
             var isSigned = aData[0] == '-';
 
-            // Have we been told to reject negative (signed)
-            // integers while parsing?
-            if (isSigned && !aAllowNegative)
-            {
-                Assert(ExIDs.InvalidIntLiteral,
-                       aData,
-                       aAllowNegative);
-            }
+            // Do we need to reject negative (signed) integers?
+            Assert(isSigned && !aAllowNegative,
+                   ExIDs.InvalidIntLiteral,
+                   aData,
+                   aAllowNegative);
 
+            // The prefix is the section that indicates
+            // the type of integer that we are dealing
+            // with. This is usually the first or second
+            // character of the value.
             var offset = !isSigned ? 0 : 1;
             var prefix = "";
-            if (aData.Length >= 2)
+            if (aData.Length > 2)
             {
                 prefix = !isSigned ? aData[..2] : aData[offset..3];
             }
 
-            var tryDecimal = false;
-
             switch (prefix)
             {
-                case "":
-                    // We do not have a prefix. This means
-                    // that the value is likely to be decimal.
-                    tryDecimal = true;
-                    break;
-
                 case "0b":
                     // A binary literal.
                     success =
@@ -693,46 +671,37 @@ namespace VMCore.AsmParser
                     break;
 
                 default:
+                {
+                    var octalChar = '\0';
+                    if (prefix.Length > 1)
                     {
-                        var octalChar =
-                            !isSigned ? aData[0] : aData[1];
-
-                        if (octalChar == '0')
-                        {
-                            // An octal literal.
-                            success =
-                                TryParseOctInt(aData[(1 + offset)..],
-                                               out result);
-                        }
-                        else
-                        {
-                            tryDecimal = true;
-                        }
+                        octalChar = !isSigned ? aData[0] : aData[1];
                     }
-                    break;
-            }
 
-            if (tryDecimal)
-            {
-                // If all else fails, we will try a normal
-                // (decimal) integer parse.
-                success = TryParseInt(aData[offset..], out result);
+                    if (octalChar == '0')
+                    {
+                        // An octal literal.
+                        success =
+                            TryParseOctInt(aData[(1 + offset)..],
+                                           out result);
+                        break;
+                    }
+
+                    // If all else fails, we will try a normal
+                    // (decimal) integer parse.
+                    success = 
+                        TryParseInt(aData[offset..], out result);
+                    break;
+                }
             }
 
             // Was the input string a successfully parsed?
-            if (!success)
-            {
-                Assert(ExIDs.InvalidIntLiteral,
-                       aData,
-                       aAllowNegative);
-            }
+            Assert(!success,
+                   ExIDs.InvalidIntLiteral,
+                   aData,
+                   aAllowNegative);
 
-            if (isSigned)
-            {
-                result *= -1;
-            }
-
-            return result;
+            return (!isSigned) ? result : result * -1;
         }
 
         /// <summary>
@@ -874,15 +843,46 @@ namespace VMCore.AsmParser
             return true;
         }
 
-        private void Assert(ExIDs aId,
+        /// <summary>
+        /// Throw an exception if a given condition is true.
+        /// </summary>
+        /// <param name="aCondition">
+        /// The condition to be checked.
+        /// </param>
+        /// <param name="aId">
+        /// The ID of the exception to be raised.
+        /// </param>
+        /// <param name="aParams">
+        /// Any parameters to be passed into the exception.
+        /// </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void Assert(bool aCondition,
+                            ExIDs aId,
                             params object[] aParams)
         {
+            if (!aCondition)
+            {
+                return;
+            }
+
             throw new AsmParserException
             (
                 string.Format(_exMessages[aId], aParams)
             );
         }
 
+        /// <summary>
+        /// Quickly test if two InsArgTypes arrays are equal.
+        /// </summary>
+        /// <param name="a1">
+        /// The first InsArgTypes array to be checked.
+        /// </param>
+        /// <param name="a2">
+        /// The second InsArgTypes array to be checked.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if both arrays are equal, false otherwise.
+        /// </returns>
         private static bool FastArgRefTypeEqual(IReadOnlyList<InsArgTypes> a1,
                                                 IReadOnlyList<InsArgTypes> a2)
         {

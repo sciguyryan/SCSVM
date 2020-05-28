@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using VMCore;
 using VMCore.AsmParser;
 using VMCore.Assembler;
@@ -64,6 +63,18 @@ namespace UnitTests.AsmParser
                 new []
                 {
                     "mov $0, R1",
+                },
+                new []
+                {
+                    "mov $-0, R1",
+                },
+                new []
+                {
+                    "mov $-1, R1",
+                },
+                new []
+                {
+                    "mov $-01, R1",
                 },
 
                 #endregion // INTEGER LITERAL TESTS
@@ -262,6 +273,21 @@ namespace UnitTests.AsmParser
                 {
                     new QuickIns(OpCode.MOV_LIT_REG,
                                  new object[] { 0, Registers.R1 })
+                },
+                new []
+                {
+                    new QuickIns(OpCode.MOV_LIT_REG,
+                                 new object[] { 0, Registers.R1 })
+                },
+                new []
+                {
+                    new QuickIns(OpCode.MOV_LIT_REG,
+                                 new object[] { -1, Registers.R1 })
+                },
+                new []
+                {
+                    new QuickIns(OpCode.MOV_LIT_REG,
+                                 new object[] { -1, Registers.R1 })
                 },
 
                 #endregion // INTEGER LITERAL TESTS
@@ -474,7 +500,15 @@ namespace UnitTests.AsmParser
                 },
                 new []
                 {
+                    "mov $-, R1",
+                },
+                new []
+                {
                     "mov $0b, R1",
+                },
+                new []
+                {
+                    "mov $0b9, R1",
                 },
                 new []
                 {
@@ -490,7 +524,7 @@ namespace UnitTests.AsmParser
                 },
                 new []
                 {
-                    "mov $0xXX, R1",
+                    "mov $0A, R1",
                 },
 
                 #endregion // INVALID INTEGER LITERAL TESTS
@@ -608,7 +642,7 @@ namespace UnitTests.AsmParser
                     () => _parser.Parse(testStr),
                     "Expected exception of type" +
                            $"ParserException for test {i}. " +
-                           $"First line = {test[0]}"
+                           $"First line of test = {test[0]}"
                 );
             }
         }

@@ -61,7 +61,7 @@ namespace UnitTests.Instructions
             {
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),            // mov $12, R1
                 new QuickIns(OpCode.MOV_LIT_REG, new object[] { -0x5, r2 }),                // mov -$5, R2
-                new QuickIns(OpCode.MOV_REG_LIT_EXP_MEM, new object[] { r1, "R2 + $1A" })   // mov R3, [R2 + $1A]
+                new QuickIns(OpCode.MOV_REG_LIT_EXP_MEM, new object[] { r1, "R2 + $0x1A" })   // mov R3, [R2 + $1A]
             };
 
             _vm.Run(Utils.QuickRawCompile(program));

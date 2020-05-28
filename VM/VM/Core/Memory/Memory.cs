@@ -52,7 +52,7 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         public int StackPointer;
 
-        #endregion region // Public Properties
+        #endregion // Public Properties
 
         #region Private Properties
 
@@ -206,10 +206,12 @@ namespace VMCore.VM.Core.Mem
             // Add an executable memory region for the
             // region that will contain the executable
             // code.
-            var flags = MemoryAccess.R |
-                        MemoryAccess.W |
-                        MemoryAccess.EX;
-            var seqID = 
+            const MemoryAccess flags = 
+                MemoryAccess.R |
+                MemoryAccess.W |
+                MemoryAccess.EX;
+
+            var seqId = 
                 AddMemoryRegion(memLen,
                                 newMemLen,
                                 flags,
@@ -219,7 +221,7 @@ namespace VMCore.VM.Core.Mem
 
             ResizeRootMemoryRegion();
 
-            return (memLen, newMemLen, seqID);
+            return (memLen, newMemLen, seqId);
         }
 
         /// <summary>
@@ -257,22 +259,35 @@ namespace VMCore.VM.Core.Mem
         }
 
         /// <summary>
-        /// Gets a memory region with a given sequence identifier.
+        /// Get a memory region with a given sequence identifier.
         /// </summary>
-        /// <param name="aSeqID">
+        /// <param name="aSeqId">
         /// The sequence identifier to be located.
         /// </param>
-        public MemoryRegion GetMemoryRegion(int aSeqID)
+        /// <returns>
+        /// A MemoryRegion object for the given ID if one exists,
+        /// a null otherwise.
+        /// </returns>
+        public MemoryRegion GetMemoryRegion(int aSeqId)
         {
-            for (var i = 0; i < _memoryRegions.Count; i++)
+            var count = _memoryRegions.Count;
+            for (var i = 0; i < count; i++)
             {
-                if (_memoryRegions[i].SeqID == aSeqID)
+                if (_memoryRegions[i].SeqID == aSeqId)
                 {
                     return _memoryRegions[i];
                 }
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Get the complete list of memory regions.
+        /// </summary>
+        public MemoryRegion[] GetMemoryRegions()
+        {
+            return _memoryRegions.ToArray();
         }
 
         /// <summary>
@@ -321,19 +336,19 @@ namespace VMCore.VM.Core.Mem
         /// Remove a memory region with a given sequence identifier.
         /// The root memory region (seqID == 0) cannot be removed.
         /// </summary>
-        /// <param name="aSeqID">
+        /// <param name="aSeqId">
         /// The sequence identifier to be checked.
         /// </param>
-        public void RemoveMemoryRegion(int aSeqID)
+        public void RemoveMemoryRegion(int aSeqId)
         {
             // We do not want to remove the stack
             // or root memory regions.
-            if (aSeqID <= 1)
+            if (aSeqId <= 1)
             {
                 return;
             }
 
-            _memoryRegions.RemoveAll(x => x.SeqID == aSeqID);
+            _memoryRegions.RemoveAll(x => x.SeqID == aSeqId);
 
             ResizeRootMemoryRegion();
         }
@@ -390,7 +405,8 @@ namespace VMCore.VM.Core.Mem
                     matched.Add(region);
                     break;
                 }
-                else if (aStart <= region.End && region.Start <= aEnd)
+                
+                if (aStart <= region.End && region.Start <= aEnd)
                 {
                     // We have a cross-region match.
                     // We will have to do some additional checks
@@ -556,13 +572,13 @@ namespace VMCore.VM.Core.Mem
 
             // Clone stack that specifies which types
             // were stored.
-            Type[] types = StackTypes.ToArray();
+            var types = StackTypes.ToArray();
 
             var i = 0;
             var curStackPos = StackPointer;
             while (curStackPos < StackEnd)
             {
-                Type t = types[i];
+                var t = types[i];
 
                 // Things are always reverse here.
                 // We need to jump to the "start" of the
@@ -1056,6 +1072,31 @@ namespace VMCore.VM.Core.Mem
         }
 
         /// <summary>
+        /// Get a formatted list of the memory regions.
+        /// </summary>
+        public IEnumerable<string> GetFormattedMemoryRegions()
+        {
+            var regionCount = _memoryRegions.Count;
+            var lines = new string[regionCount + 2];
+
+            for (var i = 0; i < regionCount; i++)
+            {
+                var r = _memoryRegions[i];
+
+                lines[i + 1] =
+                    $"|{$"{r.Start},{r.End}",20} | {r.Access,15} | " +
+                    $"{r.SeqID,10} | {r.Name,15}|";
+            }
+
+            var lineLen = lines[1].Length;
+
+            lines[0] = new string('-', lineLen);
+            lines[^1] = new string('-', lineLen);
+
+            return lines;
+        }
+
+        /// <summary>
         /// Checks if a given range of memory has a flag set.
         /// </summary>
         /// <param name="aStart">
@@ -1107,8 +1148,8 @@ namespace VMCore.VM.Core.Mem
             // to be met for access to be granted to any point within
             // the range.
 
-            bool hasFlags = true;
-            MemoryAccess flags = MemoryAccess.N;
+            var hasFlags = true;
+            var flags = MemoryAccess.N;
             foreach (var r in GetMemoryPermissions(aStart, aEnd))
             {
                 // If we have requested an executable memory
@@ -1131,28 +1172,25 @@ namespace VMCore.VM.Core.Mem
                 }
             }
 
-            if (aType == DataAccessType.Read)
+            hasFlags &= aType switch
             {
-                hasFlags &=
+                DataAccessType.Read => 
                     flags.HasFlag(MemoryAccess.R) ||
-                    (flags.HasFlag(MemoryAccess.PR) &&
-                     aContext == SecurityContext.System);
-            }
-            else if (aType == DataAccessType.Write)
-            {
-                hasFlags &=
+                    (flags.HasFlag(MemoryAccess.PR) && 
+                     aContext == SecurityContext.System),
+
+                DataAccessType.Write => 
                     flags.HasFlag(MemoryAccess.W) ||
-                    (flags.HasFlag(MemoryAccess.PW) &&
-                     aContext == SecurityContext.System);
-            }
-            else
-            {
+                    (flags.HasFlag(MemoryAccess.PW) && 
+                     aContext == SecurityContext.System),
+
+                _ => 
                 throw new NotSupportedException
                 (
-                    $"ValidateAccess: attempted to check a " +
-                    $"non-valid data access type."
-                );
-            }
+                    "ValidateAccess: attempted to check a " +
+                           "non-valid data access type."
+                )
+            };
 
             if (!hasFlags)
             {
@@ -1190,31 +1228,8 @@ namespace VMCore.VM.Core.Mem
         /// </summary>
         private void DebugMemoryRegions()
         {
-            var regionCount = _memoryRegions.Count;
-            var lines = new string[regionCount + 2];
-
-            for (var i = 0; i < regionCount; i++)
+            foreach (var l in GetFormattedMemoryRegions())
             {
-                var r = _memoryRegions[i];
-
-                lines[i + 1] =
-                    String.Format("|{0,20} | {1,15} | {2,10} | {3, 15}|",
-                                  $"{r.Start},{r.End}",
-                                  r.Access,
-                                  r.SeqID,
-                                  r.Name);
-            }
-
-            var lineLen = lines[1].Length;
-
-            foreach (var l in lines)
-            {
-                if (string.IsNullOrEmpty(l))
-                {
-                    Debug.WriteLine(new string('-', lineLen));
-                    continue;
-                }
-
                 Debug.WriteLine(l);
             }
         }

@@ -62,10 +62,10 @@ namespace UnitTests.Instructions
                 _vm.Run(Utils.QuickRawCompile(program));
 
                 bool success =
-                    _vm.CPU.IsFlagSet(CPUFlags.Z) == (bool)entry[2];
+                    _vm.Cpu.IsFlagSet(CpuFlags.Z) == (bool)entry[2];
 
                 Assert.IsTrue(success,
-                              $"Zero flag for test {i} is incorrect. Expected {(bool)entry[2]}, got {_vm.CPU.IsFlagSet(CPUFlags.Z)}.");
+                              $"Zero flag for test {i} is incorrect. Expected {(bool)entry[2]}, got {_vm.Cpu.IsFlagSet(CpuFlags.Z)}.");
             }
         }
     }

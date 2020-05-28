@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Reg;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
 
-namespace VMCore.VM.Core
+namespace VMCore.VM
 {
-    public class CPU
+    public class Cpu
     {
         #region Public Properties
 
@@ -17,7 +18,7 @@ namespace VMCore.VM.Core
         /// The memory region sequence ID that this CPU
         /// instance was assigned to begin executing.
         /// </summary>
-        public int MemExecutableSeqID { get; private set; }
+        public int MemExecutableSeqId { get; private set; }
 
         /// <summary>
         /// A boolean indicating if the CPU is currently halted.
@@ -32,7 +33,7 @@ namespace VMCore.VM.Core
         /// <summary>
         /// The VM instance that holds this CPU.
         /// </summary>
-        public VirtualMachine VM { get; private set; }
+        public VirtualMachine Vm { get; private set; }
 
         #endregion // Public Properties
 
@@ -46,7 +47,7 @@ namespace VMCore.VM.Core
         /// to use here as the virtual machine parent will always
         /// have called the method to build these caches.
         /// </remarks>
-        private Dictionary<OpCode, Instruction> _instructionCache = 
+        private readonly Dictionary<OpCode, Instruction> _instructionCache =
             ReflectionUtils.InstructionCache;
 
 #if DEBUG
@@ -68,26 +69,26 @@ namespace VMCore.VM.Core
         /// <summary>
         /// A shorthand for the user security context.
         /// </summary>
-        private const SecurityContext _userCtx = 
+        private const SecurityContext UserCtx =
             SecurityContext.User;
 
         /// <summary>
         /// A short hand for the system security context.
         /// </summary>
-        private const SecurityContext _sysCtx =
+        private const SecurityContext SysCtx =
             SecurityContext.System;
 
         /// <summary>
         /// A IP/user register tuple to avoid having to repeatedly create one.
         /// </summary>
         private readonly (Registers, SecurityContext) _ipUserTuple
-            = (VMCore.Registers.IP, _userCtx);
+            = (VMCore.Registers.IP, UserCtx);
 
         /// <summary>
         /// A PC/system register tuple to avoid having to repeatedly create one.
         /// </summary>
         private readonly (Registers, SecurityContext) _pcSystemTuple
-            = (VMCore.Registers.PC, _sysCtx);
+            = (VMCore.Registers.PC, SysCtx);
 
         /// <summary>
         /// The lower memory bound from which data can be read or written
@@ -118,44 +119,43 @@ namespace VMCore.VM.Core
         /// A boolean, true if the CPU will be permitted to swap
         /// between executable memory regions, false otherwise.
         /// </param>
-        public CPU(VirtualMachine aVm,
+        public Cpu(VirtualMachine aVm,
                    bool aCanSwapMemoryRegions = false)
         {
-            VM = aVm;
+            Vm = aVm;
             Registers = new RegisterCollection(this);
 
             _canSwapMemoryRegions = aCanSwapMemoryRegions;
         }
 
-        ~CPU()
+        ~Cpu()
         {
         }
-
 
         /// <summary>
         /// Initialize the CPU.
         /// </summary>
-        /// <param name="aMemSeqID">
+        /// <param name="aMemSeqId">
         /// The sequence ID for the memory region containing the code.
         /// </param>
         /// <param name="aStartAddr">
         /// The address from which the execution should commence.
         /// </param>
-        public void Initialize(int aMemSeqID, int aStartAddr)
+        public void Initialize(int aMemSeqId, int aStartAddr)
         {
-            MemExecutableSeqID = aMemSeqID;
+            MemExecutableSeqId = aMemSeqId;
 
             if (_minExecutableBound == -1)
             {
                 if (_canSwapMemoryRegions)
                 {
                     _minExecutableBound = 0;
-                    _maxExecutableBound = VM.Memory.Length;
+                    _maxExecutableBound = Vm.Memory.Length;
                 }
                 else
                 {
                     var region =
-                        VM.Memory.GetMemoryRegion(aMemSeqID);
+                        Vm.Memory.GetMemoryRegion(aMemSeqId);
                     _minExecutableBound = region.Start;
                     _maxExecutableBound = region.End;
                 }
@@ -183,7 +183,7 @@ namespace VMCore.VM.Core
 
             // TODO - reset stack pointer here.
 
-            SetHaultedState(false);
+            SetHaltedState(false);
         }
 
         /// <summary>
@@ -193,10 +193,10 @@ namespace VMCore.VM.Core
         /// <param name="aState">
         /// The state to which the flag should be set.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetFlagState(CPUFlags aFlag, bool aState)
+        public void SetFlagState(CpuFlags aFlag, bool aState)
         {
-            var flags = 
-                ((CPUFlags)Registers[VMCore.Registers.FL])
+            var flags =
+                ((CpuFlags)Registers[VMCore.Registers.FL])
                 & ~aFlag;
 
             if (aState)
@@ -217,16 +217,16 @@ namespace VMCore.VM.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetResultFlagPair(int aResult)
         {
-            var flags = (CPUFlags)Registers[VMCore.Registers.FL];
-            flags &= ~CPUFlags.S & ~CPUFlags.Z;
+            var flags = (CpuFlags)Registers[VMCore.Registers.FL];
+            flags &= ~CpuFlags.S & ~CpuFlags.Z;
 
             if (aResult < 0)
             {
-                flags |= CPUFlags.S;
+                flags |= CpuFlags.S;
             }
             else if (aResult == 0)
             {
-                flags |= CPUFlags.Z;
+                flags |= CpuFlags.Z;
             }
 
             Registers[VMCore.Registers.FL] = (int)flags;
@@ -242,10 +242,10 @@ namespace VMCore.VM.Core
         /// A boolean, true if the flag is set, false otherwise.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsFlagSet(CPUFlags aFlag)
+        public bool IsFlagSet(CpuFlags aFlag)
         {
             return
-                ((CPUFlags)Registers[VMCore.Registers.FL])
+                ((CpuFlags)Registers[VMCore.Registers.FL])
                 .HasFlag(aFlag);
         }
 
@@ -272,9 +272,9 @@ namespace VMCore.VM.Core
             // Offset the starting address by the base
             // size of the memory. This is the area of memory
             // containing the system memory and stack.
-            int offsetAddress = aStartAddr + VM.Memory.BaseMemorySize;
+            var offsetAddress = aStartAddr + Vm.Memory.BaseMemorySize;
 
-            if (offsetAddress < 0 || offsetAddress >= VM.Memory.Length)
+            if (offsetAddress < 0 || offsetAddress >= Vm.Memory.Length)
             {
                 throw new IndexOutOfRangeException
                 (
@@ -332,11 +332,11 @@ namespace VMCore.VM.Core
             OpCode opCode;
             try
             {
-                opCode =  VM.Memory.GetOpCode(pos, _userCtx, true);
+                opCode = Vm.Memory.GetOpCode(pos, UserCtx, true);
             }
             catch (Exception ex)
             {
-                SetHaultedState(true);
+                SetHaltedState(true);
 
                 throw ex switch
                 {
@@ -358,9 +358,9 @@ namespace VMCore.VM.Core
             }
 
             if (!_instructionCache.TryGetValue(opCode,
-                                               out Instruction ins))
+                                               out var ins))
             {
-                SetHaultedState(true);
+                SetHaltedState(true);
                 throw new InvalidDataException
                 (
                     $"FetchExecuteNextInstruction: Invalid opcode " +
@@ -396,11 +396,11 @@ namespace VMCore.VM.Core
             }
             catch (Exception ex)
             {
-                SetHaultedState(true);
+                SetHaltedState(true);
 
                 throw ex switch
                 {
-                    EndOfStreamException _ 
+                    EndOfStreamException _
                         => new EndOfStreamException
                         (
                             $"FetchExecuteNextInstruction: expected " +
@@ -419,7 +419,7 @@ namespace VMCore.VM.Core
                         ),
 
                     // I do not know how this can happen, but just to be safe.
-                    _                       
+                    _
                         => new Exception
                         (
                             $"FetchExecuteNextInstruction: {ex.Message}"
@@ -433,13 +433,13 @@ namespace VMCore.VM.Core
 
             if (ExecuteInstruction(ins, asmIns))
             {
-                SetHaultedState(true);
+                SetHaltedState(true);
             }
 
             // Have we executed everything that needs to be executed?
             if (pos >= _maxExecutableBound)
             {
-                SetHaultedState(true);
+                SetHaltedState(true);
             }
 
             return asmIns;
@@ -473,7 +473,7 @@ namespace VMCore.VM.Core
             }
             catch (Exception ex)
             {
-                SetHaultedState(true);
+                SetHaltedState(true);
 
                 var opCodeStartPos = Registers[_ipUserTuple];
 
@@ -497,8 +497,8 @@ namespace VMCore.VM.Core
                             $"as it falls outside of the bounds of " +
                             $"the memory region."
                         ),
-                    
-                    RegisterAccessViolationException _ 
+
+                    RegisterAccessViolationException _
                         => new RegisterAccessViolationException
                         (
                             $"ExecuteInstruction: instruction at " +
@@ -506,7 +506,7 @@ namespace VMCore.VM.Core
                             $"a permission error when trying to " +
                             $"operate on a register. {ex.Message}"
                         ),
-                    
+
                     KeyNotFoundException _
                         => new InvalidRegisterException
                         (
@@ -515,7 +515,7 @@ namespace VMCore.VM.Core
                             $"to access the register specified: " +
                             $"the specified register does not exist."
                         ),
-                    
+
                     DivideByZeroException _
                         => new DivideByZeroException
                         (
@@ -524,7 +524,7 @@ namespace VMCore.VM.Core
                             $"triggered a division by zero " +
                             $"exception."
                         ),
-                    
+
                     _
                         => new Exception
                         (
@@ -541,7 +541,7 @@ namespace VMCore.VM.Core
         /// This will skip any exceptions that would otherwise be thrown
         /// when executing this code.
         /// </summary>
-        /// <param name="aMemSeqID">
+        /// <param name="aMemSeqId">
         /// The sequence ID for the memory region containing the code.
         /// </param>
         /// <param name="aShowLocation">
@@ -553,32 +553,25 @@ namespace VMCore.VM.Core
         /// <returns>
         /// A string array containing one instruction per entry.
         /// </returns>
-        public string[] Disassemble(int aMemSeqID,
+        public string[] Disassemble(int aMemSeqId,
                                     bool aShowLocation = false,
                                     int aStartAddr = 0)
         {
             // Reset the position of the stream back to
             // the start.
-            int pos = aStartAddr + VM.Memory.BaseMemorySize;
+            var pos = aStartAddr + Vm.Memory.BaseMemorySize;
 
             var region =
-                VM.Memory.GetMemoryRegion(aMemSeqID);
+                Vm.Memory.GetMemoryRegion(aMemSeqId);
             var minPos = region.Start;
             var maxPos = region.End;
 
-            List<string> disInstructions = new List<string>();
+            var disInstructions = new List<string>();
 
-            string s;
             while (pos >= minPos && pos < maxPos)
             {
-                if (aShowLocation)
-                {
-                    s = $"{pos:X8} : ";
-                }
-                else
-                {
-                    s = string.Empty;
-                }
+                var s = 
+                    aShowLocation ? $"{pos:X8} : " : string.Empty;
 
                 s += DisassembleNextInstruction(ref pos);
 
@@ -591,56 +584,56 @@ namespace VMCore.VM.Core
         /// <summary>
         /// Read an opcode instruction argument from memory.
         /// </summary>
-        /// <param name="pos">
+        /// <param name="aPos">
         /// The position in memory from which to begin 
         /// reading the argument.
         /// </param>
-        /// <param name="t"
+        /// <param name="aT"
         /// >The type of the argument to be read.
         /// </param>
         /// <returns>
         /// An object containing the opcode instruction data.
         /// </returns>
-        private object GetNextInstructionArgument(ref int pos, Type t)
+        private object GetNextInstructionArgument(ref int aPos, Type aT)
         {
             object arg;
-            switch (t)
+            switch (aT)
             {
-                case Type _ when t == typeof(byte):
-                    arg = VM.Memory.GetValue(pos, _userCtx, true);
-                    pos += sizeof(byte);
+                case Type _ when aT == typeof(byte):
+                    arg = Vm.Memory.GetValue(aPos, UserCtx, true);
+                    aPos += sizeof(byte);
                     break;
 
-                case Type _ when t == typeof(int):
-                    arg = VM.Memory.GetInt(pos, _userCtx, true);
-                    pos += sizeof(int);
+                case Type _ when aT == typeof(int):
+                    arg = Vm.Memory.GetInt(aPos, UserCtx, true);
+                    aPos += sizeof(int);
                     break;
 
-                case Type _ when t == typeof(string):
+                case Type _ when aT == typeof(string):
                     // Strings are special as their size
                     // cannot be determined directly from
                     // their type.
                     // So here we need to add the number of bytes
                     // we read to the position marker.
-                    (int bLen, string s) =
-                        VM.Memory.GetString(pos, _userCtx, true);
+                    var (bLen, s) =
+                        Vm.Memory.GetString(aPos, UserCtx, true);
                     arg = s;
-                    pos += bLen;
+                    aPos += bLen;
                     break;
 
-                case Type _ when t == typeof(Registers):
-                    arg = VM.Memory.GetRegisterIdent(pos, _userCtx, true);
-                    pos += sizeof(byte);
+                case Type _ when aT == typeof(Registers):
+                    arg = 
+                        Vm.Memory.GetRegisterIdent(aPos, UserCtx, true);
+                    aPos += sizeof(byte);
                     break;
 
                 default:
                     throw new NotSupportedException
                     (
-                        $"GetNextInstructionArgument: the type {t} was " +
+                        $"GetNextInstructionArgument: the type {aT} was " +
                         $"passed as an argument type, but no support " +
                         $"has been provided for that type."
                     );
-                    break;
             }
 
             return arg;
@@ -651,48 +644,50 @@ namespace VMCore.VM.Core
         /// </summary>
         private void SetBreakpointObservers()
         {
-            if (VM.Debugger.Breakpoints.Count == 0)
+            if (Vm.Debugger.Breakpoints.Count == 0)
             {
                 return;
             }
 
-            void instructionPointerBP(int pos)
+            void InstructionPointerBp(int aPos)
             {
-                var halt = VM.Debugger
-                    .TriggerBreakpoint(pos, Breakpoint.BreakpointType.PC);
+                var halt = Vm.Debugger
+                    .TriggerBreakpoint(aPos, Breakpoint.BreakpointType.PC);
 
-                SetHaultedState(halt);
+                SetHaltedState(halt);
             }
 
-            void programCounterBP(int pos)
+            void ProgramCounterBp(int aPos)
             {
-                var halt = VM.Debugger
-                    .TriggerBreakpoint(pos, Breakpoint.BreakpointType.PC);
+                var halt = Vm.Debugger
+                    .TriggerBreakpoint(aPos, Breakpoint.BreakpointType.PC);
 
-                SetHaultedState(halt);
+                SetHaltedState(halt);
             }
 
             // If we have any instruction pointer breakpoints
             // then we need to add the handler for those now.
-            if (VM.Debugger
+            if (Vm.Debugger
                 .HasBreakpointOfType(Breakpoint.BreakpointType.IP))
             {
                 _hasIPBreakpoint = true;
                 Registers.Hook(VMCore.Registers.IP,
-                               instructionPointerBP,
+                               InstructionPointerBp,
                                Register.HookTypes.Change);
             }
 
             // If we have any program counter breakpoints
             // then we need to add the handler for those now.
-            if (VM.Debugger
+            if (!Vm.Debugger
                 .HasBreakpointOfType(Breakpoint.BreakpointType.PC))
             {
-                _hasPCBreakpoint = true;
-                Registers.Hook(VMCore.Registers.PC,
-                               programCounterBP,
-                               Register.HookTypes.Change);
+                return;
             }
+
+            _hasPCBreakpoint = true;
+            Registers.Hook(VMCore.Registers.PC,
+                           ProgramCounterBp,
+                           Register.HookTypes.Change);
         }
 
         /// <summary>
@@ -700,7 +695,7 @@ namespace VMCore.VM.Core
         /// </summary>
         private void ClearBreakpoints()
         {
-            VM.Debugger.RemoveAllBreakpoints();
+            Vm.Debugger.RemoveAllBreakpoints();
             _hasIPBreakpoint = false;
             _hasPCBreakpoint = false;
         }
@@ -710,19 +705,20 @@ namespace VMCore.VM.Core
         /// Essentially a clone of FetchExecuteNextInstruction
         /// but without the exception throwing code.
         /// </summary>
-        /// <param name="pos">
+        /// <param name="aPos">
         /// The position in memory from which to begin 
         /// reading the instruction.
         /// </param>
         /// <returns>
         /// A string giving the disassembly of the next instruction.
         /// </returns>
-        private string DisassembleNextInstruction(ref int pos)
+        private string DisassembleNextInstruction(ref int aPos)
         {
-            OpCode opCode = OpCode.NOP;
+            var opCode = OpCode.NOP;
             try
             {
-                opCode = VM.Memory.GetOpCode(pos, _userCtx, true);
+                opCode = 
+                    Vm.Memory.GetOpCode(aPos, SysCtx, true);
             }
             catch
             {
@@ -741,14 +737,14 @@ namespace VMCore.VM.Core
             // In practice this shouldn't happen, except in a malformed
             // binary file.
             if (!_instructionCache.TryGetValue(opCode,
-                                               out Instruction ins))
+                                               out var ins))
             {
                 // Return the byte code as that's all we can
                 // safely provide.
                 return $"???? {opCode:X2}";
             }
 
-            pos += sizeof(OpCode);
+            aPos += sizeof(OpCode);
 
             var opIns = new InstructionData
             {
@@ -766,30 +762,30 @@ namespace VMCore.VM.Core
                 {
                     opIns.Args.Add(new InstructionArg
                     {
-                        Value = GetNextInstructionArgument(ref pos, t)
+                        Value = GetNextInstructionArgument(ref aPos, t)
                     });
                 }
             }
             catch { }
 
-            // If the number of arguments is less than expected then the
-            // data is malformed.
-            // Try to get the most information that we can
-            // from this but the data is likely to be useless.
-            if (opIns.Args.Count < ins.ArgumentTypes.Length)
-            {
-                string s = $"{ins.AsmName}";
-                foreach (var arg in opIns.Args)
-                {
-                    s += $" {arg:X2}";
-                }
-
-                return s;
-            }
-            else
+            if (opIns.Args.Count == ins.ArgumentTypes.Length)
             {
                 return ins.ToString(opIns);
             }
+
+            // If the number of arguments is not equal to the expected
+            // number then the data is malformed.
+            // Try to get the most information that we can
+            // from this but the data is likely to be useless.
+
+            var s = $"{ins.AsmName}";
+            foreach (var arg in opIns.Args)
+            {
+                s += $" {arg:X2}";
+            }
+
+            return s;
+
         }
 
         /// <summary>
@@ -798,7 +794,7 @@ namespace VMCore.VM.Core
         /// <param name="aState">
         /// The halt state to apply to the CPU.
         /// </param>
-        private void SetHaultedState(bool aState)
+        private void SetHaltedState(bool aState)
         {
             IsHalted = aState;
         }

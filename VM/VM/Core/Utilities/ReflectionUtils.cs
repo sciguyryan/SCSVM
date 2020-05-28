@@ -21,7 +21,7 @@ namespace VMCore.VM.Core.Utilities
         /// <summary>
         /// A cached of the opcodes mapped to their instruction instances.
         /// </summary>
-        private static bool _isInsCacheGenerated = false;
+        private static bool _isInsCacheGenerated;
         private static readonly Dictionary<OpCode, Instruction> _instructionCache =
             new Dictionary<OpCode, Instruction>();
 
@@ -42,8 +42,14 @@ namespace VMCore.VM.Core.Utilities
         /// Build the type caches used by this application and applies
         /// any hooked types that are being used.
         /// </summary>
-        /// <param name="aInsOnly">A boolean, true if only the instruction cache should be built, false otherwise.</param>
-        /// <param name="aForceRebuild">A boolean, true if the caches should be cleared and rebuilt from scratch, false otherwise.</param>
+        /// <param name="aInsOnly">
+        /// A boolean, true if only the instruction cache should
+        /// be built, false otherwise.
+        /// </param>
+        /// <param name="aForceRebuild">
+        /// A boolean, true if the caches should be cleared and
+        /// rebuilt from scratch, false otherwise.
+        /// </param>
         public static void BuildCachesAndHooks(bool aInsOnly = false,
                                                bool aForceRebuild = false)
         {
@@ -62,8 +68,9 @@ namespace VMCore.VM.Core.Utilities
             // Indicate that we have generate the instruction cache.
             _isInsCacheGenerated = true;
 
+            var execAss = Assembly.GetExecutingAssembly();
             var types = new HashSet<Type>();
-            foreach (var t in Assembly.GetExecutingAssembly().GetTypes())
+            foreach (var t in execAss.GetTypes())
             {
                 if (t.IsSubclassOf(typeof(Instruction)))
                 {
@@ -104,8 +111,6 @@ namespace VMCore.VM.Core.Utilities
 #if false
             InstructionDebugData();
 #endif
-
-            return;
         }
 
         /// <summary>
@@ -116,11 +121,21 @@ namespace VMCore.VM.Core.Utilities
         {
             var instance = 
                 (Instruction)Activator.CreateInstance(aType);
+            if (instance == null)
+            {
+                return;
+            }
 
             if (!_instructionCache.TryAdd(instance.OpCode,
                                           instance))
             {
-                throw new Exception($"HandleInstructionType: failed to add instruction implementation class '{instance.GetType()}' for opcode '{instance.OpCode}'. An implementation has already been found for the given opcode.");
+                throw new Exception
+                (
+                    "HandleInstructionType: failed to add instruction " +
+                    $"implementation class '{instance.GetType()}' for opcode " +
+                    $"'{instance.OpCode}'. An implementation has already been " +
+                    "found for the given opcode."
+                );
             }
         }
 
@@ -132,7 +147,16 @@ namespace VMCore.VM.Core.Utilities
         {
             var handler = 
                 (IInterruptHandler)Activator.CreateInstance(aType);
+            if (handler == null)
+            {
+                return;
+            }
+
             var attr = aType.GetCustomAttribute<InterruptAttribute>();
+            if (attr == null)
+            {
+                return;
+            }
 
             InterruptManager.Handlers.Add(attr.InterruptType, handler);
         }
@@ -145,7 +169,13 @@ namespace VMCore.VM.Core.Utilities
         {
             var device = 
                 (ISocketDevice)Activator.CreateInstance(aType);
-            var attrs = aType.GetCustomAttributes<SocketAttribute>();
+            if (device == null)
+            {
+                return;
+            }
+
+            var attrs = 
+                aType.GetCustomAttributes<SocketAttribute>();
 
             foreach (var att in attrs)
             {
@@ -169,21 +199,32 @@ namespace VMCore.VM.Core.Utilities
         {
             // Debug logging to indicate any opcodes that are
             // missing implementations.
-            List<string> entries = new List<string>
-             {
-                 $"There are {Enum.GetValues(typeof(OpCode)).Length} OpCodes listed."
-             };
+            var len = Enum.GetValues(typeof(OpCode)).Length;
+            var entries = new List<string>
+            {
+                 $"There are {len} OpCodes listed."
+            };
 
-            var logPath = Utils.GetProgramDirectory() + @"\OpCodes.txt";
+            var logPath = 
+                Utils.GetProgramDirectory() + @"\OpCodes.txt";
             foreach (OpCode op in Enum.GetValues(typeof(OpCode)))
             {
-                if (!ReflectionUtils.InstructionCache.ContainsKey(op))
+                if (!InstructionCache.ContainsKey(op))
                 {
-                    entries.Add($"OpCode '{op}' does not have an associated instruction class.");
+                    entries.Add
+                    (
+                        $"OpCode '{op}' does not have an " +
+                        "associated instruction class."
+                    );
                 }
                 else
                 {
-                    entries.Add($"OpCode '{op}' is associated with the instruction class {InstructionCache[op].GetType().Name}.");
+                    entries.Add
+                    (
+                        $"OpCode '{op}' is associated with the " +
+                        "instruction class " +
+                        $"{InstructionCache[op].GetType().Name}."
+                    );
                 }
             }
 
@@ -208,16 +249,24 @@ namespace VMCore.VM.Core.Utilities
         /// <summary>
         /// Create an instance of an object by its type name.
         /// </summary>
-        /// <param name="aTypeName">The instance type to be created.</param>
-        /// <returns>An object giving a new instance of the type.</returns>
+        /// <param name="aTypeName">
+        /// The instance type to be created.
+        /// </param>
+        /// <returns>
+        /// An object giving a new instance of the type.
+        /// </returns>
         public static object GetInstance(string aTypeName)
         {
-            var type = (from t in ReflectionUtils.TypesCache
+            var type = (from t in TypesCache
                         where t.Name == aTypeName
                         select t).FirstOrDefault();
             if (type == null)
             {
-                throw new InvalidOperationException($"GetInstance: the type {aTypeName} could not be found.");
+                throw new InvalidOperationException
+                (
+                    $"GetInstance: the type {aTypeName} " +
+                    "could not be found."
+                );
             }
 
             return Activator.CreateInstance(type);

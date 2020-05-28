@@ -32,12 +32,12 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "jge";
 
-        public override bool CanBindToLabel(int aArgumentID)
+        public override bool CanBindToLabel(int aArgumentId)
         {
-            return (aArgumentID == 1);
+            return (aArgumentId == 1);
         }
 
-        public override bool Execute(InstructionData aData, CPU aCpu)
+        public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             if (aCpu.Registers[(Registers)aData[0]] >=
                 aCpu.Registers[Registers.AC])
@@ -46,7 +46,7 @@ namespace VMCore.VM.Instructions
                 // This is the bound of the memory outside of the 
                 // executable memory region (e.g. main memory and stack).
                 aCpu.Registers[Registers.IP] =
-                    aCpu.VM.Memory.BaseMemorySize + (int)aData[1];
+                    aCpu.Vm.Memory.BaseMemorySize + (int)aData[1];
             }
 
             return false;

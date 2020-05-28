@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace VMCore.VM.Core.Mem
+﻿namespace VMCore.VM.Core.Mem
 {
     public class MemoryRegion
     {
@@ -32,13 +30,13 @@ namespace VMCore.VM.Core.Mem
         public MemoryRegion(int aStart,
                             int aEnd,
                             MemoryAccess aAccess,
-                            int aSeqID,
+                            int aSeqId,
                             string aName)
         {
             Start = aStart;
             End = aEnd;
             Access = aAccess;
-            SeqID = aSeqID;
+            SeqID = aSeqId;
             Name = aName;
         }
     }

@@ -20,7 +20,7 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "hlt";
 
-        public override bool Execute(InstructionData aData, CPU aCpu)
+        public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             // Returning true here will instruct the virtual machine
             // to suspend execution.

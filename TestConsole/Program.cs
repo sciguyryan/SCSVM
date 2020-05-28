@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using VMCore;
+using VMCore.VM;
 using VMCore.AsmParser;
 using VMCore.Expressions;
 using VMCore.VM.Core.Utilities;
@@ -86,8 +86,8 @@ namespace TestConsole
             // Break at PC = 1
             vm.Debugger.AddBreakpoint(2, Breakpoint.BreakpointType.PC, pcBP);*/
 
-            // Enable CPU debug logging.
-            vm.CPU.SetLoggingEnabled(true);
+            // Enable Cpu debug logging.
+            vm.Cpu.SetLoggingEnabled(true);
 
             var programBytes = 
                 Utils.QuickRawCompile(p.Parse(progText),
@@ -102,7 +102,7 @@ namespace TestConsole
             vm.Memory.StackPushInt(0xBA);
 
             Console.WriteLine("-------------[Registers]------------");
-            vm.CPU.Registers.PrintRegisters();
+            vm.Cpu.Registers.PrintRegisters();
 
             Console.WriteLine("---------------[Stack]--------------");
             vm.Memory.PrintStack();
@@ -126,7 +126,7 @@ namespace TestConsole
 
             Console.WriteLine("------------[Disassembly]-----------");
             foreach (var s in 
-                     vm.CPU.Disassemble(vm.CPU.MemExecutableSeqID, true))
+                     vm.Cpu.Disassemble(vm.Cpu.MemExecutableSeqId, true))
             {
                 Console.WriteLine(s);
             }

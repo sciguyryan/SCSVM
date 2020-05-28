@@ -14,9 +14,16 @@ namespace VMCore.VM.Core.Utilities
         /// Convert an integer into a string representing the flags
         /// that would be set if it were cast to an flags enum.
         /// </summary>
-        /// <param name="aEnumType">The type of the flags enumeration to be referenced.</param>
-        /// <param name="aValue">An integer, the bits of which should be treated as flags.</param>
-        /// <returns></returns>
+        /// <param name="aEnumType">
+        /// The type of the flags enumeration to be referenced.
+        /// </param>
+        /// <param name="aValue">
+        /// An integer, the bits of which should be treated as flags.
+        /// </param>
+        /// <returns>
+        /// A comma delimited string giving the flags set within a
+        /// flag-type enum.
+        /// </returns>
         /// <remarks>
         /// Intended to be used for the CPU flags register.
         /// Due to the way that they are set out, it is not possible to
@@ -74,6 +81,7 @@ namespace VMCore.VM.Core.Utilities
         /// <summary>
         /// Clear a given bit within an integer.
         /// </summary>
+        /// <param name="aV">The value to be modified.</param>
         /// <param name="aP">The bit to be cleared.</param>
         /// <returns>An integer with the specified bit modified.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -99,7 +107,9 @@ namespace VMCore.VM.Core.Utilities
         /// <summary>
         /// Cast an object to a given type.
         /// </summary>
-        /// <typeparam name="T">The type that the object should be cast into.</typeparam>
+        /// <typeparam name="T">
+        /// The type that the object should be cast into.
+        /// </typeparam>
         /// <param name="aObj">The object to be case.</param>
         /// <returns>An object of the designated type.</returns>
         public static T CastTo<T>(object aObj)
@@ -110,10 +120,18 @@ namespace VMCore.VM.Core.Utilities
         /// <summary>
         /// Write data to a binary writer based on the specified type.
         /// </summary>
-        /// <param name="aType">The type of the data being written.</param>
-        /// <param name="aData">An object representing the data to be written.</param>
-        /// <param name="aBw">The binary writer into which the data will be written.</param>
-        /// <exception cref="NotSupportedException">Thrown if the specified type is currently not supported.</exception>
+        /// <param name="aType">
+        /// The type of the data being written.
+        /// </param>
+        /// <param name="aData">
+        /// An object representing the data to be written.
+        /// </param>
+        /// <param name="aBw">
+        /// The binary writer into which the data will be written.
+        /// </param>
+        /// <exception cref="NotSupportedException">
+        /// Thrown if the specified type is currently not supported.
+        /// </exception>
         public static void WriteDataByType(Type aType,
                                            object aData,
                                            BinaryWriter aBw)
@@ -142,8 +160,12 @@ namespace VMCore.VM.Core.Utilities
                     break;
 
                 default:
-                    throw new NotSupportedException($"WriteDataByType: the type {aType} was passed as an argument type, but no support has been provided for that type.");
-                    break;
+                    throw new NotSupportedException
+                    (
+                        $"WriteDataByType: the type {aType} was " +
+                        $"passed as an argument type, but no support " +
+                        $"has been provided for that type."
+                    );
             }
         }
 
@@ -151,16 +173,17 @@ namespace VMCore.VM.Core.Utilities
         /// Strip any whitespace characters from a string.
         /// </summary>
         /// <param name="aStr">The string to be processed.</param>
-        /// <returns>A string with any of the whitespaces removed.</returns>
+        /// <returns>
+        /// A string with any of the whitespaces removed.
+        /// </returns>
         public static string StripWhiteSpaces(string aStr)
         {
-            if (string.IsNullOrEmpty(aStr))
+            if (string.IsNullOrWhiteSpace(aStr))
             {
                 return aStr;
             }
 
-            char[] newArr = 
-                new char[aStr.Length];
+            var newArr = new char[aStr.Length];
 
             var j = 0;
             foreach (var c in aStr)
@@ -177,9 +200,13 @@ namespace VMCore.VM.Core.Utilities
         /// <summary>
         /// Builds a binary file with the specified parameters.
         /// </summary>
-        /// <param name="aSecs">An array of the sections to be added to the binary.</param>
+        /// <param name="aSecs">
+        /// An array of the sections to be added to the binary.
+        /// </param>
         /// <param name="aVersion">The version of the binary.</param>
-        /// <returns>A RawBinaryWriter containing the specified sections.</returns>
+        /// <returns>
+        /// A RawBinaryWriter containing the specified sections.
+        /// </returns>
         public static BinWriter BinFileBuilder(BinSections[] aSecs = null,
                                                Version aVersion = null)
         {
@@ -211,12 +238,16 @@ namespace VMCore.VM.Core.Utilities
         /// <summary>
         /// Compile a list of instructions directly into a binary file.
         /// </summary>
-        /// <param name="aIns">The list of instruction to be compiled.</param>
-        /// <returns>A byte array containing the bytecode data for the binary file.</returns>
+        /// <param name="aIns">
+        /// The list of instruction to be compiled.
+        /// </param>
+        /// <returns>
+        /// A byte array containing the bytecode data for the binary file.
+        /// </returns>
         public static byte[] QuickFileCompile(QuickIns[] aIns)
         {
             // We are only interested in the code section here.
-            BinWriter writer = 
+            var writer = 
                 Utils.BinFileBuilder(new[] { BinSections.Code });
 
             // Add the compiled opcode instructions to the file section.
@@ -230,9 +261,16 @@ namespace VMCore.VM.Core.Utilities
         /// <summary>
         /// Compile a list of instructions directly into a bytecode array.
         /// </summary>
-        /// <param name="aIns">The list of instruction to be compiled.</param>
-        /// <param name="aOptimize">A boolean indicating if we should attempt to optimize the assembled code.</param>
-        /// <returns>A byte array containing the bytecode data for the program.</returns>
+        /// <param name="aIns">
+        /// The list of instruction to be compiled.
+        /// </param>
+        /// <param name="aOptimize">
+        /// A boolean indicating if we should attempt to optimize
+        /// the assembled code.
+        /// </param>
+        /// <returns>
+        /// A byte array containing the bytecode data for the program.
+        /// </returns>
         public static byte[] QuickRawCompile(QuickIns[] aIns,
                                              bool aOptimize = false)
         {
@@ -249,7 +287,9 @@ namespace VMCore.VM.Core.Utilities
         /// <summary>
         /// Get the current path of this application.
         /// </summary>
-        /// <returns>A string giving the path to the directory of this application.</returns>
+        /// <returns>
+        /// A string giving the path to the directory of this application.
+        /// </returns>
         public static string GetProgramDirectory()
         {
             var loc = Assembly.GetExecutingAssembly().Location;
@@ -260,8 +300,13 @@ namespace VMCore.VM.Core.Utilities
         /// Write a single line to a log file.
         /// </summary>
         /// <param name="aPath">The path to the log file.</param>
-        /// <param name="aOverwrite">A boolean, true indicating that the file should be overwritten and false if it should append the data.</param>
-        /// <param name="aArg">The string to be written to the file.</param>
+        /// <param name="aOverwrite">
+        /// A boolean, true indicating that the file should be
+        /// overwritten and false if it should append the data.
+        /// </param>
+        /// <param name="aArg">
+        /// The string to be written to the file.
+        /// </param>
         public static void WriteLogFile(string aPath,
                                         bool aOverwrite,
                                         string aArg)
@@ -273,8 +318,13 @@ namespace VMCore.VM.Core.Utilities
         /// Writes one or more lines to a log file.
         /// </summary>
         /// <param name="aPath">The path to the log file.</param>
-        /// <param name="aOverwrite">A boolean, true indicating that the file should be overwritten and false if it should append the data.</param>
-        /// <param name="aArgs">The strings to be written to the file, one line per entry.</param>
+        /// <param name="aOverwrite">
+        /// A boolean, true indicating that the file should be
+        /// overwritten and false if it should append the data.
+        /// </param>
+        /// <param name="aArgs">
+        /// The strings to be written to the file, one line per entry.
+        /// </param>
         public static void WriteLogFile(string aPath,
                                         bool aOverwrite,
                                         params string[] aArgs)

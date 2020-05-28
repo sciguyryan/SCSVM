@@ -1,6 +1,6 @@
 ﻿using System.IO;
-using VMCore;
 using VMCore.Assembler;
+using VMCore.VM;
 
 namespace Runner
 {

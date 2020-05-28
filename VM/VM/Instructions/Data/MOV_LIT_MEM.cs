@@ -32,11 +32,11 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "mov";
 
-        public override bool Execute(InstructionData aData, CPU aCpu)
+        public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             // We do not care if this writes to executable
             // memory.
-            aCpu.VM.Memory
+            aCpu.Vm.Memory
                 .SetInt((int)aData[1],
                           (int)aData[0],
                           GetSecurityContext(),

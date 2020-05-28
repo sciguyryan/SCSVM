@@ -1,4 +1,5 @@
 ﻿using VMCore;
+using VMCore.VM;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -47,12 +48,12 @@ namespace UnitTests.Instructions
 
                 bool success = entry.Type switch
                 {
-                    ResultTypes.EQUAL => aVm.CPU.Registers[aReg] == entry.Result,
+                    ResultTypes.EQUAL => aVm.Cpu.Registers[aReg] == entry.Result,
                     _                    => false
                 };
 
                 Assert.IsTrue(success,
-                              $"Value of register '{aReg}' for test {i} is incorrect. Expected {entry.Result}, got {aVm.CPU.Registers[aReg]}.");
+                              $"Value of register '{aReg}' for test {i} is incorrect. Expected {entry.Result}, got {aVm.Cpu.Registers[aReg]}.");
             }
         }
     }

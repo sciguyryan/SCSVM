@@ -54,7 +54,7 @@ namespace UnitTests.Instructions
 
             _vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.CPU.Registers[r2] == expected);
+            Assert.IsTrue(_vm.Cpu.Registers[r2] == expected);
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace UnitTests.Instructions
 
             _vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.CPU.Registers[r2] == expected);
+            Assert.IsTrue(_vm.Cpu.Registers[r2] == expected);
         }
 
 
@@ -133,7 +133,7 @@ namespace UnitTests.Instructions
 
             _vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.CPU.Registers[r2] == expected);
+            Assert.IsTrue(_vm.Cpu.Registers[r2] == expected);
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace UnitTests.Instructions
 
             _vm.Run(Utils.QuickRawCompile(program));
 
-            _vm.CPU.FetchExecuteNextInstruction();
+            _vm.Cpu.FetchExecuteNextInstruction();
         }
     }
 }

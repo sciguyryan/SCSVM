@@ -1,5 +1,5 @@
 ﻿using System;
-using VMCore.VM.Core;
+using VMCore.VM;
 
 namespace VMCore.Expressions
 {
@@ -13,11 +13,11 @@ namespace VMCore.Expressions
             _registerName = aRegisterName;
         }
 
-        public override int Evaluate(CPU aCpu)
+        public override int Evaluate(Cpu aCpu)
         {
             // This should not usually happen, but
             // when we are compiling a binary
-            // no CPU will be passed.
+            // no Cpu will be passed.
             // This is done in order to allow
             // for optimization analysis.
             if (aCpu == null)

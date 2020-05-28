@@ -1,4 +1,4 @@
-﻿using VMCore;
+﻿using VMCore.VM;
 
 namespace UnitTests.Memory
 {

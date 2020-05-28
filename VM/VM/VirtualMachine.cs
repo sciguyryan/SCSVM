@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using VMCore.VM;
 using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Mem;
 using VMCore.VM.Core.Utilities;
 
-namespace VMCore
+namespace VMCore.VM
 {
     public class VirtualMachine
     {
@@ -26,7 +25,7 @@ namespace VMCore
         /// The CPU that has been assigned to this virtual
         /// machine instance.
         /// </summary>
-        public CPU CPU { get; private set; }
+        public Cpu Cpu { get; private set; }
 
         /// <summary>
         /// The debugger that has been assigned to this
@@ -44,9 +43,9 @@ namespace VMCore
 
         public VirtualMachine(int aMainMemoryCapacity = 2048,
                               int aStackCapacity = 100,
-                              bool aCanCPUSwapMemoryRegions = false)
+                              bool aCanCpuSwapMemoryRegions = false)
         {
-            CPU = new CPU(this, aCanCPUSwapMemoryRegions);
+            Cpu = new Cpu(this, aCanCpuSwapMemoryRegions);
             Debugger = new Debugger(this);
 
             Memory = new Memory(aMainMemoryCapacity, aStackCapacity);
@@ -59,7 +58,7 @@ namespace VMCore
 
             // Set the default stack pointer position to be at the very
             // end of our allocated memory block.
-            CPU.Registers[(Registers.SP, SecurityContext.System)] =
+            Cpu.Registers[(Registers.SP, SecurityContext.System)] =
                 Memory.StackEnd;
 
             // Build our instruction cache and apply and
@@ -99,7 +98,7 @@ namespace VMCore
             Memory.RemoveExecutableRegions();
 
             // Clear any data within the CPU.
-            CPU.Reset();
+            Cpu.Reset();
 
 #if DEBUG
             // This should be done after reset
@@ -109,12 +108,12 @@ namespace VMCore
 #endif
 
             // Load the executable data into memory.
-            (_, _, int seqid) =
+            var (_, _, seqId) =
                 Memory.AddExMemory(aRaw);
 
-            CPU.Initialize(seqid, aStartAddr);
+            Cpu.Initialize(seqId, aStartAddr);
 
-            return seqid;
+            return seqId;
         }
 
         /// <summary>
@@ -137,7 +136,7 @@ namespace VMCore
         {
             LoadAndInitialize(aRaw, aStartAddr, aCanSwapMemoryRegions);
 
-            CPU.Step();
+            Cpu.Step();
 
             /*System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             
@@ -145,7 +144,7 @@ namespace VMCore
             
             for (int i = 0; i < 1_000_000; i++)
             {
-                CPU.Run(seqid, 0);
+                Cpu.Run();
             }
 
             sw.Stop();
@@ -173,7 +172,7 @@ namespace VMCore
         {
             LoadAndInitialize(aRaw, aStartAddr, aCanSwapMemoryRegions);
 
-            CPU.Run();
+            Cpu.Run();
 
             /*System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             
@@ -181,7 +180,7 @@ namespace VMCore
             
             for (int i = 0; i < 1_000_000; i++)
             {
-                CPU.Run();
+                Cpu.Run();
             }
 
             sw.Stop();
@@ -192,11 +191,11 @@ namespace VMCore
 #if DEBUG
         private void LoadRegisterTestData()
         {
-            /*CPU.Registers[Registers.R1] = _dbgMainMemoryCapacity;
+            /*Cpu.Registers[Registers.R1] = _dbgMainMemoryCapacity;
 
-            CPU.Registers[Registers.R2] = _dbgMainMemoryCapacity - 1;
+            Cpu.Registers[Registers.R2] = _dbgMainMemoryCapacity - 1;
 
-            CPU.Registers[Registers.R3] = sizeof(int);*/
+            Cpu.Registers[Registers.R3] = sizeof(int);*/
         }
 #endif
     }

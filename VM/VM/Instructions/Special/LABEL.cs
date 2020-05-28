@@ -30,7 +30,7 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "label";
 
-        public override bool Execute(InstructionData aData, CPU aCpu)
+        public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             // This should never be executed.
             return false;

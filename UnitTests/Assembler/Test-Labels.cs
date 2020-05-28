@@ -2,6 +2,7 @@
 using System.IO;
 using VMCore;
 using VMCore.Assembler;
+using VMCore.VM;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -45,7 +46,7 @@ namespace UnitTests.Assembler
 
             _vm.LoadAndInitialize(Utils.QuickRawCompile(program));
 
-            var ins = _vm.CPU.Step();
+            var ins = _vm.Cpu.Step();
 
             Assert.IsTrue(addr == (int)ins.Args[1].Value);
         }
@@ -86,7 +87,7 @@ namespace UnitTests.Assembler
             int i = 0;
             while (i < 4)
             {
-                ins = _vm.CPU.Step();
+                ins = _vm.Cpu.Step();
                 i++;
             }
 

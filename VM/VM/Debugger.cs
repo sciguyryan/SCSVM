@@ -28,8 +28,15 @@ namespace VMCore.VM
         /// <summary>
         /// Add a break point for a given position and type.
         /// </summary>
-        /// <param name="aBreakAt">The position at which the breakpoint should trigger.</param>
-        /// <param name="aType">The type of breakpoint to apply.</param>
+        /// <param name="aBreakAt">
+        /// The position at which the breakpoint should trigger.
+        /// </param>
+        /// <param name="aType">
+        /// The type of breakpoint to apply.
+        /// </param>
+        /// <param name="aAction">
+        /// The action to be performed when the breakpoint is triggered.
+        /// </param>
         public void AddBreakpoint(int aBreakAt, 
                                   Breakpoint.BreakpointType aType,
                                   Breakpoint.BreakpointAction aAction)
@@ -40,7 +47,9 @@ namespace VMCore.VM
         /// <summary>
         /// Remove a break point for a given position and type.
         /// </summary>
-        /// <param name="aBreakAt">The position at which the breakpoint should trigger.</param>
+        /// <param name="aBreakAt">
+        /// The position at which the breakpoint should trigger.
+        /// </param>
         /// <param name="aType">The type of breakpoint to apply.</param>
         public void RemoveBreakpoint(int aBreakAt,
                                      Breakpoint.BreakpointType aType)
@@ -67,9 +76,14 @@ namespace VMCore.VM
         /// <summary>
         /// Returns a breakpoint for a given position and type if one exists.
         /// </summary>
-        /// <param name="aBreakAt"></param>
-        /// <param name="aType"></param>
-        /// <returns></returns>
+        /// <param name="aBreakAt">
+        /// The position at which the breakpoint should trigger.
+        /// </param>
+        /// <param name="aType">The type of breakpoint to apply.</param>>
+        /// <returns>
+        /// A Breakpoint object is a valid breakpoint is located,
+        /// null otherwise.
+        /// </returns>
         public Breakpoint GetBreakpoint(int aBreakAt,
                                         Breakpoint.BreakpointType aType)
         {
@@ -85,11 +99,16 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Check if a breakpoint exists for a given position and for a given type.
+        /// Check if a breakpoint exists for a given position and
+        /// for a given type.
         /// </summary>
-        /// <param name="aBreakAt">The position at which the breakpoint is expected to trigger.</param>
+        /// <param name="aBreakAt">
+        /// The position at which the breakpoint is expected to trigger.
+        /// </param>
         /// <param name="aType">The type of breakpoint.</param>
-        /// <returns>A boolean indicating true if a breakpoint exists, false otherwise.</returns>
+        /// <returns>
+        /// A boolean indicating true if a breakpoint exists, false otherwise.
+        /// </returns>
         public bool HasBreakpoint(int aBreakAt,
                                   Breakpoint.BreakpointType aType)
         {
@@ -107,14 +126,18 @@ namespace VMCore.VM
         /// <summary>
         /// Check if a breakpoint exists for a given register value.
         /// </summary>
-        /// <param name="aReg">The register who's value should be checked.</param>
+        /// <param name="aReg">
+        /// The register who's value should be checked.
+        /// </param>
         /// <param name="aType">The type of breakpoint.</param>
-        /// <returns>A boolean indicating true if a breakpoint exists, false otherwise.</returns>
+        /// <returns>
+        /// A boolean indicating true if a breakpoint exists, false otherwise.
+        /// </returns>
         public bool HasBreakpoint(Registers aReg,
                                   Breakpoint.BreakpointType aType)
         {
             var breakAt = 
-                _vm.CPU.Registers[(aReg, SecurityContext.System)];
+                _vm.Cpu.Registers[(aReg, SecurityContext.System)];
 
             return HasBreakpoint(breakAt, aType);
         }
@@ -123,7 +146,10 @@ namespace VMCore.VM
         /// Checks if one or more breakpoints of a given type exists.
         /// </summary>
         /// <param name="aType">The type of breakpoint.</param>
-        /// <returns>A boolean true if one or more breakpoints have been added of this breakpoint type, false otherwise.</returns>
+        /// <returns>
+        /// A boolean true if one or more breakpoints have been added of
+        /// this breakpoint type, false otherwise.
+        /// </returns>
         public bool HasBreakpointOfType(Breakpoint.BreakpointType aType)
         {
             foreach (var bp in Breakpoints)
@@ -140,9 +166,14 @@ namespace VMCore.VM
         /// <summary>
         /// Trigger an action associated with a breakpoint, if one is set.
         /// </summary>
-        /// <param name="aBreakAt">The position at which the breakpoint is expected to trigger.</param>
+        /// <param name="aBreakAt">
+        /// The position at which the breakpoint is expected to trigger.
+        /// </param>
         /// <param name="aType">The type of breakpoint.</param>
-        /// <returns>A boolean true if the breakpoint should trigger a halt in the CPU, false otherwise.</returns>
+        /// <returns>
+        /// A boolean true if the breakpoint should halt the CPU,
+        /// false otherwise.
+        /// </returns>
         public bool TriggerBreakpoint(int aBreakAt,
                                       Breakpoint.BreakpointType aType)
         {
@@ -152,12 +183,8 @@ namespace VMCore.VM
             }
 
             var breakpoint = GetBreakpoint(aBreakAt, aType);
-            if (breakpoint == null || breakpoint.Action == null)
-            {
-                return false;
-            }
-
-            return breakpoint.Action.Invoke(aBreakAt);
+            return breakpoint?.Action != null && 
+                   breakpoint.Action.Invoke(aBreakAt);
         }
 
         public void Step()

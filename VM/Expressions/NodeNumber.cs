@@ -1,4 +1,4 @@
-﻿using VMCore.VM.Core;
+﻿using VMCore.VM;
 
 namespace VMCore.Expressions
 {
@@ -12,7 +12,7 @@ namespace VMCore.Expressions
             _value = aValue;
         }
 
-        public override int Evaluate(CPU aCpu)
+        public override int Evaluate(Cpu aCpu)
         {
             return _value;
         }

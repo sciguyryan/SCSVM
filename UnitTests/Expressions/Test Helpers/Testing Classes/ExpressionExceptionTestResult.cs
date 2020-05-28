@@ -1,4 +1,4 @@
-﻿using VMCore;
+﻿using VMCore.VM;
 using VMCore.Expressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -38,7 +38,7 @@ namespace UnitTests.Expressions
                 {
                     _ = new Parser(entry.Input)
                         .ParseExpression()
-                        .Evaluate(aVm.CPU);
+                        .Evaluate(aVm.Cpu);
                 }
                 catch (Exception ex)
                 {

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using VMCore;
+﻿using VMCore.VM;
 
 namespace UnitTests.Instructions
 {

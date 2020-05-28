@@ -3,7 +3,7 @@
     public enum SecurityContext
     {
         /// <summary>
-        /// Direct execution of a command, usually via the CPU.
+        /// Direct execution of a command, usually via the Cpu.
         /// </summary>
         System,
         /// <summary>

@@ -3,7 +3,7 @@
 namespace VMCore.VM.Core
 {
     [Flags]
-    public enum CPUFlags
+    public enum CpuFlags
     {
         /// <summary>
         /// The sign flag - set to true if the result of an operation is negative.

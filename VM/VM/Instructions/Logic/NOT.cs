@@ -29,14 +29,14 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "not";
 
-        public override bool Execute(InstructionData aData, CPU aCpu)
+        public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             var result = 
                 ~aCpu.Registers[(Registers)aData[0]];
 
             aCpu.Registers[Registers.AC] = result;
 
-            // Update the CPU flags based on the result of
+            // Update the Cpu flags based on the result of
             // the calculation just performed.
             // We do not need to check for an overflow here as it 
             // is not possible for a NOT operation on two

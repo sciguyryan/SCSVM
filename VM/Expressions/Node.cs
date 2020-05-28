@@ -1,9 +1,9 @@
-﻿using VMCore.VM.Core;
+﻿using VMCore.VM;
 
 namespace VMCore.Expressions
 {
     public abstract class Node
     {
-        public abstract int Evaluate(CPU aCpu);
+        public abstract int Evaluate(Cpu aCpu);
     }
 }

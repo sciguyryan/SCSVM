@@ -25,12 +25,12 @@ namespace VMCore.VM.Core
         /// </summary>
         /// <param name="index">The argument index to be returned.</param>
         /// <returns>An object giving the value of the argument.</returns>
-        public object this[int index] => 
-            Args[index].Value;
+        public object this[int aIndex] => 
+            Args[aIndex].Value;
 
         public override string ToString()
         {
-            string argString = "";
+            var argString = "";
             foreach (var arg in Args)
             {
                 if (!string.IsNullOrEmpty(argString))

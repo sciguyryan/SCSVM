@@ -33,7 +33,7 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "bit";
 
-        public override bool Execute(InstructionData aData, CPU aCpu)
+        public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             var val =
                 (int)aCpu.Registers[(Registers)aData[1]];

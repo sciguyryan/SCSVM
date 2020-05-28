@@ -34,7 +34,7 @@ namespace UnitTests.Instructions
 
             _vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.CPU.Registers[register] == expected);
+            Assert.IsTrue(_vm.Cpu.Registers[register] == expected);
         }
 
         /// <summary>
@@ -47,9 +47,9 @@ namespace UnitTests.Instructions
             var register = Registers.R1;
             const int expected = 0x123;
 
-            _vm.CPU.Registers[(register, SecurityContext.User)] = expected;
+            _vm.Cpu.Registers[(register, SecurityContext.User)] = expected;
 
-            Assert.IsTrue(_vm.CPU.Registers[register] == expected);
+            Assert.IsTrue(_vm.Cpu.Registers[register] == expected);
         }
 
         /// <summary>
@@ -62,9 +62,9 @@ namespace UnitTests.Instructions
             var register = Registers.R1;
             const int expected = 0x123;
 
-            _vm.CPU.Registers[(register, SecurityContext.System)] = expected;
+            _vm.Cpu.Registers[(register, SecurityContext.System)] = expected;
 
-            Assert.IsTrue(_vm.CPU.Registers[register] == expected);
+            Assert.IsTrue(_vm.Cpu.Registers[register] == expected);
         }
     }
 }

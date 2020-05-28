@@ -51,7 +51,7 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserDirectWriteProtectedRegister()
         {
-            _vm.CPU.Registers[(Registers.SP, SecurityContext.User)] = 0x1;
+            _vm.Cpu.Registers[(Registers.SP, SecurityContext.User)] = 0x1;
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestSystemDirectWriteProtectedRegister()
         {
-            _vm.CPU.Registers[(Registers.SP, SecurityContext.System)] = 0x1;
+            _vm.Cpu.Registers[(Registers.SP, SecurityContext.System)] = 0x1;
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserDirectReadProtectedRegister()
         {
-            _ = _vm.CPU.Registers[(Registers.SP, SecurityContext.User)];
+            _ = _vm.Cpu.Registers[(Registers.SP, SecurityContext.User)];
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestSystemDirectReadProtectedRegister()
         {
-            _ = _vm.CPU.Registers[(Registers.SP, SecurityContext.System)];
+            _ = _vm.Cpu.Registers[(Registers.SP, SecurityContext.System)];
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestUserDirectReadRegister()
         {
-            _ = _vm.CPU.Registers[(Registers.R1, SecurityContext.User)];
+            _ = _vm.Cpu.Registers[(Registers.R1, SecurityContext.User)];
         }
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestSystemDirectReadRegister()
         {
-            _ = _vm.CPU.Registers[(Registers.R1, SecurityContext.System)];
+            _ = _vm.Cpu.Registers[(Registers.R1, SecurityContext.System)];
         }
 
         /// <summary>

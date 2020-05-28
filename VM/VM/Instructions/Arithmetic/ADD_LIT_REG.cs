@@ -32,7 +32,7 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "add";
 
-        public override bool Execute(InstructionData aData, CPU aCpu)
+        public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             // Intentionally do the calculation as a long
             // so that we can check for an overflow.
@@ -46,7 +46,7 @@ namespace VMCore.VM.Instructions
             // Simply disregard the MSBs and take LSBs.
             aCpu.Registers[Registers.AC] = unchecked((int)result);
 
-            // Update the CPU flags based on the result of
+            // Update the Cpu flags based on the result of
             // the calculation just performed.
             // If the value is above the bounds for an
             // integer then the overflow flag will be set.

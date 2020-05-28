@@ -12,11 +12,11 @@ namespace VMCore.VM.Core.Reg
             new Dictionary<Registers, Register>();
 
         /// <summary>
-        /// The CPU to which this register collection is bound.
+        /// The Cpu to which this register collection is bound.
         /// </summary>
-        public CPU CPU { get; private set; }
+        public Cpu CPU { get; private set; }
 
-        public RegisterCollection(CPU aCpu)
+        public RegisterCollection(Cpu aCpu)
         {
             CPU = aCpu;
 
@@ -62,7 +62,7 @@ namespace VMCore.VM.Core.Reg
             Registers.Add(VMCore.Registers.AC,
                           new Register(aCpu, rw));
             Registers.Add(VMCore.Registers.FL,
-                          new Register(aCpu, rw, typeof(CPUFlags)));
+                          new Register(aCpu, rw, typeof(CpuFlags)));
             Registers.Add(VMCore.Registers.PC,
                           new Register(aCpu, r | pw));
 

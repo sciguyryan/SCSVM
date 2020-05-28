@@ -31,7 +31,7 @@ namespace UnitTests.Instructions
 
             _vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.CPU.Registers[Registers.R1] == expected);
+            Assert.IsTrue(_vm.Cpu.Registers[Registers.R1] == expected);
         }
 
         /// <summary>

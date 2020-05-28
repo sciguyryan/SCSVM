@@ -32,7 +32,7 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "swap";
 
-        public override bool Execute(InstructionData aData, CPU aCpu)
+        public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             var r1 = (Registers)aData[0];
             var r2 = (Registers)aData[1];

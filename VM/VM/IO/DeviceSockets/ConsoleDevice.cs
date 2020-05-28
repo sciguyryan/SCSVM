@@ -31,7 +31,7 @@ namespace VMCore.VM.IO.DeviceSockets
                     break;
             }
 
-            aVm.CPU.Registers[(aReg, aContext)] = result;
+            aVm.Cpu.Registers[(aReg, aContext)] = result;
         }
 
         public void HandleWrite(SocketAddresses aAddr,

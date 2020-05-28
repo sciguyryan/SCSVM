@@ -14,7 +14,8 @@ namespace VMCore.VM.Instructions
         public bool OutputLiteralsAsHex = true;
 
         /// <summary>
-        /// The security context to be used when executing this instruction. Defaults to user.
+        /// The security context to be used when executing this
+        /// instruction. Defaults to user.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual SecurityContext GetSecurityContext()
@@ -56,10 +57,14 @@ namespace VMCore.VM.Instructions
         /// <summary>
         /// If a given argument should be treated as an expression.
         /// </summary>
-        /// <param name="aArgumentID">The argument ID to be checked.</param>
-        /// <returns>A type indicating the expression return type for the argument or null if none has been specified.</returns>
-        public virtual Type ExpressionArgType(int aArgumentID) => 
-            ExpressionArgumentTypes[aArgumentID];
+        /// <param name="aArgumentId"
+        /// >The argument ID to be checked.
+        /// </param>
+        /// <returns>
+        /// A type indicating the expression return type for the argument
+        /// or null if none has been specified.</returns>
+        public virtual Type ExpressionArgType(int aArgumentId) => 
+            ExpressionArgumentTypes[aArgumentId];
 
         /// <summary>
         /// The list of the types for the expression arguments
@@ -81,42 +86,69 @@ namespace VMCore.VM.Instructions
         /// <summary>
         /// Determines if a given argument can be bound to a label.
         /// </summary>
-        /// <param name="aArgumentID">The argument ID to be checked.</param>
-        /// <returns>True if the argument supports binding to a label, false otherwise.
-        /// This defaults to false for most instructions.</returns>
-        public virtual bool CanBindToLabel(int aArgumentID) => false;
+        /// <param name="aArgumentId">
+        /// The argument ID to be checked.
+        /// </param>
+        /// <returns>
+        /// True if the argument supports binding to a label,
+        /// false otherwise.
+        /// </returns>
+        /// <remarks>
+        /// This defaults to false for most instructions.
+        /// </remarks>
+        public virtual bool CanBindToLabel(int aArgumentId) => false;
 
         /// <summary>
         /// Executes a given instruction within a given CPU instance.
         /// </summary>
-        /// <param name="aData">The data associated with this instruction.</param>
-        /// <param name="aCpu">The CPU that will be executing the command.</param>
-        /// <returns>True to indicate that the machine should halt execution, false otherwise.</returns>
+        /// <param name="aData">
+        /// The data associated with this instruction.
+        /// </param>
+        /// <param name="aCpu">
+        /// The CPU that will be executing the command.
+        /// </param>
+        /// <returns>
+        /// True to indicate that the machine should halt execution,
+        /// false otherwise.
+        /// </returns>
         /// <remarks>
-        /// CPU registers are stored as a byte, however they must be cast to an integer before
-        /// being cast to the Registers enum type, otherwise it will fail.
+        /// CPU registers are stored as a byte, however they must be cast
+        /// to an integer before being cast to the Registers enum type,
+        /// otherwise it will fail.
         /// </remarks>
-        public abstract bool Execute(InstructionData aData, CPU aCpu);
+        public abstract bool Execute(InstructionData aData, Cpu aCpu);
 
         /// <summary>
-        /// Provided the assembly textual command associated with a given byte code instruction.
+        /// Provided the assembly textual command associated with a given
+        /// byte code instruction.
         /// </summary>
-        /// <param name="aData">The data associated with this instruction.</param>
+        /// <param name="aData">
+        /// The data associated with this instruction.
+        /// </param>
         /// <returns>A string giving the assembly command.</returns>
         /// <remarks>
-        /// CPU registers are stored as a byte, however they must be cast to an integer before
-        /// being cast to the Registers enum type, otherwise it will fail.
+        /// CPU registers are stored as a byte, however they must be cast
+        /// to an integer before being cast to the Registers enum type,
+        /// otherwise it will fail.
         /// </remarks>
         public abstract string ToString(InstructionData aData);
 
         /// <summary>
-        /// Updates the CPU operation result flags based on the result of a calculation.
+        /// Updates the CPU operation result flags based on the
+        /// result of a calculation.
         /// </summary>
-        /// <param name="aCpu">The CPU that will be executing the assembly command.</param>
-        /// <param name="aResult">The result of the calculation performed.</param>
-        /// <param name="aOverflow">A boolean, true if the results of the calculation overflowed the type bounds, false otherwise.</param>
+        /// <param name="aCpu">
+        /// The CPU that will be executing the assembly command.
+        /// </param>
+        /// <param name="aResult">
+        /// The result of the calculation performed.
+        /// </param>
+        /// <param name="aOverflow">
+        /// A boolean, true if the results of the calculation overflowed
+        /// the type bounds, false otherwise.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void UpdateCalculationFlags(CPU aCpu,
+        protected void UpdateCalculationFlags(Cpu aCpu,
                                               long aResult,
                                               bool aOverflow = false)
         {
@@ -126,7 +158,7 @@ namespace VMCore.VM.Instructions
             // correctly set.
             aCpu.SetResultFlagPair((int)aResult);
 
-            aCpu.SetFlagState(CPUFlags.O, aOverflow);
+            aCpu.SetFlagState(CpuFlags.O, aOverflow);
         }
 
         /// <summary>
@@ -150,7 +182,12 @@ namespace VMCore.VM.Instructions
                             => sizeof(Registers),
 
                         _
-                            => throw new NotSupportedException($"ArgumentByteSize: the type {t} was passed as an argument type, but no support has been provided for that type."),
+                            => throw new NotSupportedException
+                            (
+                                $"ArgumentByteSize: the type {t} " +
+                                "was passed as an argument type, but no " +
+                                "support has been provided for that type."
+                            ),
                     };
                 }
                 else if (t == typeof(string))

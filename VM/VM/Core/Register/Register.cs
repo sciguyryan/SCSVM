@@ -41,9 +41,9 @@ namespace VMCore.VM.Core.Reg
         public RegisterAccess AccessFlags { get; private set; }
 
         /// <summary>
-        /// The CPU instance associated with this register.
+        /// The Cpu instance associated with this register.
         /// </summary>
-        public CPU CPU { get; private set; }
+        public Cpu CPU { get; private set; }
 
         /// <summary>
         /// The internal value of this register.
@@ -62,7 +62,7 @@ namespace VMCore.VM.Core.Reg
         /// </summary>
         private Type _flagType;
 
-        public Register(CPU aCpu,
+        public Register(Cpu aCpu,
                         RegisterAccess aAccess,
                         Type aFlagType = null)
         {

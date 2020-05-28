@@ -8,7 +8,7 @@ namespace VMCore.VM.IO.InterruptHandlers
     {
         public void Handle(VirtualMachine aVm)
         {
-            aVm.CPU.Registers.PrintRegisters();
+            aVm.Cpu.Registers.PrintRegisters();
         }
     }
 }

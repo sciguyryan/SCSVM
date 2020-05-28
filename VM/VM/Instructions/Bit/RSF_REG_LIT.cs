@@ -32,7 +32,7 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "rsf";
 
-        public override bool Execute(InstructionData aData, CPU aCpu)
+        public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             aCpu.Registers[(Registers)aData[0]] >>= 
                 (int)aData[1];

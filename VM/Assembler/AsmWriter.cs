@@ -282,7 +282,7 @@ namespace VMCore.Assembler
             // If this argument is an expression then we can check to
             // see if it is possible to fold it into a single value.
             // This will increase performance later as running
-            // the expression parser within the CPU is more performance
+            // the expression parser within the Cpu is more performance
             // intensive.
             if (aIns.ExpressionArgType(aArgIndex) != null)
             {

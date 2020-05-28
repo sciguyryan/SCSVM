@@ -11,7 +11,7 @@ namespace VMCore.VM
         /// is triggered.
         /// </summary>
         /// <param name="aDataValue">The value passed from the breakpoint.</param>
-        /// <returns>A boolean, true if the CPU should halt executing, false otherwise.</returns>
+        /// <returns>A boolean, true if the Cpu should halt executing, false otherwise.</returns>
         public delegate bool BreakpointAction(int aDataValue);
 
         /// <summary>

@@ -54,7 +54,7 @@ namespace VMCore.Assembler.Optimisations
             {
                 // We can simplify this expression
                 // to a pure value.
-                // We can pass a null CPU
+                // We can pass a null Cpu
                 // here as it will not be used
                 // at all for a simple expression.
                 var val = n.Evaluate(null);

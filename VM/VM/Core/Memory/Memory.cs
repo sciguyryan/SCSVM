@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Utilities;
@@ -92,8 +91,6 @@ namespace VMCore.VM.Core.Mem
 
             BaseMemorySize = memoryCapacity;
 
-            // TODO - this needs to be in a try-catch as
-            // it can fail.
             Data = new byte[memoryCapacity];
 
             // Read and write permissions are set
@@ -217,7 +214,11 @@ namespace VMCore.VM.Core.Mem
                                 flags,
                                 $"Executable");
 
-            Array.Copy(aData, 0, Data, memLen, aData.Length);
+            Array.Copy(aData, 
+                       0, 
+                       Data, 
+                       memLen, 
+                       aData.Length);
 
             ResizeRootMemoryRegion();
 
@@ -493,7 +494,8 @@ namespace VMCore.VM.Core.Mem
             }
 
             // Read the value from the memory region.
-            var value = GetInt(maxPos, SecurityContext.System, false);
+            var value = 
+                GetInt(maxPos, SecurityContext.System, false);
 
             if (_isDebuggingEnabled)
             {
@@ -601,7 +603,6 @@ namespace VMCore.VM.Core.Mem
                             $"specified as the stack type, but no " +
                             $"support has been provided for that type."
                         );
-                        break;
                 };
 
                 Console.WriteLine("{0,5}{1,10}{2,10:X8}",
@@ -645,7 +646,10 @@ namespace VMCore.VM.Core.Mem
                           bool aExec)
         {
             var bytes =
-                GetValueRange(aStartPos, sizeof(int), aContext, aExec);
+                GetValueRange(aStartPos, 
+                              sizeof(int), 
+                              aContext, 
+                              aExec);
 
             return BitConverter.ToInt32(bytes);
         }
@@ -986,7 +990,8 @@ namespace VMCore.VM.Core.Mem
                            aContext,
                            aExec);
 
-            return new Span<byte>(Data).Slice(aPos, aLength).ToArray();
+            return 
+                new Span<byte>(Data).Slice(aPos, aLength).ToArray();
         }
 
         /// <summary>

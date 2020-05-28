@@ -1,7 +1,7 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using VMCore;
 using VMCore.Expressions;
+using VMCore.VM;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.Expressions
@@ -46,7 +46,7 @@ namespace UnitTests.Expressions
                     var regLen = entry.RegisterValues.Length;
                     for (var j = 0; j < regLen; j++)
                     {
-                        aVm.CPU.Registers[(Registers)j] =
+                        aVm.Cpu.Registers[(Registers)j] =
                             entry.RegisterValues[j];
                     }
                 }
@@ -58,7 +58,7 @@ namespace UnitTests.Expressions
                     value = 
                         new Parser(entry.Input)
                             .ParseExpression()
-                            .Evaluate(aVm.CPU);
+                            .Evaluate(aVm.Cpu);
 
                     success = entry.Type switch
                     {

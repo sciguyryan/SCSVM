@@ -1,4 +1,5 @@
 ﻿using VMCore;
+using VMCore.VM;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -58,20 +59,20 @@ namespace UnitTests.Instructions
 
                 bool success = entry.Type switch
                 {
-                    ResultTypes.EQUAL => aVm.CPU.Registers[aReg] == entry.Result,
+                    ResultTypes.EQUAL => aVm.Cpu.Registers[aReg] == entry.Result,
                     _                    => false
                 };
 
                 Assert.IsTrue(success,
-                              $"Value of register '{aReg}' for test {i} is incorrect. Expected {entry.Result}, got {aVm.CPU.Registers[aReg]}.");
+                              $"Value of register '{aReg}' for test {i} is incorrect. Expected {entry.Result}, got {aVm.Cpu.Registers[aReg]}.");
 
-                Assert.IsTrue(aVm.CPU.IsFlagSet(CPUFlags.S) == entry.SignFlag,
+                Assert.IsTrue(aVm.Cpu.IsFlagSet(CpuFlags.S) == entry.SignFlag,
                               $"Sign flag not correctly set for test {i}. Expected {entry.SignFlag}.");
 
-                Assert.IsTrue(aVm.CPU.IsFlagSet(CPUFlags.Z) == entry.ZeroFlag,
+                Assert.IsTrue(aVm.Cpu.IsFlagSet(CpuFlags.Z) == entry.ZeroFlag,
                               $"Zero flag not correctly set for test {i}. Expected {entry.ZeroFlag}.");
 
-                Assert.IsTrue(aVm.CPU.IsFlagSet(CPUFlags.O) == entry.OverflowFlag,
+                Assert.IsTrue(aVm.Cpu.IsFlagSet(CpuFlags.O) == entry.OverflowFlag,
                               $"Overflow flag not correctly set for test {i}. Expected {entry.OverflowFlag}.");
             }
         }

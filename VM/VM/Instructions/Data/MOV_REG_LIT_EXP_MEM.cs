@@ -33,7 +33,7 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "mov";
 
-        public override bool Execute(InstructionData aData, CPU aCpu)
+        public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             var pos = (int)new Parser((string)aData[1])
                     .ParseExpression()
@@ -42,7 +42,7 @@ namespace VMCore.VM.Instructions
             // We do not care if this write
             // is within an executable
             // region or not.
-            aCpu.VM.Memory
+            aCpu.Vm.Memory
                 .SetInt(pos,
                         aCpu.Registers[(Registers)aData[0]],
                         GetSecurityContext(),

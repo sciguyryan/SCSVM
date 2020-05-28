@@ -31,7 +31,7 @@ namespace VMCore.VM.Instructions
 
         public override string AsmName => "mod";
 
-        public override bool Execute(InstructionData aData, CPU aCpu)
+        public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             // TODO - modulo is very slow, so if we can find any fast
             // paths here, we should probably do that.
@@ -44,7 +44,7 @@ namespace VMCore.VM.Instructions
             aCpu.Registers[Registers.AC] = 
                 unchecked((int)result);
 
-            // Update the CPU flags based on the result of
+            // Update the Cpu flags based on the result of
             // the calculation just performed.
             // If the value is above the bounds for an
             // integer then the overflow flag will be set.

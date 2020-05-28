@@ -15,7 +15,7 @@ namespace UnitTests.Instructions
         }
 
         /// <summary>
-        /// Test is the CPU has it's internal halted state set after executing
+        /// Test is the Cpu has it's internal halted state set after executing
         /// the halt instruction.
         /// </summary>
         [TestMethod]
@@ -30,11 +30,11 @@ namespace UnitTests.Instructions
             _vm.Run(Utils.QuickRawCompile(program));
 
             // Check if the halted state is set.
-            Assert.IsTrue(_vm.CPU.IsHalted);
+            Assert.IsTrue(_vm.Cpu.IsHalted);
         }
 
         /// <summary>
-        /// Test is the CPU has actually halted.
+        /// Test is the Cpu has actually halted.
         /// </summary>
         [TestMethod]
         public void TestCPUIsHalted()
@@ -51,10 +51,10 @@ namespace UnitTests.Instructions
 
             _vm.Run(Utils.QuickRawCompile(program));
 
-            // If the CPU halted after executing the HLT instruction
+            // If the Cpu halted after executing the HLT instruction
             // then the register R1 should still be set to the value
             // of "expected". The last statement should not have executed.
-            Assert.IsTrue(_vm.CPU.Registers[Registers.R1] == expected);
+            Assert.IsTrue(_vm.Cpu.Registers[Registers.R1] == expected);
         }
     }
 }

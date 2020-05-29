@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using VMCore.VM;
 using VMCore.AsmParser;
-using VMCore.Expressions;
 using VMCore.VM.Core.Utilities;
 
 namespace TestConsole
@@ -11,10 +10,7 @@ namespace TestConsole
     {
         private static void Main()
         {
-            const int mainMemoryCapacity = 2048;
-            const int stackCapacity = 100;
-
-            var lines = new string[]
+            var lines = new []
             {
                 "mov $0x10, R1",
                 "mov $0x11, R2",
@@ -25,6 +21,8 @@ namespace TestConsole
                 "hlt",
                 "@GOOD",
                 "mov $0x1413, R4",
+                "push $0xAA",
+                "push $0xBB",
                 "hlt"
             };
 
@@ -62,9 +60,7 @@ namespace TestConsole
                               sw2.Elapsed / iterations);
             return;*/
 
-            var vm = 
-                new VirtualMachine(mainMemoryCapacity,
-                                   stackCapacity);
+            var vm = new VirtualMachine();
 
             // Break point stuff for experimenting.
             /*Breakpoint.BreakpointAction ipBP = delegate (int x)
@@ -86,7 +82,7 @@ namespace TestConsole
             // Break at PC = 1
             vm.Debugger.AddBreakpoint(2, Breakpoint.BreakpointType.PC, pcBP);*/
 
-            // Enable Cpu debug logging.
+            // Enable CPU debug logging.
             vm.Cpu.SetLoggingEnabled(true);
 
             var programBytes = 
@@ -97,9 +93,6 @@ namespace TestConsole
             //File.WriteAllBytes(@"D:\Downloads\test.bin", programBytes);
 
             vm.Run(programBytes);
-
-            vm.Memory.StackPushInt(0xAB);
-            vm.Memory.StackPushInt(0xBA);
 
             Console.WriteLine("-------------[Registers]------------");
             vm.Cpu.Registers.PrintRegisters();

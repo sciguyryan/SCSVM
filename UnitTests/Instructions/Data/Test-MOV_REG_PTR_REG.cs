@@ -1,4 +1,3 @@
-using VMCore;
 using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;

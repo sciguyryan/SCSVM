@@ -323,6 +323,10 @@
         /// </remarks>
         JGE_LIT,
 
+        /// <summary>
+        /// Push Literal to stack - push a literal (integer) value onto
+        /// the stack.
+        /// </summary>
         PSH_LIT,
         PSH_REG,
         POP,

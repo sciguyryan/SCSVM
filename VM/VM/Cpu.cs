@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -51,20 +53,20 @@ namespace VMCore.VM
             ReflectionUtils.InstructionCache;
 
 #if DEBUG
-        private bool _isLoggingEnabled { get; set; } = true;
+        private bool IsLoggingEnabled { get; set; } = true;
 #else
-        private bool _isLoggingEnabled { get; set; } = false;
+        private bool IsLoggingEnabled { get; set; } = false;
 #endif
 
         /// <summary>
         /// An internal indicator of if an IP breakpoint has been triggered.
         /// </summary>
-        private bool _hasIPBreakpoint = false;
+        private bool _hasIpBreakpoint = false;
 
         /// <summary>
         /// An internal indicator of if a PC breakpoint has been triggered.
         /// </summary>
-        private bool _hasPCBreakpoint = false;
+        private bool _hasPcBreakpoint = false;
 
         /// <summary>
         /// A shorthand for the user security context.
@@ -257,7 +259,7 @@ namespace VMCore.VM
         /// </param>
         public void SetLoggingEnabled(bool aEnabled)
         {
-            _isLoggingEnabled = aEnabled;
+            IsLoggingEnabled = aEnabled;
         }
 
         /// <summary>
@@ -313,7 +315,7 @@ namespace VMCore.VM
         /// <returns>
         /// The data for the instruction that was executed.
         /// </returns>
-        public InstructionData Step()
+        public InstructionData? Step()
         {
             return (!IsHalted) ? FetchExecuteNextInstruction() : null;
         }
@@ -670,7 +672,7 @@ namespace VMCore.VM
             if (Vm.Debugger
                 .HasBreakpointOfType(Breakpoint.BreakpointType.IP))
             {
-                _hasIPBreakpoint = true;
+                _hasIpBreakpoint = true;
                 Registers.Hook(VMCore.Registers.IP,
                                InstructionPointerBp,
                                Register.HookTypes.Change);
@@ -684,7 +686,7 @@ namespace VMCore.VM
                 return;
             }
 
-            _hasPCBreakpoint = true;
+            _hasPcBreakpoint = true;
             Registers.Hook(VMCore.Registers.PC,
                            ProgramCounterBp,
                            Register.HookTypes.Change);
@@ -696,8 +698,8 @@ namespace VMCore.VM
         private void ClearBreakpoints()
         {
             Vm.Debugger.RemoveAllBreakpoints();
-            _hasIPBreakpoint = false;
-            _hasPCBreakpoint = false;
+            _hasIpBreakpoint = false;
+            _hasPcBreakpoint = false;
         }
 
         /// <summary>

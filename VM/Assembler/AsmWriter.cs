@@ -1,9 +1,11 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using VMCore.Assembler.Optimisations;
+using VMCore.Assembler.Optimizations;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
 
@@ -15,7 +17,7 @@ namespace VMCore.Assembler
         /// If we should attempt to Optimize certain
         /// instructions.
         /// </summary>
-        private bool _optimize = false;
+        private bool _optimize;
 
         /// <summary>
         /// The binary writer for the data stream.
@@ -107,11 +109,13 @@ namespace VMCore.Assembler
         /// A label that is bound to this opcode, can be null.
         /// </param>
         public void AddWithLabel(OpCode aOpCode,
-                                 object[] aArgs,
-                                 AsmLabel aBoundLabel)
+                                 object[]? aArgs,
+                                 AsmLabel? aBoundLabel)
         {
+            var args = aArgs ?? new object[0];
+
             if (!_instructionCache.TryGetValue(aOpCode,
-                                               out Instruction ins))
+                                               out var ins))
             {
                 throw new InvalidDataException
                 (
@@ -121,16 +125,16 @@ namespace VMCore.Assembler
                 );
             }
 
-            OpCode op = aOpCode;
+            var op = aOpCode;
             if (op == OpCode.LABEL)
             {
-                string label = (string)aArgs[0];
+                var label = (string)args[0];
                 if (!_labelDestinations.TryAdd(label, _ms.Position))
                 {
                     throw new InvalidDataException
                     (
                         $"AddWithLabel: attempted to add label " +
-                        $"'{aArgs[0]}' at position " +
+                        $"'{args[0]}' at position " +
                         $"{_bw.BaseStream.Position} but a label " +
                         $"with that name already exists."
                     );
@@ -150,8 +154,7 @@ namespace VMCore.Assembler
             }
 
             // We should have at least one argument here...
-            if (aArgs == null ||
-                aArgs.Length < ins.ArgumentTypes.Length)
+            if (args.Length < ins.ArgumentTypes.Length)
             {
                 // TODO - handle this better.
                 return;
@@ -164,17 +167,17 @@ namespace VMCore.Assembler
             var opCodePos = _bw.BaseStream.Position;
             _bw.Write(0);
 
-            OpCode newOp = aOpCode;
-            bool hasOpCodeChanged = false;
-            for (var i = 0; i < aArgs.Length; i++)
+            var newOp = aOpCode;
+            var hasOpCodeChanged = false;
+            for (var i = 0; i < args.Length; i++)
             {
-                Type argType = ins.ArgumentTypes[i];
-                object arg = aArgs[i];
+                var argType = ins.ArgumentTypes[i];
+                var arg = args[i];
 
                 if (_optimize)
                 {
                     (newOp, argType, arg) 
-                        = Optimize(newOp, i, ins, aArgs[i]);
+                        = Optimize(newOp, i, ins, args[i]);
 
                     // We cannot change the opcode more than
                     // once during optimization otherwise it
@@ -200,7 +203,7 @@ namespace VMCore.Assembler
 
                 // Check if we have a label bound to this
                 // argument.
-                if (aBoundLabel != null &&
+                if (!(aBoundLabel is null) &&
                     aBoundLabel.BoundArgumentIndex == i)
                 {
                     // Check if the instruction is permitted to
@@ -219,7 +222,7 @@ namespace VMCore.Assembler
 
                     // Do we know about this label already?
                     if (!_labelDestinations.TryGetValue(aBoundLabel.Name,
-                                                        out long addr))
+                                                        out var addr))
                     {
                         // No, we will have to replace it later.
                         _labelsToBeReplaced.Add(aBoundLabel.Name,
@@ -303,7 +306,7 @@ namespace VMCore.Assembler
         {
             while (_labelsToBeReplaced.Count > 0)
             {
-                (var name, var addr)
+                var (name, addr)
                     = _labelsToBeReplaced.First();
 
                 ReplaceLabel(name, addr);
@@ -381,7 +384,7 @@ namespace VMCore.Assembler
     // A nice trick from here:
     // https://stackoverflow.com/questions/8827649/fastest-way-to-convert-int-to-4-bytes-in-c-sharp
     [StructLayout(LayoutKind.Explicit)]
-    struct IntegerByteUnion
+    internal struct IntegerByteUnion
     {
         [FieldOffset(0)]
         public byte byte0;

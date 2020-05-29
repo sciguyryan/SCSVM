@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using VMCore.VM.Core;
@@ -16,14 +18,14 @@ namespace VMCore.Assembler
 
         public object[] Args { get; }
 
-        public AsmLabel Label { get; }
+        public AsmLabel? Label { get; }
 
         public QuickIns(OpCode aOpCode,
-                        object[] aArgs = null,
-                        AsmLabel aLabel = null)
+                        object[]? aArgs = null,
+                        AsmLabel? aLabel = null)
         {
             Op = aOpCode;
-            Args = aArgs;
+            Args = aArgs ?? new object[0];
             Label = aLabel;
         }
 
@@ -55,39 +57,39 @@ namespace VMCore.Assembler
         public bool Equals([AllowNull] QuickIns aOther)
         {
             // Check for null and compare run-time types.
-            if (aOther == null || this.GetType() != aOther.GetType())
+            if (aOther is null || GetType() != aOther.GetType())
             {
                 return false;
             }
 
-            var q = (QuickIns)aOther;
+            var q = aOther;
 
-            // We need to ensure that we do not pass a null value to
-            // SequenceEqual or it will throw an exception.
+            // If one (but not both) of the labels are not
+            // null then they cannot be equal.
+            // We need to check this here to ensure that we do not
+            // pass a null value to SequenceEqual or it will throw
+            // an exception.
+            if (Label is null || q.Label is null)
+            {
+                return (Label is null && q.Label is null);
+            }
+
             return
                 Op == q.Op &&
                 Label == q.Label &&
-                (Args == null || q.Args == null) ?
-                    Args == q.Args :
-                    Args.SequenceEqual(q.Args);
+                Args.SequenceEqual(q.Args);
         }
 
         public override int GetHashCode()
         {
             var hash = Op.GetHashCode();
 
-            if (Label == null)
+            if (Label is null)
             {
                 return hash;
             }
 
             hash = (hash * 17) + Label.GetHashCode();
-
-            if (Args == null)
-            {
-                return hash;
-            }
-
             hash = (hash * 17) + Args.Length;
             foreach (var a in Args)
             {
@@ -104,7 +106,7 @@ namespace VMCore.Assembler
         public static bool operator ==(QuickIns aLeft,
                                        QuickIns aRight)
         {
-            return object.Equals(aLeft, aRight);
+            return Equals(aLeft, aRight);
         }
 
         public static bool operator !=(QuickIns aLeft,

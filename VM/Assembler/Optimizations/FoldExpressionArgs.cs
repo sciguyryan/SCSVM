@@ -1,37 +1,54 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using VMCore.Expressions;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
 
-namespace VMCore.Assembler.Optimisations
+namespace VMCore.Assembler.Optimizations
 {
-    class FoldExpressionArg
+    internal class FoldExpressionArg
     {
         /// <summary>
         /// Optimize an expression by attempting to fold
         /// (simplify) an expression into a single literal
         /// value.
         /// </summary>
-        /// <param name="aOp">The opcode of the instruction to be folded.</param>
-        /// <param name="aArgIndex">The index of the argument to be folded.</param>
-        /// <param name="ins">The instruction instance for the opcode.</param>
-        /// <param name="aArg">The data for the opcode argument.</param>
-        /// <returns>A tuple of the output opcode, argument type and argument data.</returns>
+        /// <param name="aOp">
+        /// The opcode of the instruction to be folded.
+        /// </param>
+        /// <param name="aArgIndex">
+        /// The index of the argument to be folded.
+        /// </param>
+        /// <param name="aIns">
+        /// The instruction instance for the opcode.
+        /// </param>
+        /// <param name="aArg">
+        /// The data for the opcode argument.
+        /// </param>
+        /// <returns>
+        /// A tuple of the output opcode, argument type and argument data.
+        /// </returns>
         public static (OpCode, Type, object) FoldExpression(OpCode aOp,
                                                             int aArgIndex,
                                                             Instruction aIns,
                                                             object aArg)
         {
-            if (aIns.ExpressionArgType(aArgIndex) == null)
+            if (aIns.ExpressionArgType(aArgIndex) is null)
             {
-                throw new Exception($"FoldExpression: argument {aArgIndex} for opcode {aOp} is not an expression and so should not have been passed here.");
+                throw new Exception
+                (
+                    $"FoldExpression: argument {aArgIndex} for opcode " +
+                    $"{aOp} is not an expression and so should not have been " +
+                    "passed here."
+                );
             }
 
-            OpCode opCode = aOp;
+            var opCode = aOp;
 
             // Expression arguments are always of type string
             // unless they can be flattened.
-            Type outArgType = typeof(string);
+            var outArgType = typeof(string);
 
             // Get rid of any white-spaces that
             // we do not need here.
@@ -81,7 +98,12 @@ namespace VMCore.Assembler.Optimisations
                 }
                 else
                 {
-                    throw new NotSupportedException($"FoldExpression: the type {outArgType} was passed as the expression argument type, but no support has been provided for that type.");
+                    throw new NotSupportedException
+                    (
+                        $"FoldExpression: the type {outArgType} was " +
+                        "passed as the expression argument type, but no " +
+                        "support has been provided for that type."
+                    );
                 }
             }
             else

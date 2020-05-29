@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -16,7 +18,8 @@ namespace VMCore.VM.Core.Utilities
         /// <summary>
         /// An array of all of the types present in this assembly.
         /// </summary>
-        public static Type[] TypesCache { get; private set; }
+        public static Type[] TypesCache { get; private set; } = 
+            new Type[0];
 
         /// <summary>
         /// A cached of the opcodes mapped to their instruction instances.
@@ -120,8 +123,8 @@ namespace VMCore.VM.Core.Utilities
         public static void HandleInstructionType(Type aType)
         {
             var instance = 
-                (Instruction)Activator.CreateInstance(aType);
-            if (instance == null)
+                (Instruction?)Activator.CreateInstance(aType);
+            if (instance is null)
             {
                 return;
             }
@@ -146,14 +149,14 @@ namespace VMCore.VM.Core.Utilities
         public static void HookInterruptHandler(Type aType)
         {
             var handler = 
-                (IInterruptHandler)Activator.CreateInstance(aType);
-            if (handler == null)
+                (IInterruptHandler?)Activator.CreateInstance(aType);
+            if (handler is null)
             {
                 return;
             }
 
             var attr = aType.GetCustomAttribute<InterruptAttribute>();
-            if (attr == null)
+            if (attr is null)
             {
                 return;
             }
@@ -168,8 +171,8 @@ namespace VMCore.VM.Core.Utilities
         public static void HookSocketDevice(Type aType)
         {
             var device = 
-                (ISocketDevice)Activator.CreateInstance(aType);
-            if (device == null)
+                (ISocketDevice?)Activator.CreateInstance(aType);
+            if (device is null)
             {
                 return;
             }
@@ -207,9 +210,17 @@ namespace VMCore.VM.Core.Utilities
 
             var logPath = 
                 Utils.GetProgramDirectory() + @"\OpCodes.txt";
-            foreach (OpCode op in Enum.GetValues(typeof(OpCode)))
+            foreach (OpCode? op in Enum.GetValues(typeof(OpCode)))
             {
-                if (!InstructionCache.ContainsKey(op))
+                // This should never happen.
+                if (op is null)
+                {
+                    break;
+                }
+
+                var castOp = (OpCode)op;
+
+                if (!InstructionCache.ContainsKey(castOp))
                 {
                     entries.Add
                     (
@@ -223,14 +234,16 @@ namespace VMCore.VM.Core.Utilities
                     (
                         $"OpCode '{op}' is associated with the " +
                         "instruction class " +
-                        $"{InstructionCache[op].GetType().Name}."
+                        $"{InstructionCache[castOp].GetType().Name}."
                     );
                 }
             }
 
             entries.Add(new string('-', 100));
 
-            Utils.WriteLogFile(logPath, true, entries.ToArray());
+            Utils.WriteLogFile(logPath,
+                               true,
+                               entries.ToArray());
         }
 
         /// <summary>
@@ -255,12 +268,12 @@ namespace VMCore.VM.Core.Utilities
         /// <returns>
         /// An object giving a new instance of the type.
         /// </returns>
-        public static object GetInstance(string aTypeName)
+        public static object? GetInstance(string aTypeName)
         {
             var type = (from t in TypesCache
                         where t.Name == aTypeName
                         select t).FirstOrDefault();
-            if (type == null)
+            if (type is null)
             {
                 throw new InvalidOperationException
                 (

@@ -7,27 +7,27 @@ namespace VMCore.VM.Core.Utilities
         /// <summary>
         /// Convert a type into a friendly type name.
         /// </summary>
-        /// <param name="t">The type to be converted.</param>
+        /// <param name="aT">The type to be converted.</param>
         /// <returns>
         /// A string giving the friendly name for the type,
         /// if one has been specified.
         /// </returns>
-        public static string GetFriendlyName(this Type t)
+        public static string GetFriendlyName(this Type aT)
         {
-            return t switch
+            return aT switch
             {
-                Type _ when t == typeof(int) => "int",
-                Type _ when t == typeof(short) => "short",
-                Type _ when t == typeof(byte) => "byte",
-                Type _ when t == typeof(bool) => "bool",
-                Type _ when t == typeof(long) => "long",
-                Type _ when t == typeof(float) => "float",
-                Type _ when t == typeof(long) => "double",
-                Type _ when t == typeof(float) => "decimal",
-                Type _ when t == typeof(string) => "string",
-                Type _ when t == typeof(Registers) => "Registers",
-                Type _ when t == typeof(OpCode) => "OpCode",
-                _ => t.Name,
+                Type _ when aT == typeof(int) => "int",
+                Type _ when aT == typeof(short) => "short",
+                Type _ when aT == typeof(byte) => "byte",
+                Type _ when aT == typeof(bool) => "bool",
+                Type _ when aT == typeof(long) => "long",
+                Type _ when aT == typeof(float) => "float",
+                Type _ when aT == typeof(long) => "double",
+                Type _ when aT == typeof(float) => "decimal",
+                Type _ when aT == typeof(string) => "string",
+                Type _ when aT == typeof(Registers) => "Registers",
+                Type _ when aT == typeof(OpCode) => "OpCode",
+                _ => aT.Name,
             };
         }
     }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -35,8 +37,7 @@ namespace VMCore.VM.Core.Utilities
         {
             if (!aEnumType.IsEnum)
             {
-                // TODO - might need to handle this a bit better.
-                return "";
+                return string.Empty;
             }
 
             var enumEntries = aEnumType.GetEnumNames();
@@ -174,7 +175,7 @@ namespace VMCore.VM.Core.Utilities
         /// </summary>
         /// <param name="aStr">The string to be processed.</param>
         /// <returns>
-        /// A string with any of the whitespaces removed.
+        /// A string with any whitespace characters removed.
         /// </returns>
         public static string StripWhiteSpaces(string aStr)
         {
@@ -207,8 +208,8 @@ namespace VMCore.VM.Core.Utilities
         /// <returns>
         /// A RawBinaryWriter containing the specified sections.
         /// </returns>
-        public static BinWriter BinFileBuilder(BinSections[] aSecs = null,
-                                               Version aVersion = null)
+        public static BinWriter BinFileBuilder(BinSections[]? aSecs = null,
+                                               Version? aVersion = null)
         {
             var rbw = new BinWriter();
             var rbi = new BinMeta
@@ -221,7 +222,7 @@ namespace VMCore.VM.Core.Utilities
 
             // Create all sections by default if none
             // were provided.
-            if (aSecs == null || aSecs.Length == 0)
+            if (aSecs is null || aSecs.Length == 0)
             {
                 aSecs = 
                     (BinSections[])Enum.GetValues(typeof(BinSections));
@@ -248,11 +249,11 @@ namespace VMCore.VM.Core.Utilities
         {
             // We are only interested in the code section here.
             var writer = 
-                Utils.BinFileBuilder(new[] { BinSections.Code });
+                BinFileBuilder(new[] { BinSections.Code });
 
             // Add the compiled opcode instructions to the file section.
             writer.Sections[BinSections.Code].Raw = 
-                Utils.QuickRawCompile(aIns);
+                QuickRawCompile(aIns);
 
             // Return the byte stream.
             return writer.Save();
@@ -293,7 +294,7 @@ namespace VMCore.VM.Core.Utilities
         public static string GetProgramDirectory()
         {
             var loc = Assembly.GetExecutingAssembly().Location;
-            return Path.GetDirectoryName(loc);
+            return Path.GetDirectoryName(loc) ?? string.Empty;
         }
 
         /// <summary>
@@ -311,7 +312,7 @@ namespace VMCore.VM.Core.Utilities
                                         bool aOverwrite,
                                         string aArg)
         {
-            Utils.WriteLogFile(aPath, aOverwrite, new[] { aArg });
+            WriteLogFile(aPath, aOverwrite, new[] { aArg });
         }
 
         /// <summary>

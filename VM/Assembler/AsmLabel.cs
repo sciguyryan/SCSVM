@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace VMCore.Assembler
@@ -29,12 +31,12 @@ namespace VMCore.Assembler
         public bool Equals([AllowNull] AsmLabel aOther)
         {
             // Check for null and compare run-time types.
-            if (aOther == null || this.GetType() != aOther.GetType())
+            if (aOther is null || GetType() != aOther.GetType())
             {
                 return false;
             }
 
-            var label = (AsmLabel)aOther;
+            var label = aOther;
 
             return
                 label.Name == Name &&
@@ -49,7 +51,7 @@ namespace VMCore.Assembler
         public static bool operator ==(AsmLabel aLeft,
                                        AsmLabel aRight)
         {
-            return object.Equals(aLeft, aRight);
+            return Equals(aLeft, aRight);
         }
 
         public static bool operator !=(AsmLabel aLeft,

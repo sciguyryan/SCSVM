@@ -1,12 +1,12 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.Assembler;
 using VMCore.VM.Core;
-using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
 
@@ -171,7 +171,7 @@ namespace VMCore.AsmParser
                 // We have a line. Pass the span into
                 // the next stage of the parser.
                 var ins = ParseLine(span[startPos..endPos]);
-                if (ins != null)
+                if (!(ins is null))
                 {
                     insList.Add(ins);
                 }
@@ -189,10 +189,10 @@ namespace VMCore.AsmParser
         /// </summary>
         /// <param name="aLine">The string to be parsed.</param>
         /// <returns>
-        /// A QuickIns object representing the parsed data.
+        /// A nullable QuickIns object representing the parsed data.
         /// This can be null if there was no instruction to output.
         /// </returns>
-        private QuickIns ParseLine(ReadOnlySpan<char> aLine)
+        private QuickIns? ParseLine(ReadOnlySpan<char> aLine)
         {
             // Fast path return for lines that are comments.
             if (aLine[0] == ';')
@@ -321,10 +321,10 @@ namespace VMCore.AsmParser
         /// represent the arguments provided to the instruction.
         /// </param>
         /// <returns>
-        /// A QuickIns object representing the parsed data.
+        /// A nullable QuickIns object representing the parsed data.
         /// This can be null if there was no instruction to output.
         /// </returns>
-        private QuickIns BuildInstruction(string[] aSegments)
+        private QuickIns? BuildInstruction(string[] aSegments)
         {
             // The line was likely a comment line.
             if (aSegments.Length == 0)
@@ -337,32 +337,35 @@ namespace VMCore.AsmParser
             var asmName = aSegments[0];
             var args = aSegments[1..];
 
-            // This is a special case, this is a label.
+            // Is this a label?
+            if (asmName[0] != '@')
+            {
+                // If the instruction has no arguments then it is simple
+                // to identify the opcode for the instruction belonging
+                // to it.
+                // If it has arguments then the job is more difficult
+                // as we will have to perform validation on the number
+                // of arguments, their types, etc. to find the best match.
+                return aSegments.Length == 1 ? 
+                    ParseSimple(asmName) : 
+                    ParseComplex(asmName, args);
+            }
+
+            // Yes, this is a label. This is a special case
             // Trying to parse this in the normal way will fail
             // as it is in a format like this:
             // @GOOD
             // In this case we pass "GOOD" as the argument and
             // then we are done.
-            if (asmName[0] == '@')
-            {
-                var label = TryParseLabel(asmName[1..]);
 
-                Assert(string.IsNullOrWhiteSpace(label),
-                       ExIDs.InvalidLabel);
+            var label = TryParseLabel(asmName[1..]);
 
-                return
-                    new QuickIns(OpCode.LABEL,
-                                 new object[] { label });
-            }
+            Assert(string.IsNullOrWhiteSpace(label),
+                ExIDs.InvalidLabel);
 
-            // If the instruction has no arguments then it is simple to
-            // identify the opcode for the instruction belonging to it. 
-            // If it has arguments then the job is more difficult as we
-            // will have to perform validation on the number of arguments,
-            // their types, etc. to find the best match.
-            return aSegments.Length == 1 ?
-                ParseSimple(asmName) :
-                ParseComplex(asmName, args);
+            return
+                new QuickIns(OpCode.LABEL,
+                    new object[] { label });
         }
 
         /// <summary>
@@ -373,9 +376,9 @@ namespace VMCore.AsmParser
         /// The mnemonic of the instruction.
         /// </param>
         /// <returns>
-        /// A QuickIns object containing the parsed data.
+        /// A nullable QuickIns object containing the parsed data.
         /// </returns>
-        private QuickIns ParseSimple(string aInsName)
+        private QuickIns? ParseSimple(string aInsName)
         {
             if (Enum.TryParse(aInsName.ToUpper(), out OpCode op))
             {
@@ -503,10 +506,10 @@ namespace VMCore.AsmParser
         /// The name of the instruction.
         /// </param>
         /// <returns>
-        /// A QuickIns object containing the parsed data.
+        /// A nullable QuickIns object containing the parsed data.
         /// </returns>
-        private QuickIns ParseComplex(string aInsName,
-                                      IReadOnlyList<string> aRawArgs)
+        private QuickIns? ParseComplex(string aInsName,
+                                       IReadOnlyList<string> aRawArgs)
         {
             var args = ParseArgs(aRawArgs);
             var insName = aInsName.ToLower();
@@ -514,7 +517,7 @@ namespace VMCore.AsmParser
             var len = args.Arguments.Length;
             var argTypes = new Type[len];
 
-            AsmLabel asmLabel = null;
+            AsmLabel? asmLabel = null;
             for (var i = 0; i < len; i++)
             {
                 argTypes[i] = args.Arguments[i].GetType();
@@ -526,7 +529,7 @@ namespace VMCore.AsmParser
 
                 // We cannot have more than one bound label
                 // to an instruction currently.
-                Assert(asmLabel != null,
+                Assert(!(asmLabel is null),
                        ExIDs.MultipleArgumentLabels,
                        aInsName,
                        string.Join(", ", aRawArgs));
@@ -544,7 +547,7 @@ namespace VMCore.AsmParser
 
                 // If we have a label then checking this will be a
                 // fast path as few instructions can support a label.
-                if (asmLabel != null &&
+                if (!(asmLabel is null) &&
                     !ins.CanBindToLabel(asmLabel.BoundArgumentIndex))
                 {
                     continue;
@@ -570,14 +573,16 @@ namespace VMCore.AsmParser
                 break;
             }
 
-            Assert(op == null,
+            Assert(op is null,
                    ExIDs.InvalidInstruction,
                    aInsName,
                    string.Join(", ", aRawArgs),
                    string.Join<Type>(", ", argTypes),
                    string.Join(", ", args.ArgRefTypes));
 
+#pragma warning disable CS8629 // Nullable value type may be null
             return new QuickIns((OpCode)op, args.Arguments, asmLabel);
+#pragma warning restore CS8629 // Nullable value type may be null.
         }
 
         /// <summary>
@@ -820,9 +825,9 @@ namespace VMCore.AsmParser
         private static bool FastTypeArrayEqual(IReadOnlyList<Type> a1,
                                                IReadOnlyList<Type> a2)
         {
-            if (a1 == null || a2 == null)
+            if (a1 is null || a2 is null)
             {
-                return (a1 == null && a2 == null);
+                return (a1 is null && a2 is null);
             }
 
             var len1 = a1.Count;
@@ -886,9 +891,9 @@ namespace VMCore.AsmParser
         private static bool FastArgRefTypeEqual(IReadOnlyList<InsArgTypes> a1,
                                                 IReadOnlyList<InsArgTypes> a2)
         {
-            if (a1 == null || a2 == null)
+            if (a1 is null || a2 is null)
             {
-                return (a1 == null && a2 == null);
+                return (a1 is null && a2 is null);
             }
 
             var len1 = a1.Count;

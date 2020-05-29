@@ -1,13 +1,14 @@
-using VMCore;
+using VMCore.VM.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Logic
 {
     [TestClass]
-    public class Test_NOT
-        : Test_Instruction_Base
+    public class TestNot
+        : TestInstructionBase
     {
-        public Test_NOT()
+        public TestNot()
         {
         }
 
@@ -15,9 +16,9 @@ namespace UnitTests.Instructions
         /// Test the functionality of a logical NOT instruction.
         /// </summary>
         [TestMethod]
-        public void TestLogicalNOT()
+        public void TestLogicalNot()
         {
-            var table = new IntegerTestResult[]
+            var table = new []
             {
                 #region TESTS
                 new IntegerTestResult(0, 0, -1, true, false, false),
@@ -26,7 +27,7 @@ namespace UnitTests.Instructions
                 #endregion
             };
 
-            IntegerTestResult.RunTests(_vm, table, OpCode.NOT);
+            IntegerTestResult.RunTests(Vm, table, OpCode.NOT);
         }
     }
 }

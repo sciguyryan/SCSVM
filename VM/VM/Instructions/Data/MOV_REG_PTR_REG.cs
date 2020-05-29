@@ -1,7 +1,7 @@
 ﻿using System;
 using VMCore.VM.Core;
 
-namespace VMCore.VM.Instructions
+namespace VMCore.VM.Instructions.Data
 {
     internal class MOV_REG_PTR_REG
         : Instruction

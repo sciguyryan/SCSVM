@@ -1,17 +1,17 @@
-﻿using System.Collections.Generic;
-using VMCore;
+﻿using VMCore;
 using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Bit
 {
     [TestClass]
-    public class Test_BIT
-        : Test_Instruction_Base
+    public class TestBit
+        : TestInstructionBase
     {
-        public Test_BIT()
+        public TestBit()
         {
         }
 
@@ -21,7 +21,7 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestBitTest()
         {
-            var table = new object[][]
+            var table = new []
             {
                 #region TESTS
                 // Note that these are little endian so the
@@ -53,19 +53,23 @@ namespace UnitTests.Instructions
             {
                 var entry = table[i];
 
-                var program = new QuickIns[]
+                var program = new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG, new object[] { (int)entry[1], Registers.R1 }),
-                    new QuickIns(OpCode.BIT, new object[] { (int)entry[0], Registers.R1 }),
+                    new QuickIns(OpCode.MOV_LIT_REG, 
+                                new object[] { (int)entry[1], Registers.R1 }),
+                    new QuickIns(OpCode.BIT, 
+                                new object[] { (int)entry[0], Registers.R1 }),
                 };
 
-                _vm.Run(Utils.QuickRawCompile(program));
+                Vm.Run(Utils.QuickRawCompile(program));
 
-                bool success =
-                    _vm.Cpu.IsFlagSet(CpuFlags.Z) == (bool)entry[2];
+                var success =
+                    Vm.Cpu.IsFlagSet(CpuFlags.Z) == (bool)entry[2];
 
                 Assert.IsTrue(success,
-                              $"Zero flag for test {i} is incorrect. Expected {(bool)entry[2]}, got {_vm.Cpu.IsFlagSet(CpuFlags.Z)}.");
+                              $"Zero flag for test {i} is incorrect. " +
+                              $"Expected {(bool)entry[2]}, got " +
+                              $"{Vm.Cpu.IsFlagSet(CpuFlags.Z)}.");
             }
         }
     }

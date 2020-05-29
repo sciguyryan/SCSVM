@@ -38,7 +38,7 @@ namespace VMCore.Expressions
         /// <summary>
         /// The input string to be tokenized.
         /// </summary>
-        private string _str;
+        private readonly string _str;
 
         /// <summary>
         /// The depth of brackets that have been
@@ -103,23 +103,28 @@ namespace VMCore.Expressions
                     NextChar();
                     Token = Tokens.OpenBracket;
                     return;
+
                 case ')':
                     --_bracketDepth;
                     NextChar();
                     Token = Tokens.CloseBracket;
                     return;
+
                 case '+':
                     NextChar();
                     Token = Tokens.Add;
                     return;
+
                 case '-':
                     NextChar();
                     Token = Tokens.Subtract;
                     return;
+
                 case '*':
                     NextChar();
                     Token = Tokens.Multiply;
                     return;
+
                 case '/':
                     NextChar();
                     Token = Tokens.Divide;

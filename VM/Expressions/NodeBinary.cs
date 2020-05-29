@@ -3,12 +3,12 @@ using VMCore.VM;
 
 namespace VMCore.Expressions
 {
-    class NodeBinary
+    internal class NodeBinary
         : Node
     {
-        private Node _lhs;
-        private Node _rhs;
-        private OpTypes _op;
+        private readonly Node _lhs;
+        private readonly Node _rhs;
+        private readonly OpTypes _op;
 
         public NodeBinary(Node aLhs, Node aRhs, OpTypes aOp)
         {

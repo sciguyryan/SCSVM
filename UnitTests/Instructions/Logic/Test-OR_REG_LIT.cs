@@ -1,13 +1,14 @@
-using VMCore;
+using VMCore.VM.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Logic
 {
     [TestClass]
-    public class Test_OR_REG_LIT
-        : Test_Instruction_Base
+    public class TestOrRegLit
+        : TestInstructionBase
     {
-        public Test_OR_REG_LIT()
+        public TestOrRegLit()
         {
         }
 
@@ -15,9 +16,9 @@ namespace UnitTests.Instructions
         /// Test the functionality of a logical OR instruction.
         /// </summary>
         [TestMethod]
-        public void TestLogicalOR()
+        public void TestLogicalOr()
         {
-            var table = new IntegerTestResult[]
+            var table = new []
             {
                 #region TESTS
                 new IntegerTestResult(0, 0, 0, false, true, false),
@@ -30,7 +31,7 @@ namespace UnitTests.Instructions
                 #endregion
             };
 
-            IntegerTestResult.RunTests(_vm, table, OpCode.OR_REG_LIT);
+            IntegerTestResult.RunTests(Vm, table, OpCode.OR_REG_LIT);
         }
     }
 }

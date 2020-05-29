@@ -1,29 +1,28 @@
-using System;
-using VMCore;
-using VMCore.VM;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Text;
+using VMCore.VM.Core;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Core.Memory.Helpers;
 
-namespace UnitTests.Memory
+namespace UnitTests.Core.Memory
 {
     [TestClass]
-    public class Test_Memory_Type_IO
-        : Test_Memory_Base
+    public class TestMemoryTypeIo
+        : TestMemoryBase
     {
-        public Test_Memory_Type_IO()
+        public TestMemoryTypeIo()
         {
         }
 
         [TestMethod]
         public void TestByteRoundTrip()
         {
-            var input = (byte)10;
+            const byte input = (byte)10;
 
-            _vm.Memory
+            Vm.Memory
                 .SetValue(0, input, SecurityContext.System, false);
 
             var output = 
-                _vm.Memory.GetValue(0, SecurityContext.System, false);
+                Vm.Memory.GetValue(0, SecurityContext.System, false);
 
             Assert.IsTrue(input == output);
         }
@@ -31,13 +30,13 @@ namespace UnitTests.Memory
         [TestMethod]
         public void TestRegisterRoundTrip()
         {
-            var input = Registers.R1;
+            const VMCore.VM.Core.Registers input = VMCore.VM.Core.Registers.R1;
 
-            _vm.Memory
+            Vm.Memory
                 .SetRegisterIdent(0, input,SecurityContext.System, false);
 
             var output =
-                _vm.Memory.GetRegisterIdent(0, SecurityContext.System, false);
+                Vm.Memory.GetRegisterIdent(0, SecurityContext.System, false);
 
             Assert.IsTrue(input == output);
         }
@@ -45,13 +44,13 @@ namespace UnitTests.Memory
         [TestMethod]
         public void TestIntegerRoundTrip()
         {
-            var input = 10;
+            const int input = 10;
 
-            _vm.Memory
+            Vm.Memory
                 .SetInt(0, input, SecurityContext.System, false);
 
             var output =
-                _vm.Memory.GetInt(0, SecurityContext.System, false);
+                Vm.Memory.GetInt(0, SecurityContext.System, false);
 
             Assert.IsTrue(input == output);
         }
@@ -59,13 +58,13 @@ namespace UnitTests.Memory
         [TestMethod]
         public void TestOpCodeRoundTrip()
         {
-            var input = OpCode.ADD_LIT_REG;
+            const OpCode input = OpCode.ADD_LIT_REG;
 
-            _vm.Memory
+            Vm.Memory
                 .SetOpCode(0, input, SecurityContext.System, false);
 
             var output =
-                _vm.Memory.GetOpCode(0, SecurityContext.System, false);
+                Vm.Memory.GetOpCode(0, SecurityContext.System, false);
 
             Assert.IsTrue(input == output);
         }
@@ -73,21 +72,21 @@ namespace UnitTests.Memory
         [TestMethod]
         public void TestStringRoundTrip()
         {
-            var input = "banana";
+            const string input = "banana";
 
             var byteLen = 
                 sizeof(int) +
                 Encoding.UTF8.GetBytes(input).Length;
 
-            _vm.Memory
+            Vm.Memory
                 .SetString(0, input, SecurityContext.System, false);
 
             // Tuple argument 1 is the number of bytes
             // taken to write the length of the string (4)
             // and the number of bytes taken to create the
             // string.
-            (var outL, var outS) =
-                _vm.Memory.GetString(0, SecurityContext.System, false);
+            var (outL, outS) =
+                Vm.Memory.GetString(0, SecurityContext.System, false);
 
             Assert.IsTrue(input == outS);
             Assert.IsTrue(byteLen == outL);

@@ -1,11 +1,11 @@
-﻿namespace VMCore
+﻿namespace VMCore.VM.Core
 {
     public enum Registers : byte
     {
         // TODO - I had initially planned to allow access
         // to the same register types as in Intel processors
         // but it adds overhead and complications that I
-        // do not want to deal with fort he time being.
+        // do not want to deal with for the time being.
         // As such I have commented them out.
         // I might come back along later and work on these.
 

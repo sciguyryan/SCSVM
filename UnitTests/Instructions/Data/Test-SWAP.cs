@@ -1,16 +1,17 @@
-using System.Collections.Generic;
 using VMCore;
 using VMCore.Assembler;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Data
 {
     [TestClass]
-    public class Test_SWAP
-        : Test_Instruction_Base
+    public class TestSwap
+        : TestInstructionBase
     {
-        public Test_SWAP()
+        public TestSwap()
         {
         }
 
@@ -21,22 +22,25 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestSwapRegisters()
         {
-            var r1 = Registers.R1;
-            var r2 = Registers.R2;
+            const Registers r1 = Registers.R1;
+            const Registers r2 = Registers.R2;
             const int expected1 = 0x123;
             const int expected2 = 0x321;
 
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected1, r1 }),
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected2, r2 }),
-                new QuickIns(OpCode.SWAP, new object[] { r1, r2 }),
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                             new object[] { expected1, r1 }),
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                             new object[] { expected2, r2 }),
+                new QuickIns(OpCode.SWAP, 
+                             new object[] { r1, r2 }),
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.Cpu.Registers[r1] == expected2);
-            Assert.IsTrue(_vm.Cpu.Registers[r2] == expected1);
+            Assert.IsTrue(Vm.Cpu.Registers[r1] == expected2);
+            Assert.IsTrue(Vm.Cpu.Registers[r2] == expected1);
         }
     }
 }

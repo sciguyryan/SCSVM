@@ -1,60 +1,64 @@
-using VMCore.VM;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Core.Memory.Helpers;
 
-namespace UnitTests.Memory
+namespace UnitTests.Core.Memory
 {
     [TestClass]
-    public class Test_Memory_Access
-        : Test_Memory_Base
+    public class TestMemoryAccess
+        : TestMemoryBase
     {
-        private int _executableStart;
+        private readonly int _executableStart;
 
-        public Test_Memory_Access()
+        public TestMemoryAccess()
         {
             // Create a dummy program so that we have
             // an executable memory region to work with.
             var dummy = 
                 new byte[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-            (_executableStart, _, _) = _vm.Memory.AddExMemory(dummy);
+            (_executableStart, _, _) = Vm.Memory.AddExMemory(dummy);
         }
 
         #region Read/Write Public Region Tests
+
         [TestMethod]
         public void TestUserWriteInPublicRegion()
         {
-            _vm.Memory
+            Vm.Memory
                 .SetInt(0, 1, SecurityContext.User, false);
         }
 
         [TestMethod]
         public void TestUserReadInPublicRegion()
         {
-            _ = _vm.Memory.GetInt(0, SecurityContext.User, false);
+            _ = Vm.Memory.GetInt(0, SecurityContext.User, false);
         }
 
         [TestMethod]
         public void TestSystemWriteInPublicRegion()
         {
-            _vm.Memory
+            Vm.Memory
                 .SetInt(0, 1, SecurityContext.System, false);
         }
 
         [TestMethod]
         public void TestSystemReadInPublicRegion()
         {
-            _ = _vm.Memory.GetInt(0, SecurityContext.System, false);
+            _ = Vm.Memory.GetInt(0, SecurityContext.System, false);
         }
+
         #endregion
 
         #region Read/Write Private Region Tests
+
         [TestMethod]
         [ExpectedException(typeof(MemoryAccessViolationException))]
         public void TestUserWriteInPrivateRegion()
         {
-            _vm.Memory
-                .SetInt(_stackStart, 1, SecurityContext.User, false);
+            Vm.Memory
+                .SetInt(StackStart, 1, SecurityContext.User, false);
         }
 
         [TestMethod]
@@ -62,77 +66,81 @@ namespace UnitTests.Memory
         public void TestUserReadInPrivateRegion()
         {
             _ = 
-                _vm.Memory.GetInt(_stackStart, SecurityContext.User, false);
+                Vm.Memory.GetInt(StackStart, SecurityContext.User, false);
         }
 
         [TestMethod]
         public void TestSystemWriteInPrivateRegion()
         {
-            _vm.Memory
-                .SetInt(_stackStart, 1, SecurityContext.System, false);
+            Vm.Memory
+                .SetInt(StackStart, 1, SecurityContext.System, false);
         }
 
         [TestMethod]
         public void TestSystemReadInPrivateRegion()
         {
             _ = 
-                _vm.Memory.GetInt(_stackStart, SecurityContext.System, false);
+                Vm.Memory.GetInt(StackStart, SecurityContext.System, false);
         }
+
         #endregion
 
         #region Read/Write Non Executable Region Tests
+
         [TestMethod]
         [ExpectedException(typeof(MemoryAccessViolationException))]
-        public void TestUserWriteInNonEXRegion()
+        public void TestUserWriteInNonExRegion()
         {
-            _vm.Memory
+            Vm.Memory
                 .SetInt(0, 1, SecurityContext.User, true);
         }
 
         [TestMethod]
         [ExpectedException(typeof(MemoryAccessViolationException))]
-        public void TestUserReadInNonEXRegion()
+        public void TestUserReadInNonExRegion()
         {
-            _ = _vm.Memory.GetInt(0, SecurityContext.User, true);
+            _ = Vm.Memory.GetInt(0, SecurityContext.User, true);
         }
 
         [TestMethod]
         [ExpectedException(typeof(MemoryAccessViolationException))]
-        public void TestSystemWriteInNonEXRegion()
+        public void TestSystemWriteInNonExRegion()
         {
-            _vm.Memory
+            Vm.Memory
                 .SetInt(0, 1, SecurityContext.System, true);
         }
 
         [TestMethod]
         [ExpectedException(typeof(MemoryAccessViolationException))]
-        public void TestSystemReadInNonEXRegion()
+        public void TestSystemReadInNonExRegion()
         {
-            _ = _vm.Memory.GetInt(0, SecurityContext.System, true);
+            _ = Vm.Memory.GetInt(0, SecurityContext.System, true);
         }
+
         #endregion
 
         #region Read/Write Executable Region Tests
+
         [TestMethod]
-        public void TestUserWriteInPublicEXRegion()
+        public void TestUserWriteInPublicExRegion()
         {
-            _vm.Memory
+            Vm.Memory
                 .SetInt(_executableStart, 1, SecurityContext.User, true);
         }
 
         [TestMethod]
-        public void TestUserReadInPublicEXRegion()
+        public void TestUserReadInPublicExRegion()
         {
             _ = 
-                _vm.Memory.GetInt(_executableStart,
+                Vm.Memory.GetInt(_executableStart,
                                   SecurityContext.User,
                                   true);
         }
 
         [TestMethod]
-        public void TestSystemWriteInPublicEXRegion()
+        public void TestSystemWriteInPublicExRegion()
         {
-            _vm.Memory
+            Vm.Memory
                 .SetInt(_executableStart,
                         1,
                         SecurityContext.System,
@@ -140,21 +148,23 @@ namespace UnitTests.Memory
         }
 
         [TestMethod]
-        public void TestSystemReadInPublicEXRegion()
+        public void TestSystemReadInPublicExRegion()
         {
             _ = 
-                _vm.Memory.GetInt(_executableStart,
+                Vm.Memory.GetInt(_executableStart,
                                   SecurityContext.System,
                                   true);
         }
+
         #endregion
 
         #region Read/Write Executable Cross Region Tests
+
         [TestMethod]
         [ExpectedException(typeof(MemoryAccessViolationException))]
-        public void TestUserWriteInPublicEXCrossRegion()
+        public void TestUserWriteInPublicExCrossRegion()
         {
-            _vm.Memory
+            Vm.Memory
                 .SetInt(_executableStart - 2,
                         1,
                         SecurityContext.User,
@@ -163,22 +173,22 @@ namespace UnitTests.Memory
 
         [TestMethod]
         [ExpectedException(typeof(MemoryAccessViolationException))]
-        public void TestUserReadInPublicEXCrossRegion()
+        public void TestUserReadInPublicExCrossRegion()
         {
             _ =
-                _vm.Memory.GetInt(_executableStart - 2,
+                Vm.Memory.GetInt(_executableStart - 2,
                                   SecurityContext.User,
                                   true);
         }
 
         [TestMethod]
         [ExpectedException(typeof(MemoryAccessViolationException))]
-        public void TestSystemWriteInPublicEXCrossRegion()
+        public void TestSystemWriteInPublicExCrossRegion()
         {
             // This will fail as any attempt to read across
             // a memory region boundary will throw an exception,
             // even for a system-level context.
-            _vm.Memory
+            Vm.Memory
                 .SetInt(_executableStart - 2,
                         1,
                         SecurityContext.System,
@@ -187,19 +197,21 @@ namespace UnitTests.Memory
 
         [TestMethod]
         [ExpectedException(typeof(MemoryAccessViolationException))]
-        public void TestSystemReadInPublicEXCrossRegion()
+        public void TestSystemReadInPublicExCrossRegion()
         {
             // This will fail as any attempt to read across
             // a memory region boundary will throw an exception,
             // even for a system-level context.
             _ =
-                _vm.Memory.GetInt(_executableStart - 2,
+                Vm.Memory.GetInt(_executableStart - 2,
                                   SecurityContext.System,
                                   true);
         }
+
         #endregion
 
         #region Read/Write Cross Region Tests
+
         [TestMethod]
         [ExpectedException(typeof(MemoryAccessViolationException))]
         public void TestUserWriteCrossRegion()
@@ -208,9 +220,9 @@ namespace UnitTests.Memory
             // a private write region.
             // This should not be permitted with a user
             // security context.
-            var pos = _stackStart - 2;
+            var pos = StackStart - 2;
 
-            _vm.Memory.SetInt(pos, 1, SecurityContext.User, false);
+            Vm.Memory.SetInt(pos, 1, SecurityContext.User, false);
         }
 
         [TestMethod]
@@ -221,9 +233,9 @@ namespace UnitTests.Memory
             // a private write region.
             // This should not be permitted with a user
             // security context.
-            var pos = _stackStart - 2;
+            var pos = StackStart - 2;
 
-            _ = _vm.Memory.GetInt(pos, SecurityContext.User, false);
+            _ = Vm.Memory.GetInt(pos, SecurityContext.User, false);
         }
 
         [TestMethod]
@@ -236,9 +248,9 @@ namespace UnitTests.Memory
             // access to be granted.
             // As are using a system level context, those higher
             // permissions will be met.
-            var pos = _stackStart - 2;
+            var pos = StackStart - 2;
 
-            _vm.Memory.SetInt(pos, 1, SecurityContext.System, false);
+            Vm.Memory.SetInt(pos, 1, SecurityContext.System, false);
         }
 
         [TestMethod]
@@ -251,25 +263,27 @@ namespace UnitTests.Memory
             // access to be granted.
             // As are using a system level context, those higher
             // permissions will be met.
-            var pos = _stackStart - 2;
+            var pos = StackStart - 2;
 
-            _ = _vm.Memory.GetInt(pos, SecurityContext.System, false);
+            _ = Vm.Memory.GetInt(pos, SecurityContext.System, false);
         }
+
         #endregion
 
         #region Read/Write Invalid Region Tests
+
         [TestMethod]
         [ExpectedException(typeof(MemoryOutOfRangeException))]
         public void TestUserWriteInvalidRegion()
         {
-            _vm.Memory.SetInt(-1, 1, SecurityContext.User, false);
+            Vm.Memory.SetInt(-1, 1, SecurityContext.User, false);
         }
 
         [TestMethod]
         [ExpectedException(typeof(MemoryOutOfRangeException))]
         public void TestUserReadInvalidRegion()
         {
-            _ = _vm.Memory.GetInt(-1, SecurityContext.User, false);
+            _ = Vm.Memory.GetInt(-1, SecurityContext.User, false);
         }
 
         [TestMethod]
@@ -277,9 +291,9 @@ namespace UnitTests.Memory
         public void TestUserWritePartialInvalidRegion()
         {
             // 2 bytes will be written outside of memory bounds.
-            var pos = _vm.Memory.Length - 2;
+            var pos = Vm.Memory.Length - 2;
 
-            _vm.Memory
+            Vm.Memory
                 .SetInt(pos, 1, SecurityContext.User, false);
         }
 
@@ -288,10 +302,11 @@ namespace UnitTests.Memory
         public void TestUserReadPartialInvalidRegion()
         {
             // 2 bytes will be read from outside of memory bounds.
-            var pos = _vm.Memory.Length - 2;
+            var pos = Vm.Memory.Length - 2;
 
-            _ = _vm.Memory.GetInt(pos, SecurityContext.User, false);
+            _ = Vm.Memory.GetInt(pos, SecurityContext.User, false);
         }
+
         #endregion
     }
 }

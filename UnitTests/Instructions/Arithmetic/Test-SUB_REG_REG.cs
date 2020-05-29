@@ -1,13 +1,14 @@
-using VMCore;
+using VMCore.VM.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Arithmetic
 {
     [TestClass]
-    public class Test_SUB_REG_REG
-        : Test_Instruction_Base
+    public class TestSubRegReg
+        : TestInstructionBase
     {
-        public Test_SUB_REG_REG()
+        public TestSubRegReg()
         {
         }
 
@@ -17,7 +18,7 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestSubtraction()
         {
-            var table = new IntegerTestResult[]
+            var table = new []
             {
                 #region TESTS
                 new IntegerTestResult(2, 1, 1, false, false, false),
@@ -34,7 +35,7 @@ namespace UnitTests.Instructions
                 #endregion
             };
 
-            IntegerTestResult.RunTests(_vm, table, OpCode.SUB_REG_REG);
+            IntegerTestResult.RunTests(Vm, table, OpCode.SUB_REG_REG);
         }
     }
 }

@@ -1,12 +1,15 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using VMCore.VM;
+using VMCore.VM.Core;
 
 namespace VMCore.Expressions
 {
     public class NodeRegister
         : Node
     {
-        private string _registerName;
+        private readonly string _registerName;
 
         public NodeRegister(string aRegisterName)
         {
@@ -17,10 +20,10 @@ namespace VMCore.Expressions
         {
             // This should not usually happen, but
             // when we are compiling a binary
-            // no Cpu will be passed.
+            // no CPU will be passed.
             // This is done in order to allow
             // for optimization analysis.
-            if (aCpu == null)
+            if (aCpu is null)
             {
                 return -1;
             }

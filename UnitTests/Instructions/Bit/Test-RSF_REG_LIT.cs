@@ -1,13 +1,15 @@
 using VMCore;
+using VMCore.VM.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Bit
 {
     [TestClass]
-    public class Test_RSF_REG_LIT
-        : Test_Instruction_Base
+    public class TestRsfRegLit
+        : TestInstructionBase
     {
-        public Test_RSF_REG_LIT()
+        public TestRsfRegLit()
         {
         }
 
@@ -20,7 +22,7 @@ namespace UnitTests.Instructions
             // These test values are derived from the EMCA 
             // right shift tests under section 11.7.2.
             // See https://github.com/tc39/test262/tree/c4dd26bceed03b41dca672ccad9ba09c9f44ef12/test/language/expressions/right-shift
-            var table = new BitTestResult[]
+            var table = new []
             {
                 #region TESTS
                 new BitTestResult(-1, 0, -1, ResultTypes.EQUAL),
@@ -2075,7 +2077,10 @@ namespace UnitTests.Instructions
                 #endregion
             };
 
-            BitTestResult.RunTests(_vm, table, OpCode.RSF_REG_LIT, Registers.R1);
+            BitTestResult.RunTests(Vm,
+                                   table, 
+                                   OpCode.RSF_REG_LIT, 
+                                   Registers.R1);
         }
     }
 }

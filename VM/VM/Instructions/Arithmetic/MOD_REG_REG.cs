@@ -1,7 +1,7 @@
 ﻿using System;
 using VMCore.VM.Core;
 
-namespace VMCore.VM.Instructions
+namespace VMCore.VM.Instructions.Arithmetic
 {
     internal class MOD_REG_REG
         : Instruction
@@ -44,7 +44,7 @@ namespace VMCore.VM.Instructions
             // Simply disregard the MSBs and take LSBs.
             aCpu.Registers[Registers.AC] = unchecked((int)result);
 
-            // Update the Cpu flags based on the result of
+            // Update the CPU flags based on the result of
             // the calculation just performed.
             // If the value is above the bounds for an
             // integer then the overflow flag will be set.

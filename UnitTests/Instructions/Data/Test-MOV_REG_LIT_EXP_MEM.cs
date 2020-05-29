@@ -1,18 +1,18 @@
-using System.Collections.Generic;
 using VMCore;
 using VMCore.Assembler;
-using VMCore.VM;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Data
 {
     [TestClass]
-    public class MOV_REG_LIT_EXP_MEM
-        : Test_Instruction_Base
+    public class MovRegLitExpMem
+        : TestInstructionBase
     {
-        public MOV_REG_LIT_EXP_MEM()
+        public MovRegLitExpMem()
         {
         }
 
@@ -28,18 +28,21 @@ namespace UnitTests.Instructions
 
             const int expected = 0x12;
 
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),         // mov $12, R1
-                new QuickIns(OpCode.MOV_REG_REG, new object[] { r1, r2 }),               // mov R1, R2
-                new QuickIns(OpCode.MOV_REG_LIT_EXP_MEM, new object[] { r1, "R2 + $3" }) // mov R1, [R2 + $3]
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                        new object[] { expected, r1 }),     // mov $12, R1
+                new QuickIns(OpCode.MOV_REG_REG, 
+                        new object[] { r1, r2 }),           // mov R1, R2
+                new QuickIns(OpCode.MOV_REG_LIT_EXP_MEM, 
+                        new object[] { r1, "R2 + $3" })     // mov R1, [R2 + $3]
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
             // Extract the value type from memory.
             var intOut = 
-                _vm.Memory
+                Vm.Memory
                     .GetInt(0x15, SecurityContext.System, false);
 
             Assert.IsTrue(intOut == expected);
@@ -57,18 +60,21 @@ namespace UnitTests.Instructions
 
             const int expected = 0x12;
 
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),            // mov $12, R1
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { -0x5, r2 }),                // mov -$5, R2
-                new QuickIns(OpCode.MOV_REG_LIT_EXP_MEM, new object[] { r1, "R2 + $0x1A" })   // mov R3, [R2 + $1A]
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                        new object[] { expected, r1 }),     // mov $12, R1
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                        new object[] { -0x5, r2 }),         // mov -$5, R2
+                new QuickIns(OpCode.MOV_REG_LIT_EXP_MEM, 
+                        new object[] { r1, "R2 + $0x1A" })  // mov R3, [R2 + $1A]
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
             // Extract the value type from memory.
             var intOut =
-                _vm.Memory
+                Vm.Memory
                     .GetInt(0x15, SecurityContext.System, false);
 
             Assert.IsTrue(intOut == expected);
@@ -86,13 +92,15 @@ namespace UnitTests.Instructions
             const Registers r1 = Registers.R1;
             const Registers r2 = Registers.R2;
 
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0, r1 }),                   // mov $0, R1
-                new QuickIns(OpCode.MOV_REG_LIT_EXP_MEM, new object[] { r2, "R1 + -$1" })   // mov R2, [R1 + -$1]
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                             new object[] { 0, r1 }),           // mov $0, R1
+                new QuickIns(OpCode.MOV_REG_LIT_EXP_MEM, 
+                             new object[] { r2, "R1 + -$1" })   // mov R2, [R1 + -$1]
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
         }
     }
 }

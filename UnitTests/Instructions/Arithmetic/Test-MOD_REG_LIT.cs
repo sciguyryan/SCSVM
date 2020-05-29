@@ -1,18 +1,18 @@
 using System;
-using System.Collections.Generic;
 using VMCore;
 using VMCore.Assembler;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Arithmetic
 {
     [TestClass]
-    public class Test_MOD_REG_LIT
-        : Test_Instruction_Base
+    public class TestModRegLit
+        : TestInstructionBase
     {
-        public Test_MOD_REG_LIT()
+        public TestModRegLit()
         {
         }
 
@@ -22,7 +22,7 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestModulo()
         {
-            var table = new IntegerTestResult[]
+            var table = new []
             {
                 #region TESTS
                 new IntegerTestResult(2, 2, 0, false, true, false),
@@ -37,7 +37,7 @@ namespace UnitTests.Instructions
                 #endregion
             };
 
-            IntegerTestResult.RunTests(_vm, table, OpCode.MOD_REG_LIT);
+            IntegerTestResult.RunTests(Vm, table, OpCode.MOD_REG_LIT);
         }
 
         /// <summary>
@@ -46,27 +46,29 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestModuloExceptions()
         {
-            var table = new int[][]
+            var table = new []
             {
-                #region TESTS
-                new int[] { 0, 0 },
-                new int[] { 0, 2 },
-                #endregion
+                new [] { 0, 0 },
+                new [] { 0, 2 },
             };
 
             for (var i = 0; i < table.Length; i++)
             {
                 var entry = table[i];
 
-                var program = new QuickIns[]
+                var program = new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG, new object[] { entry[0], (byte)Registers.R1 }),
-                    new QuickIns(OpCode.MOD_REG_LIT, new object[] { (byte)Registers.R1, entry[1] }),
+                    new QuickIns(OpCode.MOV_LIT_REG, 
+                            new object[] { entry[0], (byte)Registers.R1 }),
+                    new QuickIns(OpCode.MOD_REG_LIT, 
+                            new object[] { (byte)Registers.R1, entry[1] }),
                 };
 
-                Assert.ThrowsException<DivideByZeroException>(
-                    () => _vm.Run(Utils.QuickRawCompile(program)),
-                    $"Expected exception of type DivideByZeroException for test {i}.");
+                Assert.ThrowsException<DivideByZeroException>
+                (
+                    () => Vm.Run(Utils.QuickRawCompile(program)),
+                    $"Expected exception of type DivideByZeroException for test {i}."
+                );
             }
         }
     }

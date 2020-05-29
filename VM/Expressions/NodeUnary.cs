@@ -3,11 +3,11 @@ using VMCore.VM;
 
 namespace VMCore.Expressions
 {
-    class NodeUnary
+    internal class NodeUnary
         : Node
     {
-        private Node _rhs;
-        private OpTypes _op;
+        private readonly Node _rhs;
+        private readonly OpTypes _op;
 
         public NodeUnary(Node aRhs, OpTypes aOp)
         {

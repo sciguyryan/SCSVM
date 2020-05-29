@@ -1,7 +1,7 @@
 ﻿using System;
 using VMCore.VM.Core;
 
-namespace VMCore.VM.Instructions
+namespace VMCore.VM.Instructions.Special
 {
     internal class NOP
         : Instruction

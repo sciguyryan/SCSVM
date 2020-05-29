@@ -1,13 +1,14 @@
-using VMCore;
+using VMCore.VM.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Arithmetic
 {
     [TestClass]
-    public class Test_ADD_REG_REG
-        : Test_Instruction_Base
+    public class TestAddRegReg
+        : TestInstructionBase
     {
-        public Test_ADD_REG_REG()
+        public TestAddRegReg()
         {
         }
 
@@ -17,7 +18,7 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestAddition()
         {
-            var table = new IntegerTestResult[]
+            var table = new []
             {
                 #region TESTS
                 new IntegerTestResult(1, 2, 3, false, false, false),
@@ -36,7 +37,7 @@ namespace UnitTests.Instructions
                 #endregion
             };
 
-            IntegerTestResult.RunTests(_vm, table, OpCode.ADD_REG_REG);
+            IntegerTestResult.RunTests(Vm, table, OpCode.ADD_REG_REG);
         }
     }
 }

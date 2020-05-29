@@ -1,17 +1,18 @@
-using System.Collections.Generic;
 using VMCore;
 using VMCore.Assembler;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Data
 {
     [TestClass]
-    public class Test_MOV_LIT_EXP_MEM_REG
-        : Test_Instruction_Base
+    public class TestMovLitExpMemReg
+        : TestInstructionBase
     {
-        public Test_MOV_LIT_EXP_MEM_REG()
+        public TestMovLitExpMemReg()
         {
         }
 
@@ -28,17 +29,21 @@ namespace UnitTests.Instructions
 
             const int expected = 0x12;
 
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),         // mov $12, R1
-                new QuickIns(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),             // mov R1, [$15]
-                new QuickIns(OpCode.MOV_REG_REG, new object[] { r1, r2 }),               // mov R1, R2
-                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "R2 + $3", r3 }) // mov [R2 + $3], R3
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                        new object[] { expected, r1 }),     // mov $12, R1
+                new QuickIns(OpCode.MOV_REG_MEM, 
+                        new object[] { r1, 0x15 }),         // mov R1, [$15]
+                new QuickIns(OpCode.MOV_REG_REG, 
+                        new object[] { r1, r2 }),           // mov R1, R2
+                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, 
+                        new object[] { "R2 + $3", r3 })     // mov [R2 + $3], R3
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.Cpu.Registers[r3] == expected);
+            Assert.IsTrue(Vm.Cpu.Registers[r3] == expected);
         }
 
         /// <summary>
@@ -54,17 +59,21 @@ namespace UnitTests.Instructions
 
             const int expected = 0x12;
 
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, r1 }),            // mov $12, R1
-                new QuickIns(OpCode.MOV_REG_MEM, new object[] { r1, 0x15 }),                // mov R1, [$15]
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { -0x5, r2 }),                // mov -$5, R2
-                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "R2 + $0x1A", r3 })   // mov [R2 + $1A], R3
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                        new object[] { expected, r1 }),     // mov $12, R1
+                new QuickIns(OpCode.MOV_REG_MEM, 
+                        new object[] { r1, 0x15 }),         // mov R1, [$15]
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                        new object[] { -0x5, r2 }),         // mov -$5, R2
+                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, 
+                        new object[] { "R2 + $0x1A", r3 })  // mov [R2 + $1A], R3
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.Cpu.Registers[r3] == expected);
+            Assert.IsTrue(Vm.Cpu.Registers[r3] == expected);
         }
 
         /// <summary>
@@ -79,13 +88,15 @@ namespace UnitTests.Instructions
             const Registers r1 = Registers.R1;
             const Registers r2 = Registers.R2;
 
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0, r1 }),                   // mov $0, R1
-                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, new object[] { "R1 + -$1", r2 })   // mov [R1 + -$1], R2
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                        new object[] { 0, r1 }),            // mov $0, R1
+                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, 
+                        new object[] { "R1 + -$1", r2 })    // mov [R1 + -$1], R2
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
         }
     }
 }

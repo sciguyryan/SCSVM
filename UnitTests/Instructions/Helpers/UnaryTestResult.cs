@@ -1,10 +1,11 @@
 ﻿using VMCore;
 using VMCore.Assembler;
 using VMCore.VM;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Helpers
 {
     public class UnaryTestResult
     {
@@ -27,37 +28,47 @@ namespace UnitTests.Instructions
         }
 
         /// <summary>
-        /// Run a set of tests within a given virtual machine instance for a given opcode.
+        /// Run a set of tests within a given virtual machine instance
+        /// for a given opcode.
         /// </summary>
-        /// <param name="aVm">The virtual machine instance in which the tests should be run.</param>
+        /// <param name="aVm">
+        /// The virtual machine instance in which the tests should be run.
+        /// </param>
         /// <param name="aTests">An array of the tests to be run.</param>
         /// <param name="aOp">The opcode to be tested.</param>
         public static void RunTests(VirtualMachine aVm,
                                     UnaryTestResult[] aTests,
                                     OpCode aOp)
         {
-            var reg = Registers.R1;
+            const Registers reg = Registers.R1;
 
             for (var i = 0; i < aTests.Length; i++)
             {
                 var entry = aTests[i];
 
-                var program = new QuickIns[]
+                var program = new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG, new object[] { entry.Value1, (byte)reg }),
-                    new QuickIns(aOp, new object[] { (byte)reg }),
+                    new QuickIns(OpCode.MOV_LIT_REG, 
+                            new object[] { entry.Value1, (byte)reg }),
+                    new QuickIns(aOp, 
+                            new object[] { (byte)reg }),
                 };
 
                 aVm.Run(Utils.QuickRawCompile(program));
 
-                bool success = entry.Type switch
+                var success = entry.Type switch
                 {
-                    ResultTypes.EQUAL   => aVm.Cpu.Registers[reg] == entry.Result,
-                    _                   => false
+                    ResultTypes.EQUAL => 
+                        aVm.Cpu.Registers[reg] == entry.Result,
+                    _
+                        => false
                 };
 
                 Assert.IsTrue(success,
-                              $"Value of register '{reg}' for test {i} is incorrect. Expected {entry.Result}, got {aVm.Cpu.Registers[reg]}.");
+                              $"Value of register '{reg}' for " +
+                              $"test {i} is incorrect. " +
+                              $"Expected {entry.Result}, got " +
+                              $"{aVm.Cpu.Registers[reg]}.");
             }
         }
     }

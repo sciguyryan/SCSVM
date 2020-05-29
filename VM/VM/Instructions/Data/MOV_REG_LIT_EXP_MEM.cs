@@ -2,7 +2,7 @@
 using VMCore.Expressions;
 using VMCore.VM.Core;
 
-namespace VMCore.VM.Instructions
+namespace VMCore.VM.Instructions.Data
 {
     internal class MOV_REG_LIT_EXP_MEM
         : Instruction
@@ -35,7 +35,8 @@ namespace VMCore.VM.Instructions
 
         public override bool Execute(InstructionData aData, Cpu aCpu)
         {
-            var pos = (int)new Parser((string)aData[1])
+            var pos = 
+                new Parser((string)aData[1])
                     .ParseExpression()
                     .Evaluate(aCpu);
 

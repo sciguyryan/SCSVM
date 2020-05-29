@@ -2,7 +2,7 @@
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Utilities;
 
-namespace VMCore.VM.Core.Reg
+namespace VMCore.VM.Core.Register
 {
     public class Register
     {
@@ -38,12 +38,12 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// The permission access flags for this register.
         /// </summary>
-        public RegisterAccess AccessFlags { get; private set; }
+        public RegisterAccess AccessFlags { get; }
 
         /// <summary>
-        /// The Cpu instance associated with this register.
+        /// The CPU instance associated with this register.
         /// </summary>
-        public Cpu CPU { get; private set; }
+        public Cpu Cpu { get; }
 
         /// <summary>
         /// The internal value of this register.
@@ -53,7 +53,7 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// The internal ID of this register, mainly used for debugging.
         /// </summary>
-        private Registers _registerID;
+        private Registers _registerId;
 
         /// <summary>
         /// The internal enum instance for the flag type of
@@ -66,7 +66,7 @@ namespace VMCore.VM.Core.Reg
                         RegisterAccess aAccess,
                         Type aFlagType = null)
         {
-            CPU = aCpu;
+            Cpu = aCpu;
             AccessFlags = aAccess;
             _flagType = aFlagType;
         }
@@ -78,9 +78,9 @@ namespace VMCore.VM.Core.Reg
         /// <param name="aId">
         /// The ID to be applied to this register.
         /// </param>
-        public void SetID(Registers aId)
+        public void SetId(Registers aId)
         {
-            _registerID = aId;
+            _registerId = aId;
         }
 
         /// <summary>
@@ -169,29 +169,25 @@ namespace VMCore.VM.Core.Reg
         private void ValidateAccess(DataAccessType aType,
                                     SecurityContext aContext)
         {
-            bool hasFlags;
-            if (aType == DataAccessType.Read)
+            var hasFlags = aType switch
             {
-                hasFlags =
+                DataAccessType.Read => 
                     AccessFlags.HasFlag(RegisterAccess.R) ||
-                    (AccessFlags.HasFlag(RegisterAccess.PR) &&
-                     aContext == SecurityContext.System);
-            }
-            else if (aType == DataAccessType.Write)
-            {
-                hasFlags =
+                    (AccessFlags.HasFlag(RegisterAccess.PR) && 
+                     aContext == SecurityContext.System),
+
+                DataAccessType.Write => 
                     AccessFlags.HasFlag(RegisterAccess.W) ||
-                    (AccessFlags.HasFlag(RegisterAccess.PW) &&
-                     aContext == SecurityContext.System);
-            }
-            else
-            {
-                throw new NotSupportedException
-                (
-                    $"ValidateAccess: attempted to check a non-valid " +
-                    $"data access type."
-                );
-            }
+                    (AccessFlags.HasFlag(RegisterAccess.PW) && 
+                     aContext == SecurityContext.System),
+
+                _ => 
+                    throw new NotSupportedException
+                    (
+                        "ValidateAccess: attempted to check a " +
+                        "non-valid data access type."
+                    )
+            };
 
             if (!hasFlags)
             {

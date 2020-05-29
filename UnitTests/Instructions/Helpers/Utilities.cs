@@ -3,19 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using VMCore;
 using VMCore.Assembler;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Helpers
 {
-    public static class TestUtilties
+    public static class TestUtilities
     {
         /// <summary>
-        /// A method to generate the required instructions to test a given opcode.
+        /// A method to generate the required instructions
+        /// to test a given opcode.
         /// </summary>
-        /// <typeparam name="T">The type of input expected for non-Register parameters.</typeparam>
-        /// <param name="op">The opcode to be tested.</param>
-        /// <param name="values">An array of values to be passed to as arguments to the instruction.</param>
-        /// <returns>A list of QuickInstruction objects to be executed for the test.</returns>
+        /// <typeparam name="T">
+        /// The type of input expected for non-Register parameters.
+        /// </typeparam>
+        /// <param name="aOp">The opcode to be tested.</param>
+        /// <param name="aVals">
+        /// An array of values to be passed to as arguments to
+        /// the instruction.
+        /// </param>
+        /// <returns>A list of QuickInstruction objects to be
+        /// executed for the test.</returns>
         public static QuickIns[] Generate<T>(OpCode aOp, T[] aVals)
         {
             var instructionList
@@ -45,15 +53,22 @@ namespace UnitTests.Instructions
             // register that we expect to use.
             // Registers are incrementally assigned
             // to avoid overlaps.
-            for (int i = 0; i < registerArgs; i++)
+            for (var i = 0; i < registerArgs; i++)
             {
-                instructionList.Add(new QuickIns(OpCode.MOV_LIT_REG, new object[] { argQueue.Dequeue(), (byte)i }));
+                instructionList.Add
+                (
+                    new QuickIns
+                    (
+                        OpCode.MOV_LIT_REG, 
+                        new object[] { argQueue.Dequeue(), (byte)i }
+                    )
+                );
             }
 
             // Build the instruction argument
             // list that we are actually testing.
             var args = new List<object>();
-            var registerID = 0;
+            var registerId = 0;
             for (var i = 0; i < types.Length; i++)
             {
                 switch (types[i])
@@ -65,8 +80,8 @@ namespace UnitTests.Instructions
                             // Argument 1 will point to register 0
                             // (R1), argument 2 will point to
                             // register 1 (R2), etc.
-                            args.Add((Registers)registerID);
-                            ++registerID;
+                            args.Add((Registers)registerId);
+                            ++registerId;
                         }
                         break;
 
@@ -80,8 +95,12 @@ namespace UnitTests.Instructions
                         break;
 
                     default:
-                        throw new NotSupportedException($"GenerateProgram: the type {types[i]} was passed as an argument type, but no support has been provided for that type.");
-                        break;
+                        throw new NotSupportedException
+                         (
+                            $"GenerateProgram: the type {types[i]} " +
+                            "was passed as an argument type, but no " +
+                            "support has been provided for that type."
+                         );
                 }
             }
 

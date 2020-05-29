@@ -10,15 +10,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTests.Assembler
 {
     [TestClass]
-    public class Test_Labels
+    public class TestLabels
     {
-        protected int _mainMemoryCapacity = 2048;
-        protected int _stackCapacity = 100;
-        protected VirtualMachine _vm;
+        protected VirtualMachine Vm;
 
-        public Test_Labels()
+        public TestLabels()
         {
-            _vm = new VirtualMachine(_mainMemoryCapacity, _stackCapacity);
+            Vm = new VirtualMachine();
         }
 
         /// <summary>
@@ -34,7 +32,7 @@ namespace UnitTests.Assembler
                 sizeof(int)
             );
 
-            var program = new QuickIns[]
+            var program = new []
             {
                 new QuickIns(OpCode.JNE_REG,
                              new object[] { Registers.R1, 0 },
@@ -44,9 +42,13 @@ namespace UnitTests.Assembler
                 new QuickIns(OpCode.NOP),
             };
 
-            _vm.LoadAndInitialize(Utils.QuickRawCompile(program));
+            Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
 
-            var ins = _vm.Cpu.Step();
+            var ins = Vm.Cpu.Step();
+            if (ins is null)
+            {
+                Assert.Fail();
+            }
 
             Assert.IsTrue(addr == (int)ins.Args[1].Value);
         }
@@ -64,7 +66,7 @@ namespace UnitTests.Assembler
                 sizeof(int)
             );
 
-            var program = new QuickIns[]
+            var program = new []
             {
                 new QuickIns(OpCode.MOV_LIT_REG,
                              new object[] { 1, Registers.R1 }),
@@ -77,18 +79,23 @@ namespace UnitTests.Assembler
                              new AsmLabel("A", 1)),
             };
 
-            _vm.LoadAndInitialize(Utils.QuickRawCompile(program));
+            Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
 
-            InstructionData ins = new InstructionData()
+            var ins = new InstructionData()
             {
                 OpCode = OpCode.NOP
             };
 
-            int i = 0;
+            var i = 0;
             while (i < 4)
             {
-                ins = _vm.Cpu.Step();
+                ins = Vm.Cpu.Step();
                 i++;
+            }
+
+            if (ins is null)
+            {
+                Assert.Fail();
             }
 
             Assert.IsTrue(addr == (int)ins.Args[1].Value);
@@ -102,14 +109,14 @@ namespace UnitTests.Assembler
         [ExpectedException(typeof(InvalidDataException))]
         public void TestJumpNoDestination()
         {
-            var program = new QuickIns[]
+            var program = new []
             {
                 new QuickIns(OpCode.JNE_REG,
                              new object[] { Registers.R1, 0 },
                              new AsmLabel("A", 1)),
             };
 
-            _vm.LoadAndInitialize(Utils.QuickRawCompile(program));
+            Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
         }
 
         /// <summary>
@@ -120,14 +127,14 @@ namespace UnitTests.Assembler
         [ExpectedException(typeof(InvalidDataException))]
         public void TestDuplicateLabelNames()
         {
-            var program = new QuickIns[]
+            var program = new []
             {
                 new QuickIns(OpCode.LABEL, new object[] { "A" }),
                 new QuickIns(OpCode.LABEL, new object[] { "A" }),
                 new QuickIns(OpCode.NOP),
             };
 
-            _vm.LoadAndInitialize(Utils.QuickRawCompile(program));
+            Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
         }
 
         /// <summary>
@@ -138,7 +145,7 @@ namespace UnitTests.Assembler
         [ExpectedException(typeof(ArgumentException))]
         public void TestLabelInvalidArgumentBind()
         {
-            var program = new QuickIns[]
+            var program = new []
             {
                 new QuickIns(OpCode.LABEL, new object[] { "A" }),
                 new QuickIns(OpCode.JNE_REG,
@@ -146,7 +153,7 @@ namespace UnitTests.Assembler
                              new AsmLabel("A", 0)),
             };
 
-            _vm.LoadAndInitialize(Utils.QuickRawCompile(program));
+            Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
         }
     }
 }

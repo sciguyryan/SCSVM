@@ -1,4 +1,4 @@
-﻿namespace VMCore.VM.Core.Mem
+﻿namespace VMCore.VM.Core.Memory
 {
     public class MemoryRegion
     {

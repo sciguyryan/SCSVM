@@ -5,10 +5,6 @@ namespace VMCore.VM.Core.Exceptions
     public class InvalidRegisterException
         : Exception
     {
-        public InvalidRegisterException()
-        {
-        }
-
         public InvalidRegisterException(string aMessage)
             : base(aMessage)
         {

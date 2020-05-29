@@ -1,18 +1,14 @@
-using System;
-using System.Collections.Generic;
-using VMCore;
-using VMCore.Assembler;
-using VMCore.VM;
 using VMCore.VM.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Logic
 {
     [TestClass]
-    public class Test_XOR_REG_REG
-        : Test_Instruction_Base
+    public class TestXorRegReg
+        : TestInstructionBase
     {
-        public Test_XOR_REG_REG()
+        public TestXorRegReg()
         {
         }
 
@@ -20,9 +16,9 @@ namespace UnitTests.Instructions
         /// Test the functionality of a logical XOR instruction.
         /// </summary>
         [TestMethod]
-        public void TestLogicalXOR()
+        public void TestLogicalXor()
         {
-            var table = new IntegerTestResult[]
+            var table = new []
             {
                 #region TESTS
                 new IntegerTestResult(0, 0, 0, false, true, false),
@@ -36,7 +32,7 @@ namespace UnitTests.Instructions
                 #endregion
             };
 
-            IntegerTestResult.RunTests(_vm, table, OpCode.XOR_REG_REG);
+            IntegerTestResult.RunTests(Vm, table, OpCode.XOR_REG_REG);
         }
     }
 }

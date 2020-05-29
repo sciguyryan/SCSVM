@@ -1,13 +1,14 @@
-using VMCore;
+using VMCore.VM.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Arithmetic
 {
     [TestClass]
-    public class Test_MUL_LIT_REG
-        : Test_Instruction_Base
+    public class TestMulLitReg
+        : TestInstructionBase
     {
-        public Test_MUL_LIT_REG()
+        public TestMulLitReg()
         {
         }
 
@@ -17,7 +18,7 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestMultiplication()
         {
-            var table = new IntegerTestResult[]
+            var table = new []
             {
                 #region TESTS
                 new IntegerTestResult(1, 2, 2, false, false, false),
@@ -35,7 +36,7 @@ namespace UnitTests.Instructions
                 #endregion
             };
 
-            IntegerTestResult.RunTests(_vm, table, OpCode.MUL_LIT_REG);
+            IntegerTestResult.RunTests(Vm, table, OpCode.MUL_LIT_REG);
         }
     }
 }

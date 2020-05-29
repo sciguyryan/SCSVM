@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace VMCore.VM
+﻿namespace VMCore.VM
 {
     public class Breakpoint
     {
@@ -10,8 +6,13 @@ namespace VMCore.VM
         /// An delegate function to be fired when a breakpoint
         /// is triggered.
         /// </summary>
-        /// <param name="aDataValue">The value passed from the breakpoint.</param>
-        /// <returns>A boolean, true if the Cpu should halt executing, false otherwise.</returns>
+        /// <param name="aDataValue">
+        /// The value passed from the breakpoint.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if the CPU should halt executing,
+        /// false otherwise.
+        /// </returns>
         public delegate bool BreakpointAction(int aDataValue);
 
         /// <summary>
@@ -44,14 +45,15 @@ namespace VMCore.VM
         public BreakpointType Type { get; set; }
 
         /// <summary>
-        /// The action that should be triggered when this breakpoint is encountered.
+        /// The action that should be triggered when this
+        /// breakpoint is encountered.
         /// </summary>
         public BreakpointAction Action { get; set; }
 
-        public Breakpoint(int breakAt, BreakpointType aType,
+        public Breakpoint(int aBreakAt, BreakpointType aType,
                           BreakpointAction aAction)
         {
-            BreakAt = breakAt;
+            BreakAt = aBreakAt;
             Type = aType;
             Action = aAction;
         }

@@ -23,6 +23,9 @@
 
   <ItemGroup>
     <Folder Include="Core\CPU\" />
+    <Folder Include="Core\Memory\Helpers\" />
+    <Folder Include="Expressions\Helpers\" />
+    <Folder Include="Instructions\Helpers\" />
   </ItemGroup>
 
 </Project>

@@ -6,7 +6,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
-using VMCore.VM.Core.Reg;
+using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
 
@@ -84,13 +84,13 @@ namespace VMCore.VM
         /// A IP/user register tuple to avoid having to repeatedly create one.
         /// </summary>
         private readonly (Registers, SecurityContext) _ipUserTuple
-            = (VMCore.Registers.IP, UserCtx);
+            = (Core.Registers.IP, UserCtx);
 
         /// <summary>
         /// A PC/system register tuple to avoid having to repeatedly create one.
         /// </summary>
         private readonly (Registers, SecurityContext) _pcSystemTuple
-            = (VMCore.Registers.PC, SysCtx);
+            = (Core.Registers.PC, SysCtx);
 
         /// <summary>
         /// The lower memory bound from which data can be read or written
@@ -130,10 +130,6 @@ namespace VMCore.VM
             _canSwapMemoryRegions = aCanSwapMemoryRegions;
         }
 
-        ~Cpu()
-        {
-        }
-
         /// <summary>
         /// Initialize the CPU.
         /// </summary>
@@ -147,24 +143,36 @@ namespace VMCore.VM
         {
             MemExecutableSeqId = aMemSeqId;
 
-            if (_minExecutableBound == -1)
+            if (_minExecutableBound != -1)
             {
-                if (_canSwapMemoryRegions)
+                SetStartAddress(aStartAddr);
+                SetBreakpointObservers();
+                return;
+            }
+
+            if (_canSwapMemoryRegions)
+            {
+                _minExecutableBound = 0;
+                _maxExecutableBound = Vm.Memory.Length;
+            }
+            else
+            {
+                var region =
+                    Vm.Memory.GetMemoryRegion(aMemSeqId);
+                if (region is null)
                 {
-                    _minExecutableBound = 0;
-                    _maxExecutableBound = Vm.Memory.Length;
+                    throw new Exception
+                    (
+                        "Initialize: the specified memory sequence ID " +
+                        $"{aMemSeqId} is invalid."
+                    );
                 }
-                else
-                {
-                    var region =
-                        Vm.Memory.GetMemoryRegion(aMemSeqId);
-                    _minExecutableBound = region.Start;
-                    _maxExecutableBound = region.End;
-                }
+
+                _minExecutableBound = region.Start;
+                _maxExecutableBound = region.End;
             }
 
             SetStartAddress(aStartAddr);
-
             SetBreakpointObservers();
         }
 
@@ -181,7 +189,7 @@ namespace VMCore.VM
             Registers[_pcSystemTuple] = 0;
 
             // Reset the flags register.
-            Registers[VMCore.Registers.FL] = 0;
+            Registers[Core.Registers.FL] = 0;
 
             // TODO - reset stack pointer here.
 
@@ -198,7 +206,7 @@ namespace VMCore.VM
         public void SetFlagState(CpuFlags aFlag, bool aState)
         {
             var flags =
-                ((CpuFlags)Registers[VMCore.Registers.FL])
+                (CpuFlags)Registers[Core.Registers.FL]
                 & ~aFlag;
 
             if (aState)
@@ -206,7 +214,7 @@ namespace VMCore.VM
                 flags |= aFlag;
             }
 
-            Registers[VMCore.Registers.FL] = (int)flags;
+            Registers[Core.Registers.FL] = (int)flags;
         }
 
         /// <summary>
@@ -219,7 +227,7 @@ namespace VMCore.VM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetResultFlagPair(int aResult)
         {
-            var flags = (CpuFlags)Registers[VMCore.Registers.FL];
+            var flags = (CpuFlags)Registers[Core.Registers.FL];
             flags &= ~CpuFlags.S & ~CpuFlags.Z;
 
             if (aResult < 0)
@@ -231,7 +239,7 @@ namespace VMCore.VM
                 flags |= CpuFlags.Z;
             }
 
-            Registers[VMCore.Registers.FL] = (int)flags;
+            Registers[Core.Registers.FL] = (int)flags;
         }
 
         /// <summary>
@@ -247,7 +255,7 @@ namespace VMCore.VM
         public bool IsFlagSet(CpuFlags aFlag)
         {
             return
-                ((CpuFlags)Registers[VMCore.Registers.FL])
+                ((CpuFlags)Registers[Core.Registers.FL])
                 .HasFlag(aFlag);
         }
 
@@ -317,7 +325,7 @@ namespace VMCore.VM
         /// </returns>
         public InstructionData? Step()
         {
-            return (!IsHalted) ? FetchExecuteNextInstruction() : null;
+            return !IsHalted ? FetchExecuteNextInstruction() : null;
         }
 
         /// <summary>
@@ -345,10 +353,11 @@ namespace VMCore.VM
                     MemoryAccessViolationException _
                         => new MemoryAccessViolationException
                         (
-                            $"FetchExecuteNextInstruction: instruction " +
+                            "FetchExecuteNextInstruction: instruction " +
                             $"at position {opCodeStartPos} attempted " +
-                            $"to access memory with insufficient " +
-                            $"permissions. {ex.Message}"),
+                            "to access memory with insufficient " +
+                            $"permissions. {ex.Message}"
+                        ),
 
                     // I do not know how this can happen, but just to be safe.
                     _
@@ -365,7 +374,7 @@ namespace VMCore.VM
                 SetHaltedState(true);
                 throw new InvalidDataException
                 (
-                    $"FetchExecuteNextInstruction: Invalid opcode " +
+                    "FetchExecuteNextInstruction: Invalid opcode " +
                     $"ID '{opCode}' detected at position " +
                     $"{opCodeStartPos}."
                 );
@@ -405,8 +414,8 @@ namespace VMCore.VM
                     EndOfStreamException _
                         => new EndOfStreamException
                         (
-                            $"FetchExecuteNextInstruction: expected " +
-                            $"number of arguments for opcode " +
+                            "FetchExecuteNextInstruction: expected " +
+                            "number of arguments for opcode " +
                             $"'{asmIns.OpCode}' is " +
                             $"{argTypes.Length}, got {asmIns.Args.Count}."
                         ),
@@ -414,9 +423,9 @@ namespace VMCore.VM
                     MemoryAccessViolationException _
                         => new MemoryAccessViolationException
                         (
-                            $"FetchExecuteNextInstruction: instruction " +
+                            "FetchExecuteNextInstruction: instruction " +
                             $"at position {opCodeStartPos} attempted " +
-                            $"to access memory with insufficient " +
+                            "to access memory with insufficient " +
                             $"permissions. {ex.Message}"
                         ),
 
@@ -484,9 +493,9 @@ namespace VMCore.VM
                     MemoryAccessViolationException _
                         => new MemoryAccessViolationException
                         (
-                            $"ExecuteInstruction: instruction at " +
+                            "ExecuteInstruction: instruction at " +
                             $"position {opCodeStartPos} attempted " +
-                            $"to access memory with insufficient " +
+                            "to access memory with insufficient " +
                             $"permissions. {ex.Message}"
                         ),
 
@@ -495,43 +504,43 @@ namespace VMCore.VM
                         (
                             $"ExecuteInstruction: instruction at " +
                             $"position {opCodeStartPos} failed to " +
-                            $"access the specified memory location " +
-                            $"as it falls outside of the bounds of " +
-                            $"the memory region."
+                            "access the specified memory location " +
+                            "as it falls outside of the bounds of " +
+                            "the memory region."
                         ),
 
                     RegisterAccessViolationException _
                         => new RegisterAccessViolationException
                         (
-                            $"ExecuteInstruction: instruction at " +
+                            "ExecuteInstruction: instruction at " +
                             $"position {opCodeStartPos} encountered " +
-                            $"a permission error when trying to " +
+                            "a permission error when trying to " +
                             $"operate on a register. {ex.Message}"
                         ),
 
                     KeyNotFoundException _
                         => new InvalidRegisterException
                         (
-                            $"ExecuteInstruction: instruction at " +
+                            "ExecuteInstruction: instruction at " +
                             $"position {opCodeStartPos} failed " +
-                            $"to access the register specified: " +
-                            $"the specified register does not exist."
+                            "to access the register specified: " +
+                            "the specified register does not exist."
                         ),
 
                     DivideByZeroException _
                         => new DivideByZeroException
                         (
-                            $"ExecuteInstruction: instruction " +
+                            "ExecuteInstruction: instruction " +
                             $"at position {opCodeStartPos} " +
-                            $"triggered a division by zero " +
-                            $"exception."
+                            "triggered a division by zero " +
+                            "exception."
                         ),
 
                     _
                         => new Exception
                         (
-                            $"ExecuteInstruction: failed to execute " +
-                            $"the CPU instruction at position " +
+                            "ExecuteInstruction: failed to execute " +
+                            "the CPU instruction at position " +
                             $"{opCodeStartPos}. {ex.Message}"
                         ),
                 };
@@ -565,6 +574,15 @@ namespace VMCore.VM
 
             var region =
                 Vm.Memory.GetMemoryRegion(aMemSeqId);
+            if (region is null)
+            {
+                throw new Exception
+                (
+                    "Disassemble: the specified memory sequence ID " +
+                    $"{aMemSeqId} is invalid. No disassembly is possible."
+                );
+            }
+
             var minPos = region.Start;
             var maxPos = region.End;
 
@@ -633,8 +651,8 @@ namespace VMCore.VM
                     throw new NotSupportedException
                     (
                         $"GetNextInstructionArgument: the type {aT} was " +
-                        $"passed as an argument type, but no support " +
-                        $"has been provided for that type."
+                        "passed as an argument type, but no support " +
+                        "has been provided for that type."
                     );
             }
 
@@ -673,7 +691,7 @@ namespace VMCore.VM
                 .HasBreakpointOfType(Breakpoint.BreakpointType.IP))
             {
                 _hasIpBreakpoint = true;
-                Registers.Hook(VMCore.Registers.IP,
+                Registers.Hook(Core.Registers.IP,
                                InstructionPointerBp,
                                Register.HookTypes.Change);
             }
@@ -687,7 +705,7 @@ namespace VMCore.VM
             }
 
             _hasPcBreakpoint = true;
-            Registers.Hook(VMCore.Registers.PC,
+            Registers.Hook(Core.Registers.PC,
                            ProgramCounterBp,
                            Register.HookTypes.Change);
         }
@@ -724,7 +742,7 @@ namespace VMCore.VM
             }
             catch
             {
-                // TODO - handle this better.
+                return string.Empty;
             }
 
             if (!Enum.IsDefined(typeof(OpCode), opCode))

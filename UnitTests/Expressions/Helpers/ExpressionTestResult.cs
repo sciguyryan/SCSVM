@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics;
-using VMCore;
 using VMCore.Expressions;
 using VMCore.VM;
+using VMCore.VM.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace UnitTests.Expressions
+namespace UnitTests.Expressions.Helpers
 {
     public class ExpressionTestResult
     {
@@ -32,8 +32,12 @@ namespace UnitTests.Expressions
         /// <summary>
         /// Run a set of tests for the expression parser.
         /// </summary>
-        /// <param name="aVm">The virtual machine instance in which the tests should be run.</param>
-        /// <param name="aTests">An array of the tests to be executed.</param>
+        /// <param name="aVm">
+        /// The virtual machine instance in which the tests should be run.
+        /// </param>
+        /// <param name="aTests">
+        /// An array of the tests to be executed.
+        /// </param>
         public static void RunTests(VirtualMachine aVm, 
                                     ExpressionTestResult[] aTests)
         {
@@ -79,7 +83,8 @@ namespace UnitTests.Expressions
                 (
                     success,
                     $"Result of test {i} is incorrect. " +
-                    $"Expected {entry.Result}, got {value}. Expression = '{entry.Input}'."
+                    $"Expected {entry.Result}, got {value}. " +
+                    $"Expression = '{entry.Input}'."
                 );
             }
         }

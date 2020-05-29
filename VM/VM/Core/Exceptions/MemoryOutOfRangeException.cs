@@ -5,10 +5,6 @@ namespace VMCore.VM.Core.Exceptions
     public class MemoryOutOfRangeException
         : Exception
     {
-        public MemoryOutOfRangeException()
-        {
-        }
-
         public MemoryOutOfRangeException(string aMessage)
             : base(aMessage)
         {

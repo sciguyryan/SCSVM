@@ -2,7 +2,7 @@
 using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 
-namespace VMCore.VM.Instructions
+namespace VMCore.VM.Instructions.Logic
 {
     internal class BIT
         : Instruction
@@ -36,7 +36,7 @@ namespace VMCore.VM.Instructions
         public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             var val =
-                (int)aCpu.Registers[(Registers)aData[1]];
+                aCpu.Registers[(Registers)aData[1]];
 
             var bitSet =
                 Utils.IsBitSet(val, (int)aData[0]) ? 1 : 0;

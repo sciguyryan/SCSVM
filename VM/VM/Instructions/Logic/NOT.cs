@@ -1,7 +1,7 @@
 ﻿using System;
 using VMCore.VM.Core;
 
-namespace VMCore.VM.Instructions
+namespace VMCore.VM.Instructions.Logic
 {
     internal class NOT
         : Instruction
@@ -36,7 +36,7 @@ namespace VMCore.VM.Instructions
 
             aCpu.Registers[Registers.AC] = result;
 
-            // Update the Cpu flags based on the result of
+            // Update the CPU flags based on the result of
             // the calculation just performed.
             // We do not need to check for an overflow here as it 
             // is not possible for a NOT operation on two

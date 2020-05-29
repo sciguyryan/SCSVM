@@ -1,28 +1,27 @@
 using System;
-using VMCore;
-using VMCore.VM;
 using VMCore.VM.Core.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Core.Memory.Helpers;
 
-namespace UnitTests.Memory
+namespace UnitTests.Core.Memory
 {
     [TestClass]
-    public class Test_Stack
-        : Test_Memory_Base
+    public class TestStack
+        : TestMemoryBase
     {
-        public Test_Stack()
+        public TestStack()
         {
         }
 
         [TestMethod]
         public void TestStackIntRoundTrip()
         {
-            var input = (byte)10;
+            const byte input = (byte)10;
 
-            _vm.Memory
+            Vm.Memory
                 .StackPushInt(input);
 
-            Assert.IsTrue(input == _vm.Memory.StackPopInt());
+            Assert.IsTrue(input == Vm.Memory.StackPopInt());
         }
 
         [TestMethod]
@@ -30,12 +29,12 @@ namespace UnitTests.Memory
         {
             for (var i = 0; i < 10; i++)
             {
-                _vm.Memory.StackPushInt(i);
+                Vm.Memory.StackPushInt(i);
             }
 
             for (var j = 9; j >= 0; j--)
             {
-                Assert.IsTrue(j == _vm.Memory.StackPopInt());
+                Assert.IsTrue(j == Vm.Memory.StackPopInt());
             }
         }
 
@@ -43,7 +42,7 @@ namespace UnitTests.Memory
         [ExpectedException(typeof(InvalidOperationException))]
         public void TestStackPopEmpty()
         {
-            _ = _vm.Memory.StackPopInt();
+            _ = Vm.Memory.StackPopInt();
         }
 
         [TestMethod]
@@ -52,12 +51,12 @@ namespace UnitTests.Memory
         {
             for (var i = 0; i < 10; i++)
             {
-                _vm.Memory.StackPushInt(i);
+                Vm.Memory.StackPushInt(i);
             }
 
             for (var j = 10; j >= 0; j--)
             {
-                _ = _vm.Memory.StackPopInt();
+                _ = Vm.Memory.StackPopInt();
             }
         }
 
@@ -67,7 +66,7 @@ namespace UnitTests.Memory
         {
             for (var i = 0; i < 101; i++)
             {
-                _vm.Memory.StackPushInt(i);
+                Vm.Memory.StackPushInt(i);
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace VMCore
+﻿namespace VMCore.VM.Core
 {
     public enum OpCode
     {

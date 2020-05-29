@@ -23,7 +23,9 @@ namespace VMCore.VM.Core
         /// <summary>
         /// The value of the specified argument.
         /// </summary>
-        /// <param name="index">The argument index to be returned.</param>
+        /// <param name="aIndex">
+        /// The argument index to be returned.
+        /// </param>
         /// <returns>An object giving the value of the argument.</returns>
         public object this[int aIndex] => 
             Args[aIndex].Value;

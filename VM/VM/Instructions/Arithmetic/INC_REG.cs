@@ -1,7 +1,7 @@
 ﻿using System;
 using VMCore.VM.Core;
 
-namespace VMCore.VM.Instructions
+namespace VMCore.VM.Instructions.Arithmetic
 {
     internal class INC_REG
         : Instruction
@@ -33,7 +33,7 @@ namespace VMCore.VM.Instructions
         {
             ++aCpu.Registers[(Registers)aData[0]];
 
-            // We do not need to update the Cpu flags
+            // We do not need to update the CPU flags
             // here as the result is not going
             // into the accumulator register.
 

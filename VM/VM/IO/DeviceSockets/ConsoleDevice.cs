@@ -1,4 +1,5 @@
 ﻿using System;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Sockets;
 
 namespace VMCore.VM.IO.DeviceSockets
@@ -23,13 +24,11 @@ namespace VMCore.VM.IO.DeviceSockets
                                VirtualMachine aVm,
                                SecurityContext aContext)
         {
-            int result = 0;
-            switch (aAddr)
+            var result = aAddr switch
             {
-                case SocketAddresses.ConsoleData:
-                    result = Console.Read();
-                    break;
-            }
+                SocketAddresses.ConsoleData => Console.Read(),
+                _ => 0
+            };
 
             aVm.Cpu.Registers[(aReg, aContext)] = result;
         }
@@ -63,6 +62,9 @@ namespace VMCore.VM.IO.DeviceSockets
                 case ControlCodes.Beep:
                     Console.Beep(0, 0); // TODO - unfinished
                     break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
     }

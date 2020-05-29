@@ -1,5 +1,8 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
+using VMCore.VM.Core;
 
 namespace VMCore.VM
 {
@@ -84,7 +87,7 @@ namespace VMCore.VM
         /// A Breakpoint object is a valid breakpoint is located,
         /// null otherwise.
         /// </returns>
-        public Breakpoint GetBreakpoint(int aBreakAt,
+        public Breakpoint? GetBreakpoint(int aBreakAt,
                                         Breakpoint.BreakpointType aType)
         {
             foreach (var bp in Breakpoints)

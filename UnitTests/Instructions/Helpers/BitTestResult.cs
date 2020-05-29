@@ -1,9 +1,10 @@
 ﻿using VMCore;
 using VMCore.VM;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Helpers
 {
     public class BitTestResult
     {
@@ -27,12 +28,18 @@ namespace UnitTests.Instructions
         }
 
         /// <summary>
-        /// Run a set of tests within a given virtual machine instance for a given opcode.
+        /// Run a set of tests within a given virtual machine
+        /// instance for a given opcode.
         /// </summary>
-        /// <param name="aVm">The virtual machine instance in which the tests should be run.</param>
+        /// <param name="aVm">
+        /// The virtual machine instance in which the tests should be run.
+        /// </param>
         /// <param name="aTests">An array of the tests to be run.</param>
         /// <param name="aOp">The opcode to be tested.</param>
-        /// <param name="aReg">The register to be used when checking the result. Defaults to AC.</param>
+        /// <param name="aReg">
+        /// The register to be used when checking the result.
+        /// Defaults to the accumulator (AC).
+        /// </param>
         public static void RunTests(VirtualMachine aVm,
                                     BitTestResult[] aTests,
                                     OpCode aOp,
@@ -42,18 +49,23 @@ namespace UnitTests.Instructions
             {
                 var entry = aTests[i];
 
-                var program = TestUtilties.Generate<int>(aOp, entry.Values);
+                var program = TestUtilities.Generate(aOp, entry.Values);
 
                 aVm.Run(Utils.QuickRawCompile(program));
 
-                bool success = entry.Type switch
+                var success = entry.Type switch
                 {
                     ResultTypes.EQUAL => aVm.Cpu.Registers[aReg] == entry.Result,
                     _                    => false
                 };
 
-                Assert.IsTrue(success,
-                              $"Value of register '{aReg}' for test {i} is incorrect. Expected {entry.Result}, got {aVm.Cpu.Registers[aReg]}.");
+                Assert.IsTrue
+                (
+                    success,
+                    $"Value of register '{aReg}' for test " +
+                    $"{i} is incorrect. Expected {entry.Result}, " +
+                    $"got {aVm.Cpu.Registers[aReg]}."
+                );
             }
         }
     }

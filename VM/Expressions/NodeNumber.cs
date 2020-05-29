@@ -2,10 +2,10 @@
 
 namespace VMCore.Expressions
 {
-    class NodeNumber
+    internal class NodeNumber
         : Node
     {
-        private int _value;
+        private readonly int _value;
 
         public NodeNumber(int aValue)
         {

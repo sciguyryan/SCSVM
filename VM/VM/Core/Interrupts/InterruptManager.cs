@@ -16,18 +16,22 @@ namespace VMCore.VM.Core.Interrupts
         /// Handle an interrupt of a specified type.
         /// </summary>
         /// <param name="aInterruptType">The interrupt type.</param>
-        /// <param name="aVm">The virtual machine instance in which the interrupt should be handled.</param>
+        /// <param name="aVm">
+        /// The virtual machine instance in which the interrupt should be handled.
+        /// </param>
         public static void Interrupt(InterruptTypes aInterruptType,
                                      VirtualMachine aVm)
         {
-            if (Handlers.TryGetValue(aInterruptType,
-                                     out IInterruptHandler handler))
+            if (!Handlers.TryGetValue(aInterruptType, out var handler))
             {
-                handler.Handle(aVm);
-                return;
+                throw new Exception
+                (
+                    $"Interrupt: interrupt type " +
+                    $"{aInterruptType} has no registered handler."
+                );
             }
 
-            throw new Exception($"Interrupt: interrupt type {aInterruptType} has no registered handler.");
+            handler.Handle(aVm);
         }
     }
 }

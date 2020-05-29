@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using VMCore.Assembler.Optimizations;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
 

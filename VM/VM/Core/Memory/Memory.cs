@@ -1,11 +1,13 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Utilities;
 
-namespace VMCore.VM.Core.Mem
+namespace VMCore.VM.Core.Memory
 {
     public class Memory
     {
@@ -78,7 +80,7 @@ namespace VMCore.VM.Core.Mem
 #endif
 
         #endregion // Private Properties
-
+        
         public Memory(int aMainMemorySize = 2048,
                       int aStackCapacity = 100)
         {
@@ -269,7 +271,7 @@ namespace VMCore.VM.Core.Mem
         /// A MemoryRegion object for the given ID if one exists,
         /// a null otherwise.
         /// </returns>
-        public MemoryRegion GetMemoryRegion(int aSeqId)
+        public MemoryRegion? GetMemoryRegion(int aSeqId)
         {
             var count = _memoryRegions.Count;
             for (var i = 0; i < count; i++)
@@ -309,17 +311,16 @@ namespace VMCore.VM.Core.Mem
             // We want to iterate this list in reverse as
             // we only want to remove the -last- entry only.
 
-            MemoryRegion region;
-            var regionID = _memoryRegions.Count - 1;
+            var regionId = _memoryRegions.Count - 1;
 
             // We do not want to remove the stack
             // or root memory regions.
-            while (regionID >= 2)
+            while (regionId >= 2)
             {
-                region = _memoryRegions[regionID];
+                var region = _memoryRegions[regionId];
                 if (aPoint >= region.Start && aPoint <= region.End)
                 {
-                    _memoryRegions.RemoveAt(regionID);
+                    _memoryRegions.RemoveAt(regionId);
 
                     if (!aRemoveAll)
                     {
@@ -327,7 +328,7 @@ namespace VMCore.VM.Core.Mem
                     }
                 }
 
-                --regionID;
+                --regionId;
             }
 
             ResizeRootMemoryRegion();
@@ -349,7 +350,7 @@ namespace VMCore.VM.Core.Mem
                 return;
             }
 
-            _memoryRegions.RemoveAll(x => x.SeqID == aSeqId);
+            _memoryRegions.RemoveAll(aX => aX.SeqID == aSeqId);
 
             ResizeRootMemoryRegion();
         }
@@ -389,14 +390,14 @@ namespace VMCore.VM.Core.Mem
         public MemoryRegion[] GetMemoryPermissions(int aStart, int aEnd)
         {
             var regions = _memoryRegions.ToArray();
-            var regionID = regions.Length - 1;
+            var regionId = regions.Length - 1;
 
             // We want to iterate this list in reverse as the last entry
             // can override those entered before it.
             var matched = new List<MemoryRegion>();
-            while (regionID >= 0)
+            while (regionId >= 0)
             {
-                var region = regions[regionID];
+                var region = regions[regionId];
 
                 if (aStart >= region.Start && aEnd <= region.End)
                 {
@@ -415,7 +416,7 @@ namespace VMCore.VM.Core.Mem
                     matched.Add(region);
                 }
 
-                --regionID;
+                --regionId;
             }
 
             if (matched.Count > 0)
@@ -427,8 +428,8 @@ namespace VMCore.VM.Core.Mem
             // the root memory region will always match a valid address.
             throw new MemoryAccessViolationException
             (
-                $"GetMemoryPermissions: attempted to access a memory " +
-                $"region that does not exist. " +
+                "GetMemoryPermissions: attempted to access a memory " +
+                "region that does not exist. " +
                 $"Start = {aStart}, End = {aEnd}."
             );
         }
@@ -454,7 +455,11 @@ namespace VMCore.VM.Core.Mem
             // value to the stack.
             if (minPos < StackStart)
             {
-                throw new StackOutOfRangeException();
+                throw new StackOutOfRangeException
+                (
+                    "StackPushInt: there is insufficient space on " +
+                    "the stack for the value to be pushed."
+                );
             }
 
             // Write the value to stack memory region.
@@ -490,7 +495,11 @@ namespace VMCore.VM.Core.Mem
             // value from the stack.
             if (maxPos >= StackEnd)
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException
+                (
+                    "StackPopInt: there is insufficient space on " +
+                    "the stack for the value to be popped."
+                );
             }
 
             // Read the value from the memory region.
@@ -600,8 +609,8 @@ namespace VMCore.VM.Core.Mem
                         throw new NotSupportedException
                         (
                             $"PrintStackDebug: the type {t} was passed " +
-                            $"specified as the stack type, but no " +
-                            $"support has been provided for that type."
+                            "specified as the stack type, but no " +
+                            "support has been provided for that type."
                         );
                 };
 
@@ -1140,8 +1149,8 @@ namespace VMCore.VM.Core.Mem
             {
                 throw new MemoryOutOfRangeException
                 (
-                    $"ValidateAccess: the specified memory location is " +
-                    $"outside of the memory bounds."
+                    "ValidateAccess: the specified memory location is " +
+                    "outside of the memory bounds."
                 );
             }
 
@@ -1190,11 +1199,11 @@ namespace VMCore.VM.Core.Mem
                      aContext == SecurityContext.System),
 
                 _ => 
-                throw new NotSupportedException
-                (
-                    "ValidateAccess: attempted to check a " +
-                           "non-valid data access type."
-                )
+                    throw new NotSupportedException
+                    (
+                        "ValidateAccess: attempted to check a " +
+                               "non-valid data access type."
+                    )
             };
 
             if (!hasFlags)

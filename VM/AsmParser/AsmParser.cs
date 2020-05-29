@@ -272,8 +272,7 @@ namespace VMCore.AsmParser
                         break;
 
                     case char _ when char.IsWhiteSpace(c):
-                        pushString =
-                            !inString && (segments.Count == 0);
+                        pushString = !inString && segments.Count == 0;
                         skipNext = !inString;
                         break;
                 }

@@ -1,14 +1,15 @@
 ﻿using System;
 using VMCore.Expressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Expressions.Helpers;
 
 namespace UnitTests.Expressions
 {
     [TestClass]
-    public class Test_Expression_Parser :
-        Test_Expression_Base
+    public class TestExpressionParser :
+        TestExpressionBase
     {
-        public Test_Expression_Parser()
+        public TestExpressionParser()
         {
         }
 
@@ -18,7 +19,7 @@ namespace UnitTests.Expressions
         [TestMethod]
         public void TestExpressionParserBasic()
         {
-            var table = new ExpressionTestResult[]
+            var table = new []
             {
                 #region BASIC TESTS
                 new ExpressionTestResult("+$10", 10),
@@ -127,7 +128,7 @@ namespace UnitTests.Expressions
                 #endregion // SILLY TESTS
             };
 
-            ExpressionTestResult.RunTests(_vm, table);
+            ExpressionTestResult.RunTests(Vm, table);
         }
 
         [TestMethod]
@@ -135,7 +136,7 @@ namespace UnitTests.Expressions
         {
             var parserEx = typeof(ExprParserException);
 
-            var table = new ExpressionExTestResult[]
+            var table = new []
             {
                 #region TESTS
                 new ExpressionExTestResult("(", parserEx),
@@ -163,7 +164,7 @@ namespace UnitTests.Expressions
                 #endregion
             };
 
-            ExpressionExTestResult.RunTests(_vm, table);
+            ExpressionExTestResult.RunTests(Vm, table);
         }
     }
 }

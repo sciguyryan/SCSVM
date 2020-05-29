@@ -1,18 +1,17 @@
-using System;
-using System.Collections.Generic;
 using VMCore;
 using VMCore.Assembler;
-using VMCore.VM;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Data
 {
     [TestClass]
-    public class Test_MOV_LIT_REG
-        : Test_Instruction_Base
+    public class TestMovLitReg
+        : TestInstructionBase
     {
-        public Test_MOV_LIT_REG()
+        public TestMovLitReg()
         {
         }
 
@@ -23,18 +22,19 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestUserAssemblyWriteToRegister()
         {
-            var register = Registers.R1;
+            const Registers register = Registers.R1;
             const int expected = 0x123;
 
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, register }),
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                             new object[] { expected, register }),
             };
 
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.Cpu.Registers[register] == expected);
+            Assert.IsTrue(Vm.Cpu.Registers[register] == expected);
         }
 
         /// <summary>
@@ -44,12 +44,13 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestUserDirectWriteToRegister()
         {
-            var register = Registers.R1;
+            const Registers register = Registers.R1;
             const int expected = 0x123;
 
-            _vm.Cpu.Registers[(register, SecurityContext.User)] = expected;
+            Vm.Cpu.Registers[(register, SecurityContext.User)] = 
+                expected;
 
-            Assert.IsTrue(_vm.Cpu.Registers[register] == expected);
+            Assert.IsTrue(Vm.Cpu.Registers[register] == expected);
         }
 
         /// <summary>
@@ -59,12 +60,13 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestSystemDirectWriteToRegister()
         {
-            var register = Registers.R1;
+            const Registers register = Registers.R1;
             const int expected = 0x123;
 
-            _vm.Cpu.Registers[(register, SecurityContext.System)] = expected;
+            Vm.Cpu.Registers[(register, SecurityContext.System)] = 
+                expected;
 
-            Assert.IsTrue(_vm.Cpu.Registers[register] == expected);
+            Assert.IsTrue(Vm.Cpu.Registers[register] == expected);
         }
     }
 }

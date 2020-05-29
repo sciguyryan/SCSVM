@@ -1,13 +1,15 @@
 using VMCore;
+using VMCore.VM.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Bit
 {
     [TestClass]
-    public class Test_LSF_REG_REG
-        : Test_Instruction_Base
+    public class TestLsfRegReg
+        : TestInstructionBase
     {
-        public Test_LSF_REG_REG()
+        public TestLsfRegReg()
         {
         }
 
@@ -20,7 +22,7 @@ namespace UnitTests.Instructions
             // These test values are derived from the EMCA 
             // left shift tests under section 11.7.1.
             // See https://github.com/tc39/test262/tree/c4dd26bceed03b41dca672ccad9ba09c9f44ef12/test/language/expressions/left-shift
-            var table = new BitTestResult[]
+            var table = new []
             {
                 #region TESTS
                 new BitTestResult(-1, 0, -1, ResultTypes.EQUAL),
@@ -2074,7 +2076,10 @@ namespace UnitTests.Instructions
                 #endregion
             };
 
-            BitTestResult.RunTests(_vm, table, OpCode.LSF_REG_REG, Registers.R1);
+            BitTestResult.RunTests(Vm, 
+                                   table,
+                                   OpCode.LSF_REG_REG,
+                                   Registers.R1);
         }
     }
 }

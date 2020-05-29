@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VMCore.VM.Core.Reg
+namespace VMCore.VM.Core.Register
 {
     [Flags]
     public enum RegisterAccess

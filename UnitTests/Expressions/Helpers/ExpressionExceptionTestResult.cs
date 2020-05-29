@@ -1,9 +1,9 @@
-﻿using VMCore.VM;
+﻿using System;
 using VMCore.Expressions;
+using VMCore.VM;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 
-namespace UnitTests.Expressions
+namespace UnitTests.Expressions.Helpers
 {
     public class ExpressionExTestResult
     {
@@ -18,14 +18,18 @@ namespace UnitTests.Expressions
 
         public override string ToString()
         {
-            return $"ExpressionExeptionTestResult({Input}, {ExType})";
+            return $"ExpressionExceptionTestResult({Input}, {ExType})";
         }
 
         /// <summary>
         /// Run a set of tests for the expression parser.
         /// </summary>
-        /// <param name="aVm">The virtual machine instance in which the tests should be run.</param>
-        /// <param name="aTests">An array of the tests to be executed.</param>
+        /// <param name="aVm">
+        /// The virtual machine instance in which the tests should be run.
+        /// </param>
+        /// <param name="aTests">
+        /// An array of the tests to be executed.
+        /// </param>
         public static void RunTests(VirtualMachine aVm,
                                     ExpressionExTestResult[] aTests)
         {
@@ -44,7 +48,14 @@ namespace UnitTests.Expressions
                 {
                     if (ex.GetType() != entry.ExType)
                     {
-                        Assert.Fail($"Result of test {i} is incorrect. Expected exception of type '{entry.ExType}' to be thrown, however an exception of type '{ex.GetType()}' was thrown instead.");
+                        Assert.Fail
+                        (
+                            $"Result of test {i} is incorrect. " +
+                            "Expected exception of type " +
+                            $"'{entry.ExType}' to be thrown, however " +
+                            $" an exception of type '{ex.GetType()}' " +
+                            "was thrown instead."
+                        );
                     }
 
                     triggeredException = true;
@@ -52,7 +63,12 @@ namespace UnitTests.Expressions
 
                 if (!triggeredException)
                 {
-                    Assert.Fail($"Result of test {i} is incorrect. Expected exception of type '{entry.ExType}' to be thrown, however none was thrown.");
+                    Assert.Fail
+                    (
+                        $"Result of test {i} is incorrect. " +
+                        $"Expected exception of type '{entry.ExType}' " +
+                        $"to be thrown, however none was thrown."
+                    );
                 }
             }
         }

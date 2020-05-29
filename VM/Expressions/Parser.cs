@@ -17,7 +17,7 @@
         /// <summary>
         /// The tokenizer for the parser.
         /// </summary>
-        private Tokenizer _tokenizer;
+        private readonly Tokenizer _tokenizer;
 
         public Parser(string aInput)
         {
@@ -51,17 +51,18 @@
             while (true)
             {
                 OpTypes op;
-                if (_tokenizer.Token == Tokens.Add)
+                switch (_tokenizer.Token)
                 {
-                    op = OpTypes.Add;
-                }
-                else if (_tokenizer.Token == Tokens.Subtract)
-                {
-                    op = OpTypes.Subtract;
-                }
-                else
-                {
-                    return lhs;
+                    case Tokens.Add:
+                        op = OpTypes.Add;
+                        break;
+
+                    case Tokens.Subtract:
+                        op = OpTypes.Subtract;
+                        break;
+
+                    default:
+                        return lhs;
                 }
 
                 _tokenizer.NextToken();
@@ -80,17 +81,18 @@
             while (true)
             {
                 OpTypes op;
-                if (_tokenizer.Token == Tokens.Multiply)
+                switch (_tokenizer.Token)
                 {
-                    op = OpTypes.Multiply;
-                }
-                else if (_tokenizer.Token == Tokens.Divide)
-                {
-                    op = OpTypes.Divide;
-                }
-                else
-                {
-                    return lhs;
+                    case Tokens.Multiply:
+                        op = OpTypes.Multiply;
+                        break;
+
+                    case Tokens.Divide:
+                        op = OpTypes.Divide;
+                        break;
+
+                    default:
+                        return lhs;
                 }
 
                 _tokenizer.NextToken();
@@ -106,19 +108,19 @@
         {
             while (true)
             {
-                if (_tokenizer.Token == Tokens.Add)
+                switch (_tokenizer.Token)
                 {
-                    _tokenizer.NextToken();
-                    continue;
-                }
+                    case Tokens.Add:
+                        _tokenizer.NextToken();
+                        continue;
 
-                if (_tokenizer.Token == Tokens.Subtract)
-                {
-                    _tokenizer.NextToken();
-                    return new NodeUnary(ParseUnary(), OpTypes.Negate);
-                }
+                    case Tokens.Subtract:
+                        _tokenizer.NextToken();
+                        return new NodeUnary(ParseUnary(), OpTypes.Negate);
 
-                return ParseLeaf();
+                    default:
+                        return ParseLeaf();
+                }
             }
         }
 
@@ -128,34 +130,42 @@
         /// <returns>A node containing the tokenized expression.</returns>
         public Node ParseLeaf()
         {
-            if (_tokenizer.Token == Tokens.Number)
+            switch (_tokenizer.Token)
             {
-                var node = new NodeNumber(_tokenizer.Number);
-                _tokenizer.NextToken();
-                return node;
+                case Tokens.Number:
+                {
+                    var node = new NodeNumber(_tokenizer.Number);
+                    _tokenizer.NextToken();
+                    return node;
+                }
+
+                case Tokens.OpenBracket:
+                {
+                    // Skip the open bracket.
+                    _tokenizer.NextToken();
+                    var node = ParseAddSubtract();
+                    _tokenizer.NextToken();
+                    return node;
+                }
+
+                case Tokens.Register:
+                {
+                    // This is not a simple expression
+                    // so we cannot resolve it immediately.
+                    IsSimple = false;
+
+                    var name = _tokenizer.Register;
+                    _tokenizer.NextToken();
+                    return new NodeRegister(name);
+                }
+
+                default:
+                    throw new ExprParserException
+                    (
+                        "ParseLeaf: unexpected token: " +
+                        $"{_tokenizer.Token}."
+                    );
             }
-
-            if (_tokenizer.Token == Tokens.OpenBracket)
-            {
-                // Skip the open bracket.
-                _tokenizer.NextToken();
-                var node = ParseAddSubtract();
-                _tokenizer.NextToken();
-                return node;
-            }
-
-            if (_tokenizer.Token == Tokens.Register)
-            {
-                // This is not a simple expression
-                // so we cannot resolve it immediately.
-                IsSimple = false;
-
-                var name = _tokenizer.Register;
-                _tokenizer.NextToken();
-                return new NodeRegister(name);
-            }
-
-            throw new ExprParserException($"ParseLeaf: unexpected token: {_tokenizer.Token}.");
         }
     }
 }

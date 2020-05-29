@@ -1,12 +1,15 @@
 ﻿using System;
 using VMCore.Assembler;
-using VMCore.VM.Core.Mem;
+using VMCore.VM.Core;
+using VMCore.VM.Core.Memory;
 using VMCore.VM.Core.Utilities;
 
 namespace VMCore.VM
 {
     public class VirtualMachine
     {
+        #region Public Properties
+
         /// <summary>
         /// The assembly binary file that has been loaded into this
         /// virtual machine instance.
@@ -23,13 +26,17 @@ namespace VMCore.VM
         /// The CPU that has been assigned to this virtual
         /// machine instance.
         /// </summary>
-        public Cpu Cpu { get; private set; }
+        public Cpu Cpu { get;}
 
         /// <summary>
         /// The debugger that has been assigned to this
         /// virtual machine instance.
         /// </summary>
-        public Debugger Debugger { get; private set; }
+        public Debugger Debugger { get; }
+
+        #endregion // Public Properties
+
+        #region Private Properties
 
         private int _stackFrameSize = 0;
 
@@ -38,6 +45,8 @@ namespace VMCore.VM
         private int _dbgStackCapacity;
         private int _dbgFinalMemorySize;
 #endif
+
+        #endregion // Private Properties
 
         public VirtualMachine(int aMainMemoryCapacity = 2048,
                               int aStackCapacity = 100,
@@ -69,7 +78,7 @@ namespace VMCore.VM
         /// Load a binary into memory and initialize the CPU.
         /// </summary>
         /// <param name="aRaw">
-        /// The raw bytecode data representing the program.
+        /// The raw byte code data representing the program.
         /// </param>
         /// <param name="aStartAddr">
         /// The starting address from which to begin 
@@ -115,10 +124,10 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Run a bytecode program to completion.
+        /// Run a byte code program to completion.
         /// </summary>
         /// <param name="aRaw">
-        /// The raw bytecode data representing the program.
+        /// The raw byte code data representing the program.
         /// </param>
         /// <param name="aStartAddr">
         /// The starting address from which to begin 
@@ -151,10 +160,10 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Run a bytecode program to completion.
+        /// Run a byte code program to completion.
         /// </summary>
         /// <param name="aRaw">
-        /// The raw bytecode data representing the program.
+        /// The raw byte code data representing the program.
         /// </param>
         /// <param name="aStartAddr">
         /// The starting address from which to begin 

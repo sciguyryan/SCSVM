@@ -2,17 +2,19 @@
 using System.IO;
 using VMCore;
 using VMCore.Assembler;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Branching
 {
     [TestClass]
-    public class Test_JGE_LIT
-        : Test_Instruction_Base
+    public class TestJgeLit
+        : TestInstructionBase
     {
-        public Test_JGE_LIT()
+        public TestJgeLit()
         {
         }
 
@@ -23,8 +25,8 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestUserAssemblyJumpTakenValid()
         {
-            var r1 = Registers.R1;
-            var r2 = Registers.R2;
+            const Registers r1 = Registers.R1;
+            const Registers r2 = Registers.R2;
             const int expected = 0x123;
 
             // This is calculated as follows.
@@ -39,7 +41,7 @@ namespace UnitTests.Instructions
                 sizeof(int) * 4 +
                 sizeof(Registers) * 2;
 
-            var program = new QuickIns[]
+            var program = new []
             {
                 new QuickIns(OpCode.MOV_LIT_REG,
                              new object[] { 100, r1 }),
@@ -52,9 +54,9 @@ namespace UnitTests.Instructions
                              new object[] { expected, r2 }),
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.Cpu.Registers[r2] == expected);
+            Assert.IsTrue(Vm.Cpu.Registers[r2] == expected);
         }
 
         /// <summary>
@@ -64,8 +66,8 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestUserAssemblyJumpNotTakenValid()
         {
-            var r1 = Registers.R1;
-            var r2 = Registers.R2;
+            const Registers r1 = Registers.R1;
+            const Registers r2 = Registers.R2;
             const int expected = 0x123;
             const int fail = 0x321;
 
@@ -81,7 +83,7 @@ namespace UnitTests.Instructions
                 sizeof(int) * 5 +
                 sizeof(Registers) * 3;
 
-            var program = new QuickIns[]
+            var program = new []
             {
                 new QuickIns(OpCode.MOV_LIT_REG,
                              new object[] { 100, r1 }),
@@ -96,9 +98,9 @@ namespace UnitTests.Instructions
                              new object[] { fail, r2 }),
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.Cpu.Registers[r2] == expected);
+            Assert.IsTrue(Vm.Cpu.Registers[r2] == expected);
         }
 
 
@@ -109,12 +111,12 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestUserAssemblyValidLabel()
         {
-            var r1 = Registers.R1;
-            var r2 = Registers.R2;
+            const Registers r1 = Registers.R1;
+            const Registers r2 = Registers.R2;
             const int expected = 0x123;
             const int fail = 0x321;
 
-            var program = new QuickIns[]
+            var program = new []
             {
                 new QuickIns(OpCode.MOV_LIT_REG,
                              new object[] { 100, r1 }),
@@ -131,9 +133,9 @@ namespace UnitTests.Instructions
                              new object[] { expected, r2 }),
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.Cpu.Registers[r2] == expected);
+            Assert.IsTrue(Vm.Cpu.Registers[r2] == expected);
         }
 
         /// <summary>
@@ -145,9 +147,9 @@ namespace UnitTests.Instructions
         [ExpectedException(typeof(InvalidDataException))]
         public void TestUserAssemblyInvalidLabel()
         {
-            var r1 = Registers.R1;
+            const Registers r1 = Registers.R1;
 
-            var program = new QuickIns[]
+            var program = new []
             {
                 new QuickIns(OpCode.SUB_LIT_REG,
                              new object[] { 50, r1 }),  // AC = -50
@@ -156,7 +158,7 @@ namespace UnitTests.Instructions
                              new AsmLabel("A", 1)),
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
         }
 
         /// <summary>
@@ -168,9 +170,9 @@ namespace UnitTests.Instructions
         [ExpectedException(typeof(ArgumentException))]
         public void TestUserAssemblyInvalidArgumentBind()
         {
-            var r1 = Registers.R1;
+            const Registers r1 = Registers.R1;
 
-            var program = new QuickIns[]
+            var program = new []
             {
                 new QuickIns(OpCode.SUB_LIT_REG,
                              new object[] { 50, r1 }),  // AC = -50
@@ -180,7 +182,7 @@ namespace UnitTests.Instructions
                 new QuickIns(OpCode.LABEL, new object[] { "A" }),
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
         }
 
         /// <summary>
@@ -193,9 +195,9 @@ namespace UnitTests.Instructions
         [ExpectedException(typeof(MemoryAccessViolationException))]
         public void TestUserAssemblyJumpInvalid()
         {
-            var r1 = Registers.R1;
+            const Registers r1 = Registers.R1;
 
-            var program = new QuickIns[]
+            var program = new []
             {
                 new QuickIns(OpCode.MOV_LIT_REG,
                              new object[] { 100, r1 }),
@@ -205,9 +207,9 @@ namespace UnitTests.Instructions
                              new object[] { 100, -2 }),
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
-            _vm.Cpu.FetchExecuteNextInstruction();
+            Vm.Cpu.FetchExecuteNextInstruction();
         }
     }
 }

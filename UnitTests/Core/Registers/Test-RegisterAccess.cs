@@ -1,28 +1,21 @@
-using System.Collections.Generic;
-using VMCore;
 using VMCore.Assembler;
 using VMCore.VM;
-using VMCore.VM.Core.Utilities;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
+using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace UnitTests.Core.Reg
+namespace UnitTests.Core.Registers
 {
     [TestClass]
     public class TestRegisterAccess
     {
-        private int _mainMemoryCapacity = 2048;
-        private int _stackCapacity = 100;
-        private int _stackStart;
-
-        private VirtualMachine _vm;
+        private readonly VirtualMachine _vm;
 
         public TestRegisterAccess()
         {
-            _stackStart = _mainMemoryCapacity;
-
             // In general it should be safe to re-use this here.
-            _vm = new VirtualMachine(_mainMemoryCapacity, _stackCapacity);
+            _vm = new VirtualMachine();
         }
 
         /// <summary>
@@ -33,10 +26,11 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserAssemblyWriteProtectedRegister()
         {
-            var program = new QuickIns[]
+            var program = new []
             {
                 // Attempt to write a value to a protected write register.
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x0, Registers.SP })
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 0x0, VMCore.VM.Core.Registers.SP })
             };
 
             // This should fail with a RegisterAccessViolationException.
@@ -51,7 +45,7 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserDirectWriteProtectedRegister()
         {
-            _vm.Cpu.Registers[(Registers.SP, SecurityContext.User)] = 0x1;
+            _vm.Cpu.Registers[(VMCore.VM.Core.Registers.SP, SecurityContext.User)] = 0x1;
         }
 
         /// <summary>
@@ -61,7 +55,7 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestSystemDirectWriteProtectedRegister()
         {
-            _vm.Cpu.Registers[(Registers.SP, SecurityContext.System)] = 0x1;
+            _vm.Cpu.Registers[(VMCore.VM.Core.Registers.SP, SecurityContext.System)] = 0x1;
         }
 
         /// <summary>
@@ -72,11 +66,12 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserAssemblyReadProtectedRegister()
         {
-            var program = new QuickIns[]
+            var program = new []
             {
                 // Attempt to read a value from a protected write register
                 // directly from user code.
-                new QuickIns(OpCode.MOV_REG_MEM, new object[] { Registers.SP, 0x0 })
+                new QuickIns(OpCode.MOV_REG_MEM,
+                             new object[] { VMCore.VM.Core.Registers.SP, 0x0 })
             };
 
             // This should fail with a RegisterAccessViolationException.
@@ -91,7 +86,7 @@ namespace UnitTests.Core.Reg
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserDirectReadProtectedRegister()
         {
-            _ = _vm.Cpu.Registers[(Registers.SP, SecurityContext.User)];
+            _ = _vm.Cpu.Registers[(VMCore.VM.Core.Registers.SP, SecurityContext.User)];
         }
 
         /// <summary>
@@ -101,7 +96,7 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestSystemDirectReadProtectedRegister()
         {
-            _ = _vm.Cpu.Registers[(Registers.SP, SecurityContext.System)];
+            _ = _vm.Cpu.Registers[(VMCore.VM.Core.Registers.SP, SecurityContext.System)];
         }
 
         /// <summary>
@@ -111,10 +106,11 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestUserAssemblyReadRegister()
         {
-            var program = new QuickIns[]
+            var program = new []
             {
                 // Attempt to write a value to a protected write register.
-                new QuickIns(OpCode.MOV_REG_MEM, new object[] { Registers.R1, 0x0 })
+                new QuickIns(OpCode.MOV_REG_MEM,
+                             new object[] { VMCore.VM.Core.Registers.R1, 0x0 })
             };
 
             // This should fail with a RegisterAccessViolationException.
@@ -128,7 +124,7 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestUserDirectReadRegister()
         {
-            _ = _vm.Cpu.Registers[(Registers.R1, SecurityContext.User)];
+            _ = _vm.Cpu.Registers[(VMCore.VM.Core.Registers.R1, SecurityContext.User)];
         }
 
         /// <summary>
@@ -138,7 +134,7 @@ namespace UnitTests.Core.Reg
         [TestMethod]
         public void TestSystemDirectReadRegister()
         {
-            _ = _vm.Cpu.Registers[(Registers.R1, SecurityContext.System)];
+            _ = _vm.Cpu.Registers[(VMCore.VM.Core.Registers.R1, SecurityContext.System)];
         }
 
         /// <summary>
@@ -147,11 +143,12 @@ namespace UnitTests.Core.Reg
         /// </summary>
         [TestMethod]
         [ExpectedException(typeof(InvalidRegisterException))]
-        public void TestAssemblyReadInvalidRegiser()
+        public void TestAssemblyReadInvalidRegister()
         {
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_REG_MEM, new object[] { (Registers)0xFF, 0x0 }),
+                new QuickIns(OpCode.MOV_REG_MEM,
+                             new object[] { (VMCore.VM.Core.Registers)0xFF, 0x0 }),
             };
 
             // This should throw an exception as the specified register
@@ -165,11 +162,12 @@ namespace UnitTests.Core.Reg
         /// </summary>
         [TestMethod]
         [ExpectedException(typeof(InvalidRegisterException))]
-        public void TestAssemblyWriteInvalidRegiser()
+        public void TestAssemblyWriteInvalidRegister()
         {
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { 0x123, (Registers)0xFF }),
+                new QuickIns(OpCode.MOV_LIT_REG,
+                             new object[] { 0x123, (VMCore.VM.Core.Registers)0xFF }),
             };
 
             // This should throw an exception as the specified register

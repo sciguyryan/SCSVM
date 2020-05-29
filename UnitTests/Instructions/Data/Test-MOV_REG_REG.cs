@@ -1,16 +1,17 @@
-using System.Collections.Generic;
 using VMCore;
 using VMCore.Assembler;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Data
 {
     [TestClass]
-    public class Test_MOV_REG_REG
-        : Test_Instruction_Base
+    public class TestMovRegReg
+        : TestInstructionBase
     {
-        public Test_MOV_REG_REG()
+        public TestMovRegReg()
         {
         }
 
@@ -23,15 +24,17 @@ namespace UnitTests.Instructions
         {
             const int expected = 0x12;
 
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, new object[] { expected, Registers.R1 }),
-                new QuickIns(OpCode.MOV_REG_REG, new object[] { Registers.R1, Registers.R2 }),
+                new QuickIns(OpCode.MOV_LIT_REG, 
+                             new object[] { expected, Registers.R1 }),
+                new QuickIns(OpCode.MOV_REG_REG, 
+                        new object[] { Registers.R1, Registers.R2 }),
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.Cpu.Registers[Registers.R2] == expected);
+            Assert.IsTrue(Vm.Cpu.Registers[Registers.R2] == expected);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using VMCore.VM.Core;
 
-namespace VMCore.VM.Instructions
+namespace VMCore.VM.Instructions.Special
 {
     internal class LABEL
         : Instruction
@@ -38,11 +38,8 @@ namespace VMCore.VM.Instructions
 
         public override string ToString(InstructionData aData)
         {
-            // This should never be executed.
-            var name = (string)aData[0];
-
-            // label $ID NAME
-            return $"{AsmName} {name}";
+            // label $NAME
+            return $"{AsmName} {(string)aData[0]}";
         }
     }
 }

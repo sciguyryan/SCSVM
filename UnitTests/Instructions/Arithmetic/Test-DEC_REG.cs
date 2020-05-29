@@ -1,13 +1,14 @@
-using VMCore;
+using VMCore.VM.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Arithmetic
 {
     [TestClass]
-    public class Test_DEC_REG
-        : Test_Instruction_Base
+    public class TestDecReg
+        : TestInstructionBase
     {
-        public Test_DEC_REG()
+        public TestDecReg()
         {
         }
 
@@ -17,7 +18,7 @@ namespace UnitTests.Instructions
         [TestMethod]
         public void TestDecrement()
         {
-            var table = new UnaryTestResult[]
+            var table = new []
             {
                 #region TESTS
                 new UnaryTestResult(1, 0, ResultTypes.EQUAL),
@@ -30,7 +31,7 @@ namespace UnitTests.Instructions
                 #endregion
             };
 
-            UnaryTestResult.RunTests(_vm, table, OpCode.DEC_REG);
+            UnaryTestResult.RunTests(Vm, table, OpCode.DEC_REG);
         }
     }
 }

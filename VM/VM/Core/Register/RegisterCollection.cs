@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace VMCore.VM.Core.Reg
+namespace VMCore.VM.Core.Register
 {
     public class RegisterCollection
     {
@@ -12,13 +12,13 @@ namespace VMCore.VM.Core.Reg
             new Dictionary<Registers, Register>();
 
         /// <summary>
-        /// The Cpu to which this register collection is bound.
+        /// The CPU to which this register collection is bound.
         /// </summary>
-        public Cpu CPU { get; private set; }
+        public Cpu Cpu { get; }
 
         public RegisterCollection(Cpu aCpu)
         {
-            CPU = aCpu;
+            Cpu = aCpu;
 
             // Initialization here is done manually as, if I ever
             // decide to re-add the shadow registers this
@@ -37,40 +37,40 @@ namespace VMCore.VM.Core.Reg
             const RegisterAccess prpw = RegisterAccess.PR | pw;
 
             // Data registers.
-            Registers.Add(VMCore.Registers.R1,
+            Registers.Add(Core.Registers.R1,
                           new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R2,
+            Registers.Add(Core.Registers.R2,
                           new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R3,
+            Registers.Add(Core.Registers.R3,
                           new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R4,
+            Registers.Add(Core.Registers.R4,
                           new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R5,
+            Registers.Add(Core.Registers.R5,
                           new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R6,
+            Registers.Add(Core.Registers.R6,
                           new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R7,
+            Registers.Add(Core.Registers.R7,
                           new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.R8,
+            Registers.Add(Core.Registers.R8,
                           new Register(aCpu, rw));
 
             // Special registers.
-            Registers.Add(VMCore.Registers.IP,
+            Registers.Add(Core.Registers.IP,
                           new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.SP,
+            Registers.Add(Core.Registers.SP,
                           new Register(aCpu, prpw));
-            Registers.Add(VMCore.Registers.AC,
+            Registers.Add(Core.Registers.AC,
                           new Register(aCpu, rw));
-            Registers.Add(VMCore.Registers.FL,
+            Registers.Add(Core.Registers.FL,
                           new Register(aCpu, rw, typeof(CpuFlags)));
-            Registers.Add(VMCore.Registers.PC,
+            Registers.Add(Core.Registers.PC,
                           new Register(aCpu, r | pw));
 
 #if DEBUG
             // For debugging.
-            foreach ((var key, _) in Registers)
+            foreach (var (key, _) in Registers)
             {
-                Registers[key].SetID(key);
+                Registers[key].SetId(key);
             }
 #endif
         }
@@ -78,48 +78,39 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// Get or set a register with a security context.
         /// </summary>
-        /// <param name="regTuple">
+        /// <param name="aRegTuple">
         /// A tuple of the register identifier and the security context.
         /// </param>
         /// <returns>
         /// The value of the register if accessed via get,
         /// nothing otherwise.
         /// </returns>
-        public int this[(Registers r, SecurityContext c) regTuple]
+        public int this[(Registers r, SecurityContext c) aRegTuple]
         {
-            get
-            {
-                return Registers[regTuple.r].GetValue(regTuple.c);
-            }
-            set
-            {
-                Registers[regTuple.r].SetValue(value, regTuple.c);
-            }
+            get => 
+                Registers[aRegTuple.r].GetValue(aRegTuple.c);
+            set => 
+                Registers[aRegTuple.r].SetValue(value, aRegTuple.c);
         }
 
         /// <summary>
         /// Get or set a register with a security context.
         /// </summary>
-        /// <param name="regTuple">
+        /// <param name="aRegTuple">
         /// A tuple of the register ID and the security context.
         /// </param>
         /// <returns>
         /// The value of the register if accessed via get,
         /// nothing otherwise.
         /// </returns>
-        public int this[(int rID, SecurityContext c) regTuple]
+        public int this[(int rID, SecurityContext c) aRegTuple]
         {
-            get
-            {
-                return 
-                    Registers[(Registers)regTuple.rID]
-                        .GetValue(regTuple.c);
-            }
-            set
-            {
-                Registers[(Registers)regTuple.rID]
-                    .SetValue(value, regTuple.c);
-            }
+            get =>
+                Registers[(Registers)aRegTuple.rID]
+                    .GetValue(aRegTuple.c);
+            set =>
+                Registers[(Registers)aRegTuple.rID]
+                    .SetValue(value, aRegTuple.c);
         }
 
         /// <summary>
@@ -130,16 +121,12 @@ namespace VMCore.VM.Core.Reg
         /// The value of the register if accessed via get,
         /// nothing otherwise.
         /// </returns>
-        public int this[Registers r]
+        public int this[Registers aReg]
         {
-            get
-            {
-                return Registers[r].GetValue(SecurityContext.User);
-            }
-            set
-            {
-                Registers[r].SetValue(value, SecurityContext.User);
-            }
+            get => 
+                Registers[aReg].GetValue(SecurityContext.User);
+            set => 
+                Registers[aReg].SetValue(value, SecurityContext.User);
         }
 
         /// <summary>
@@ -150,18 +137,14 @@ namespace VMCore.VM.Core.Reg
         /// The value of the register if accessed via get,
         /// nothing otherwise.
         /// </returns>
-        public int this[int rID]
+        public int this[int aRegId]
         {
-            get
-            {
-                return Registers[(Registers)rID]
+            get =>
+                Registers[(Registers)aRegId]
                     .GetValue(SecurityContext.User);
-            }
-            set
-            {
-                Registers[(Registers)rID]
+            set =>
+                Registers[(Registers)aRegId]
                     .SetValue(value, SecurityContext.User);
-            }
         }
 
         /*public int this[Registers reg]
@@ -215,7 +198,7 @@ namespace VMCore.VM.Core.Reg
         /// <summary>
         /// Apply a hook to a register.
         /// </summary>
-        /// <param name="reg">
+        /// <param name="aReg">
         /// The register to which the hook should be applied.
         /// </param>
         /// <param name="aHook">
@@ -239,30 +222,31 @@ namespace VMCore.VM.Core.Reg
                     break;
 
                 default:
+                    // TODO - handle this better.
                     break;
             }
         }
 
         /// <summary>
-        /// Print a formated list registers and their
+        /// Print a formatted list registers and their
         /// contents directly to the console.
         /// </summary>
         public void PrintRegisters()
         {
-            foreach (var kvp in Registers)
+            foreach (var (key, value) in Registers)
             {
-                var reg = Enum.GetName(typeof(Registers), kvp.Key);
-                var val = kvp.Value.GetValue(SecurityContext.System);
+                var reg = Enum.GetName(typeof(Registers), key);
+                var val = value.GetValue(SecurityContext.System);
 
                 Console.Write("{0,5}{1,10:X8}", reg, val);
 
-                if (!kvp.Value.IsFlagRegister())
+                if (!value.IsFlagRegister())
                 {
                     Console.WriteLine();
                 }
                 else
                 {
-                    var fs = kvp.Value.ToFlagStateString();
+                    var fs = value.ToFlagStateString();
                     Console.WriteLine(" (" + fs + ")");
                 }
             }

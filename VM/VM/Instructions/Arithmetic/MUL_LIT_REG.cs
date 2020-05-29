@@ -1,7 +1,7 @@
 ﻿using System;
 using VMCore.VM.Core;
 
-namespace VMCore.VM.Instructions
+namespace VMCore.VM.Instructions.Arithmetic
 {
     internal class MUL_LIT_REG
         : Instruction
@@ -39,7 +39,7 @@ namespace VMCore.VM.Instructions
             // so that we can check for an overflow.
             // At least one of these must be cast to a long
             // in order for this to work as expected.
-            long result =
+            var result =
                 (long)((int)aData[0]) * 
                 aCpu.Registers[(Registers)aData[1]];
 
@@ -48,7 +48,7 @@ namespace VMCore.VM.Instructions
             aCpu.Registers[Registers.AC] = 
                 unchecked((int)result);
 
-            // Update the Cpu flags based on the result of
+            // Update the CPU flags based on the result of
             // the calculation just performed.
             // If the value is above the bounds for an
             // integer then the overflow flag will be set.

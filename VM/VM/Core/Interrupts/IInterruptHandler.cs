@@ -5,7 +5,10 @@
         /// <summary>
         /// Handle an interrupt of a specified type.
         /// </summary>
-        /// <param name="aVm">The virtual machine instance in which the interrupt should be handled.</param>
+        /// <param name="aVm">
+        /// The virtual machine instance in which the interrupt
+        /// should be handled.
+        /// </param>
         void Handle(VirtualMachine aVm);
     }
 }

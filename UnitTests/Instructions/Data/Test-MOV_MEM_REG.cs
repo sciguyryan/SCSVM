@@ -1,17 +1,18 @@
-using System.Collections.Generic;
 using VMCore;
 using VMCore.Assembler;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTests.Instructions.Helpers;
 
-namespace UnitTests.Instructions
+namespace UnitTests.Instructions.Data
 {
     [TestClass]
-    public class Test_MOV_MEM_REG
-        : Test_Instruction_Base
+    public class TestMovMemReg
+        : TestInstructionBase
     {
-        public Test_MOV_MEM_REG()
+        public TestMovMemReg()
         {
         }
 
@@ -23,15 +24,17 @@ namespace UnitTests.Instructions
         {
             const int expected = 0x123;
 
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_MEM, new object[] { expected, 0x0 }),
-                new QuickIns(OpCode.MOV_MEM_REG, new object[] { 0x0, Registers.R1 }),
+                new QuickIns(OpCode.MOV_LIT_MEM, 
+                        new object[] { expected, 0x0 }),
+                new QuickIns(OpCode.MOV_MEM_REG, 
+                        new object[] { 0x0, Registers.R1 }),
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(_vm.Cpu.Registers[Registers.R1] == expected);
+            Assert.IsTrue(Vm.Cpu.Registers[Registers.R1] == expected);
         }
 
         /// <summary>
@@ -42,12 +45,13 @@ namespace UnitTests.Instructions
         [ExpectedException(typeof(MemoryOutOfRangeException))]
         public void TestCopyInvalidMemoryToRegister()
         {
-            var program = new QuickIns[]
+            var program = new []
             {
-                new QuickIns(OpCode.MOV_MEM_REG, new object[] { int.MaxValue, Registers.R1 }),
+                new QuickIns(OpCode.MOV_MEM_REG, 
+                        new object[] { int.MaxValue, Registers.R1 }),
             };
 
-            _vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(Utils.QuickRawCompile(program));
         }
     }
 }

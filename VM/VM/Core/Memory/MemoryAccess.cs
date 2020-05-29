@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VMCore.VM.Core.Mem
+namespace VMCore.VM.Core.Memory
 {
     [Flags]
     public enum MemoryAccess

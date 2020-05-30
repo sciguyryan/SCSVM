@@ -25,7 +25,7 @@ namespace VMCore.VM
         /// <summary>
         /// A boolean indicating if the CPU is currently halted.
         /// </summary>
-        public bool IsHalted { get; set; } = false;
+        public bool IsHalted { get; set; }
 
         /// <summary>
         /// The list of registers associated with this CPU instance.
@@ -35,7 +35,7 @@ namespace VMCore.VM
         /// <summary>
         /// The VM instance that holds this CPU.
         /// </summary>
-        public VirtualMachine Vm { get; private set; }
+        public VirtualMachine Vm { get; }
 
         #endregion // Public Properties
 
@@ -53,20 +53,20 @@ namespace VMCore.VM
             ReflectionUtils.InstructionCache;
 
 #if DEBUG
-        private bool IsLoggingEnabled { get; set; } = true;
+        private bool IsLoggingEnabled = true;
 #else
-        private bool IsLoggingEnabled { get; set; } = false;
+        private bool IsLoggingEnabled = false;
 #endif
 
         /// <summary>
         /// An internal indicator of if an IP breakpoint has been triggered.
         /// </summary>
-        private bool _hasIpBreakpoint = false;
+        private bool _hasIpBreakpoint;
 
         /// <summary>
         /// An internal indicator of if a PC breakpoint has been triggered.
         /// </summary>
-        private bool _hasPcBreakpoint = false;
+        private bool _hasPcBreakpoint;
 
         /// <summary>
         /// A shorthand for the user security context.
@@ -107,7 +107,7 @@ namespace VMCore.VM
         /// <summary>
         /// If this CPU can swap between executable memory regions.
         /// </summary>
-        private bool _canSwapMemoryRegions;
+        private readonly bool _canSwapMemoryRegions;
 
         #endregion // Private Properties
 
@@ -619,17 +619,17 @@ namespace VMCore.VM
             object arg;
             switch (aT)
             {
-                case Type _ when aT == typeof(byte):
+                case { } when aT == typeof(byte):
                     arg = Vm.Memory.GetValue(aPos, UserCtx, true);
                     aPos += sizeof(byte);
                     break;
 
-                case Type _ when aT == typeof(int):
+                case { } when aT == typeof(int):
                     arg = Vm.Memory.GetInt(aPos, UserCtx, true);
                     aPos += sizeof(int);
                     break;
 
-                case Type _ when aT == typeof(string):
+                case { } when aT == typeof(string):
                     // Strings are special as their size
                     // cannot be determined directly from
                     // their type.
@@ -641,7 +641,7 @@ namespace VMCore.VM
                     aPos += bLen;
                     break;
 
-                case Type _ when aT == typeof(Registers):
+                case { } when aT == typeof(Registers):
                     arg = 
                         Vm.Memory.GetRegisterIdent(aPos, UserCtx, true);
                     aPos += sizeof(byte);
@@ -734,10 +734,10 @@ namespace VMCore.VM
         /// </returns>
         private string DisassembleNextInstruction(ref int aPos)
         {
-            var opCode = OpCode.NOP;
+            OpCode op;
             try
             {
-                opCode = 
+                op = 
                     Vm.Memory.GetOpCode(aPos, SysCtx, true);
             }
             catch
@@ -745,30 +745,30 @@ namespace VMCore.VM
                 return string.Empty;
             }
 
-            if (!Enum.IsDefined(typeof(OpCode), opCode))
+            if (!Enum.IsDefined(typeof(OpCode), op))
             {
                 // We do not recognize this opcode and so
                 // we would have no meaningful output
                 // here at all. Return the byte code instead.
-                return $"???? {opCode:X2}";
+                return $"???? {op:X2}";
             }
 
             // No instruction matching the OpCode was found.
             // In practice this shouldn't happen, except in a malformed
             // binary file.
-            if (!_instructionCache.TryGetValue(opCode,
+            if (!_instructionCache.TryGetValue(op,
                                                out var ins))
             {
                 // Return the byte code as that's all we can
                 // safely provide.
-                return $"???? {opCode:X2}";
+                return $"???? {op:X2}";
             }
 
             aPos += sizeof(OpCode);
 
             var opIns = new InstructionData
             {
-                OpCode = opCode
+                OpCode = op
             };
 
             // The types of the arguments expected for this instruction.

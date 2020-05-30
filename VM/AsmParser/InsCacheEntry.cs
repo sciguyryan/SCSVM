@@ -3,7 +3,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using VMCore.VM.Core;
+using VMCore.VM.Instructions;
 
 namespace VMCore.AsmParser
 {

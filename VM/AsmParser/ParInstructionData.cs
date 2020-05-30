@@ -1,4 +1,4 @@
-﻿using VMCore.VM.Core;
+﻿using VMCore.VM.Instructions;
 
 namespace VMCore.AsmParser
 {

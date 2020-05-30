@@ -142,16 +142,16 @@ namespace VMCore.VM.Core.Utilities
             // matching statement.
             switch (aType)
             {
-                case Type _ when aType == typeof(byte):
-                case Type _ when aType == typeof(Registers):
+                case { } when aType == typeof(byte):
+                case { } when aType == typeof(Registers):
                     aBw.Write((byte)aData);
                     break;
 
-                case Type _ when aType == typeof(int):
+                case { } when aType == typeof(int):
                     aBw.Write((int)aData);
                     break;
 
-                case Type _ when aType == typeof(string):
+                case { } when aType == typeof(string):
                     var bytes = Encoding.UTF8.GetBytes((string)aData);
                     // Write the number of bytes that made up
                     // the string. This is -not- the string
@@ -164,8 +164,8 @@ namespace VMCore.VM.Core.Utilities
                     throw new NotSupportedException
                     (
                         $"WriteDataByType: the type {aType} was " +
-                        $"passed as an argument type, but no support " +
-                        $"has been provided for that type."
+                        "passed as an argument type, but no support " +
+                        "has been provided for that type."
                     );
             }
         }

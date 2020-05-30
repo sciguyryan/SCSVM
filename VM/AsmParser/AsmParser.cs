@@ -44,7 +44,7 @@ namespace VMCore.AsmParser
         /// <summary>
         /// A list of the exception messages used by this class.
         /// </summary>
-        private Dictionary<ExIDs, string> _exMessages = 
+        private readonly Dictionary<ExIDs, string> _exMessages = 
             new Dictionary<ExIDs, string>() 
         {
             {
@@ -297,7 +297,7 @@ namespace VMCore.AsmParser
                         pushString = !inString;
                         break;
 
-                    case char _ when char.IsWhiteSpace(c):
+                    case { } when char.IsWhiteSpace(c):
                         pushString = !inString && segments.Count == 0;
                         skipNext = !inString;
                         break;

@@ -48,7 +48,7 @@ namespace VMCore.Expressions
         /// guarantee that the data is parsed
         /// as intended.
         /// </summary>
-        private int _bracketDepth = 0;
+        private int _bracketDepth;
 
         public Tokenizer(string aInput)
         {
@@ -148,7 +148,7 @@ namespace VMCore.Expressions
 
             throw new ExprParserException
             (
-                $"NextToken: failed to parse the string - invalid " +
+                "NextToken: failed to parse the string - invalid " +
                 $"character {_char} was present in the input string."
             );
         }

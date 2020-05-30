@@ -1,4 +1,4 @@
-﻿namespace VMCore.VM.Core
+﻿namespace VMCore.VM.Instructions
 {
     public enum InsArgTypes
     {

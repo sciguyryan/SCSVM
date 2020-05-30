@@ -60,7 +60,7 @@ namespace VMCore.VM.Core.Register
         /// this register. Will be null if the register
         /// is not a flag-type register.
         /// </summary>
-        private Type _flagType;
+        private readonly Type _flagType;
 
         public Register(Cpu aCpu,
                         RegisterAccess aAccess,
@@ -193,8 +193,8 @@ namespace VMCore.VM.Core.Register
             {
                 throw new RegisterAccessViolationException
                 (
-                    $"ValidateAccess: attempted to access a register without " +
-                    $"the correct security context or access flags. " +
+                    "ValidateAccess: attempted to access a register without " +
+                    "the correct security context or access flags. " +
                     $"Access Type = {aType}, AccessFlags = {AccessFlags}"
                 );
             }

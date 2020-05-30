@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -19,6 +20,9 @@ namespace VMCore.AsmParser
         /// </summary>
         private readonly Dictionary<OpCode, Instruction> _insCache =
             ReflectionUtils.InstructionCache;
+
+        private readonly Dictionary<InsCacheEntry, OpCode> _insDataParCache = 
+            new Dictionary<InsCacheEntry, OpCode>();
 
         #region EXCEPTIONS
 
@@ -97,6 +101,29 @@ namespace VMCore.AsmParser
 
         public AsmParser()
         {
+            foreach (var insKvp in _insCache)
+            {
+                var (opCode, insData) = insKvp;
+
+                var boundLabelIds = new List<int>();
+
+                var argLen = insData.ArgumentTypes.Length;
+                for (var i = 0; i < argLen; i++)
+                {
+                    if (insData.CanBindToLabel(i))
+                    {
+                        boundLabelIds.Add(i);
+                    }
+                }
+
+                var insCacheEntry = 
+                    new InsCacheEntry(insData.AsmName,
+                                    insData.ArgumentTypes,
+                                    insData.ArgumentRefTypes,
+                                    boundLabelIds.ToArray());
+
+                _insDataParCache.Add(insCacheEntry, opCode);
+            }
         }
 
         /// <summary>
@@ -379,7 +406,7 @@ namespace VMCore.AsmParser
         /// </returns>
         private QuickIns? ParseSimple(string aInsName)
         {
-            if (Enum.TryParse(aInsName.ToUpper(), out OpCode op))
+            if (Enum.TryParse(aInsName, true, out OpCode op))
             {
                 return new QuickIns(op);
             }
@@ -515,6 +542,7 @@ namespace VMCore.AsmParser
 
             var len = args.Arguments.Length;
             var argTypes = new Type[len];
+            var labelIndices = new List<int>();
 
             AsmLabel? asmLabel = null;
             for (var i = 0; i < len; i++)
@@ -526,6 +554,8 @@ namespace VMCore.AsmParser
                     continue;
                 }
 
+                labelIndices.Add(i);
+
                 // We cannot have more than one bound label
                 // to an instruction currently.
                 Assert(!(asmLabel is null),
@@ -536,52 +566,23 @@ namespace VMCore.AsmParser
                 asmLabel = new AsmLabel(args.BoundLabels[i], i);
             }
 
-            OpCode? op = null;
+            var pEntry = 
+                new InsCacheEntry(insName,
+                                     argTypes,
+                                     args.ArgRefTypes,
+                                     labelIndices.ToArray());
 
-            // Iterate over our cached list of instructions
-            // to find the one that best matches.
-            foreach (var insPair in _insCache)
+            if (!_insDataParCache.TryGetValue(pEntry, out var op))
             {
-                var ins = insPair.Value;
-
-                // If we have a label then checking this will be a
-                // fast path as few instructions can support a label.
-                if (!(asmLabel is null) &&
-                    !ins.CanBindToLabel(asmLabel.BoundArgumentIndex))
-                {
-                    continue;
-                }
-
-                if (ins.AsmName != insName ||
-                    !FastTypeArrayEqual(argTypes, ins.ArgumentTypes) ||
-                    !FastArgRefTypeEqual(args.ArgRefTypes,
-                                         ins.ArgumentRefTypes))
-                {
-                    // One (or more) of the following do not match:
-                    // * the mnemonic (ASM) name;
-                    // * the number or type of the arguments;
-                    // * the number of ref type of the arguments;
-                    // This instruction cannot be a match based
-                    // on our data.
-                    continue;
-                }
-
-                // Everything matches. We have found the
-                // correct instruction.
-                op = ins.OpCode;
-                break;
+                Assert(true,
+                       ExIDs.InvalidInstruction,
+                       aInsName,
+                       string.Join(", ", aRawArgs),
+                       string.Join<Type>(", ", argTypes),
+                       string.Join(", ", args.ArgRefTypes));
             }
 
-            Assert(op is null,
-                   ExIDs.InvalidInstruction,
-                   aInsName,
-                   string.Join(", ", aRawArgs),
-                   string.Join<Type>(", ", argTypes),
-                   string.Join(", ", args.ArgRefTypes));
-
-#pragma warning disable CS8629 // Nullable value type may be null
-            return new QuickIns((OpCode)op, args.Arguments, asmLabel);
-#pragma warning restore CS8629 // Nullable value type may be null.
+            return new QuickIns(op, args.Arguments, asmLabel);
         }
 
         /// <summary>
@@ -610,7 +611,7 @@ namespace VMCore.AsmParser
             }
 
             // We cannot have an empty label.
-            Assert(label.Equals(""),
+            Assert(label.Equals(string.Empty),
                    ExIDs.InvalidLabel);
 
             return label.ToString();

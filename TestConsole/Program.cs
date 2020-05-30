@@ -21,8 +21,10 @@ namespace TestConsole
                 "hlt",
                 "@GOOD",
                 "mov $0x1413, R4",
-                "push $0xAA",
-                "push $0xBB",
+                "push R1",
+                "push R2",
+                "push R3",
+                "push R4",
                 "hlt"
             };
 

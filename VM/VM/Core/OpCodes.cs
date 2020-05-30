@@ -328,6 +328,10 @@
         /// the stack.
         /// </summary>
         PSH_LIT,
+        /// <summary>
+        /// Push Register value to stack - push the value of a register
+        /// onto the stack.
+        /// </summary>
         PSH_REG,
         POP,
         CAL_LIT,

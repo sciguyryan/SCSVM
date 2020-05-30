@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -21,7 +20,7 @@ namespace VMCore.AsmParser
         private readonly Dictionary<OpCode, Instruction> _insCache =
             ReflectionUtils.InstructionCache;
 
-        private readonly Dictionary<InsCacheEntry, OpCode> _insDataParCache = 
+        private readonly Dictionary<InsCacheEntry, OpCode> _insCacheEntries = 
             new Dictionary<InsCacheEntry, OpCode>();
 
         #region EXCEPTIONS
@@ -122,7 +121,7 @@ namespace VMCore.AsmParser
                                     insData.ArgumentRefTypes,
                                     boundLabelIds.ToArray());
 
-                _insDataParCache.Add(insCacheEntry, opCode);
+                _insCacheEntries.Add(insCacheEntry, opCode);
             }
         }
 
@@ -572,7 +571,7 @@ namespace VMCore.AsmParser
                                      args.ArgRefTypes,
                                      labelIndices.ToArray());
 
-            if (!_insDataParCache.TryGetValue(pEntry, out var op))
+            if (!_insCacheEntries.TryGetValue(pEntry, out var op))
             {
                 Assert(true,
                        ExIDs.InvalidInstruction,
@@ -814,41 +813,6 @@ namespace VMCore.AsmParser
         }
 
         /// <summary>
-        /// A faster (limited scope) array equality checker.
-        /// </summary>
-        /// <param name="a1">The first Type array to be checked.</param>
-        /// <param name="a2">The first Type array to be checked.</param>
-        /// <returns>
-        /// A boolean, true if both of the arrays are equal,
-        /// false otherwise.
-        /// </returns>
-        private static bool FastTypeArrayEqual(IReadOnlyList<Type> a1,
-                                               IReadOnlyList<Type> a2)
-        {
-            if (a1 is null || a2 is null)
-            {
-                return (a1 is null && a2 is null);
-            }
-
-            var len1 = a1.Count;
-
-            if (len1 != a2.Count)
-            {
-                return false;
-            }
-
-            for (var i = 0; i < len1; i++)
-            {
-                if (a1[i] != a2[i])
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Throw an exception if a given condition is true.
         /// </summary>
         /// <param name="aCondition">
@@ -874,44 +838,6 @@ namespace VMCore.AsmParser
             (
                 string.Format(_exMessages[aId], aParams)
             );
-        }
-
-        /// <summary>
-        /// Quickly test if two InsArgTypes arrays are equal.
-        /// </summary>
-        /// <param name="a1">
-        /// The first InsArgTypes array to be checked.
-        /// </param>
-        /// <param name="a2">
-        /// The second InsArgTypes array to be checked.
-        /// </param>
-        /// <returns>
-        /// A boolean, true if both arrays are equal, false otherwise.
-        /// </returns>
-        private static bool FastArgRefTypeEqual(IReadOnlyList<InsArgTypes> a1,
-                                                IReadOnlyList<InsArgTypes> a2)
-        {
-            if (a1 is null || a2 is null)
-            {
-                return (a1 is null && a2 is null);
-            }
-
-            var len1 = a1.Count;
-
-            if (len1 != a2.Count)
-            {
-                return false;
-            }
-
-            for (var i = 0; i < len1; i++)
-            {
-                if (a1[i] != a2[i])
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
     }
 }

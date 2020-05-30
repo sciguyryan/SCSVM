@@ -30,6 +30,8 @@ namespace UnitTests.Instructions.Data
 
             Vm.Run(Utils.QuickRawCompile(program));
 
+            Assert.IsTrue(Vm.Memory.StackTypes.Count == 10);
+
             for (var j = 9; j >= 0; j--)
             {
                 Assert.IsTrue(Vm.Memory.StackPopInt() == j);

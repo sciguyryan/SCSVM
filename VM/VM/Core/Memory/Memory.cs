@@ -585,6 +585,7 @@ namespace VMCore.VM.Core.Memory
             // were stored.
             var types = StackTypes.ToArray();
 
+
             var i = 0;
             var curStackPos = StackPointer;
             while (curStackPos < StackEnd)

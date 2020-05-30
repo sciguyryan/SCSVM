@@ -60,27 +60,27 @@ namespace VMCore.VM.Core.Memory
         /// <summary>
         /// The byte array representing the system memory.
         /// </summary>
-        private byte[] Data { get; set; } = new byte[0];
+        private byte[] Data { get; set; }
 
         /// <summary>
         /// A list of memory regions and their associated permissions.
         /// </summary>
-        private List<MemoryRegion> _memoryRegions = 
+        private readonly List<MemoryRegion> _memoryRegions = 
             new List<MemoryRegion>();
 
         /// <summary>
         /// An internal counter for the memory sequence IDs.
         /// </summary>
-        private int _seqID = 0;
+        private int _seqId;
 
 #if DEBUG
-        private bool _isDebuggingEnabled { get; set; } = true;
+        private bool IsDebuggingEnabled { get; set; } = true;
 #else
-        private bool _isDebuggingEnabled { get; set; } = false;
+        private bool IsDebuggingEnabled { get; set; } = false;
 #endif
 
         #endregion // Private Properties
-        
+
         public Memory(int aMainMemorySize = 2048,
                       int aStackCapacity = 100)
         {
@@ -139,7 +139,7 @@ namespace VMCore.VM.Core.Memory
         /// </param>
         public void SetDebuggingEnabled(bool aEnabled)
         {
-            _isDebuggingEnabled = aEnabled;
+            IsDebuggingEnabled = aEnabled;
         }
 
         /// <summary>
@@ -251,12 +251,12 @@ namespace VMCore.VM.Core.Memory
                                    string aName)
         {
             var region = 
-                new MemoryRegion(aStart, aEnd, aAccess, _seqID, aName);
+                new MemoryRegion(aStart, aEnd, aAccess, _seqId, aName);
             _memoryRegions.Add(region);
 
             ResizeRootMemoryRegion();
 
-            ++_seqID;
+            ++_seqId;
 
             return region.SeqID;
         }
@@ -305,8 +305,7 @@ namespace VMCore.VM.Core.Memory
         /// A boolean, true if all matching memory regions
         /// should be removed, false otherwise.
         /// </param>
-        public void RemoveMemoryRegion(int aPoint,
-                                       bool aRemoveAll = false)
+        public void RemoveMemoryRegion(int aPoint, bool aRemoveAll)
         {
             // We want to iterate this list in reverse as
             // we only want to remove the -last- entry only.
@@ -465,7 +464,7 @@ namespace VMCore.VM.Core.Memory
             // Write the value to stack memory region.
             SetInt(minPos, aValue, SecurityContext.System, false);
 
-            if (_isDebuggingEnabled)
+            if (IsDebuggingEnabled)
             {
                 StackTypes.Push(typeof(int));
             }
@@ -506,7 +505,7 @@ namespace VMCore.VM.Core.Memory
             var value = 
                 GetInt(maxPos, SecurityContext.System, false);
 
-            if (_isDebuggingEnabled)
+            if (IsDebuggingEnabled)
             {
                 _ = StackTypes.Pop();
             }
@@ -527,7 +526,7 @@ namespace VMCore.VM.Core.Memory
         {
             // We can do something a bit fancier if
             // we have access to the type information.
-            if (_isDebuggingEnabled)
+            if (IsDebuggingEnabled)
             {
                 PrintStackDebug();
                 return;
@@ -568,7 +567,7 @@ namespace VMCore.VM.Core.Memory
         /// </summary>
         public void PrintStackDebug()
         {
-            if (!_isDebuggingEnabled)
+            if (!IsDebuggingEnabled)
             {
                 return;
             }
@@ -585,7 +584,6 @@ namespace VMCore.VM.Core.Memory
             // were stored.
             var types = StackTypes.ToArray();
 
-
             var i = 0;
             var curStackPos = StackPointer;
             while (curStackPos < StackEnd)
@@ -599,7 +597,7 @@ namespace VMCore.VM.Core.Memory
                 int offset;
                 switch (t)
                 {
-                    case Type _ when t == typeof(int):
+                    case { } _ when t == typeof(int):
                         value = GetInt(curStackPos,
                                        SecurityContext.System,
                                        false);
@@ -613,7 +611,7 @@ namespace VMCore.VM.Core.Memory
                             "specified as the stack type, but no " +
                             "support has been provided for that type."
                         );
-                };
+                }
 
                 Console.WriteLine("{0,5}{1,10}{2,10:X8}",
                                   i,

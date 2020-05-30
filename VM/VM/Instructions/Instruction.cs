@@ -178,7 +178,7 @@ namespace VMCore.VM.Instructions
                     // easily account for this.
                     _argumentByteSize += t switch
                     {
-                        Type _ when t == typeof(Registers) 
+                        { } when t == typeof(Registers) 
                             => sizeof(Registers),
 
                         _

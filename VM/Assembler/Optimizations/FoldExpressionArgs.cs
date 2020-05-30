@@ -39,9 +39,9 @@ namespace VMCore.Assembler.Optimizations
             {
                 throw new Exception
                 (
-                    $"FoldExpression: argument {aArgIndex} for opcode " +
-                    $"{aOp} is not an expression and so should not have been " +
-                    "passed here."
+                    $"FoldExpression: argument {aArgIndex} for " +
+                    $"opcode {aOp} is not an expression and so should " +
+                    "not have been passed here."
                 );
             }
 
@@ -72,7 +72,7 @@ namespace VMCore.Assembler.Optimizations
             {
                 // We can simplify this expression
                 // to a pure value.
-                // We can pass a null Cpu
+                // We can pass a null CPU
                 // here as it will not be used
                 // at all for a simple expression.
                 var val = n.Evaluate(null);

@@ -18,36 +18,36 @@ namespace VMCore.Assembler
         /// If we should attempt to Optimize certain
         /// instructions.
         /// </summary>
-        private bool _optimize;
+        private readonly bool _optimize;
 
         /// <summary>
         /// The binary writer for the data stream.
         /// </summary>
-        private BinaryWriter _bw;
+        private readonly BinaryWriter _bw;
 
         /// <summary>
         /// The memory stream for the data stream.
         /// </summary>
-        private MemoryStream _ms;
+        private readonly MemoryStream _ms;
 
         /// <summary>
         /// A cached of the opcodes to their instruction instances.
         /// </summary>
-        private Dictionary<OpCode, Instruction> _instructionCache = 
+        private readonly Dictionary<OpCode, Instruction> _instructionCache = 
             ReflectionUtils.InstructionCache;
 
         /// <summary>
         /// A list of the labels to be replaced and their
         /// position within the data steam.
         /// </summary>
-        private Dictionary<string, long> _labelsToBeReplaced = 
+        private readonly Dictionary<string, long> _labelsToBeReplaced = 
             new Dictionary<string, long>();
 
         /// <summary>
         /// A list of label destinations to be substituted within
         /// the data stream.
         /// </summary>
-        private Dictionary<string, long> _labelDestinations = 
+        private readonly Dictionary<string, long> _labelDestinations = 
             new Dictionary<string, long>();
 
         public AsmWriter(bool aOptimize)
@@ -120,7 +120,7 @@ namespace VMCore.Assembler
             {
                 throw new InvalidDataException
                 (
-                    $"AddWithLabel: attempted write an invalid " +
+                    "AddWithLabel: attempted write an invalid " +
                     $"opcode with ID = {(int)aOpCode} to the " +
                     $"data stream at position {_bw.BaseStream.Position}."
                 );
@@ -134,10 +134,10 @@ namespace VMCore.Assembler
                 {
                     throw new InvalidDataException
                     (
-                        $"AddWithLabel: attempted to add label " +
+                        "AddWithLabel: attempted to add label " +
                         $"'{args[0]}' at position " +
                         $"{_bw.BaseStream.Position} but a label " +
-                        $"with that name already exists."
+                        "with that name already exists."
                     );
                 }
 
@@ -190,11 +190,11 @@ namespace VMCore.Assembler
                         {
                             throw new NotSupportedException
                             (
-                                $"AddWithLabel: attempted to change " +
+                                "AddWithLabel: attempted to change " +
                                 $"the opcode from {aOpCode} to " +
                                 $"{newOp}, however the opcode has " +
-                                $"already been changed. This operation " +
-                                $"is not supported."
+                                "already been changed. This operation " +
+                                "is not supported."
                             );
                         }
                     }
@@ -213,8 +213,8 @@ namespace VMCore.Assembler
                     {
                         throw new ArgumentException
                         (
-                            $"AddWithLabel: attempted to bind a label " +
-                            $"to an argument that cannot accept it. " +
+                            "AddWithLabel: attempted to bind a label " +
+                            "to an argument that cannot accept it. " +
                             $"Op = {aOpCode}, boundLabel = '" +
                             $"{aBoundLabel.Name}', " +
                             $"argument ID = {i}"
@@ -286,7 +286,7 @@ namespace VMCore.Assembler
             // If this argument is an expression then we can check to
             // see if it is possible to fold it into a single value.
             // This will increase performance later as running
-            // the expression parser within the Cpu is more performance
+            // the expression parser within the CPU is more performance
             // intensive.
             if (aIns.ExpressionArgType(aArgIndex) != null)
             {
@@ -349,7 +349,7 @@ namespace VMCore.Assembler
             {
                 throw new InvalidDataException
                 (
-                    $"ReplaceLabel: attempted to bind a label that does" +
+                    "ReplaceLabel: attempted to bind a label that does " +
                     $"not exist. Label = '{aLabelName}'."
                 );
             }
@@ -360,7 +360,7 @@ namespace VMCore.Assembler
                 integer = (int)_labelDestinations[aLabelName]
             };
 
-            var bytes = new byte[]
+            var bytes = new []
             {
                     union.byte0,
                     union.byte1,

@@ -25,33 +25,33 @@ namespace VMCore.Assembler
         public List<BinSection> Sections { get; set; } = 
             new List<BinSection>();
 
-        public BinSection this[BinSections section]
+        public BinSection this[BinSections aSection]
         {
             // TODO - there probably isn't any need to optimize this...
             // but noting this here just in case.
-            get
-            {
-                return 
-                    (from s in Sections 
-                     where s.Name == 
-                        Enum.GetName(typeof(BinSections), section)
-                     select s).FirstOrDefault();
-            }
-            set { }
+            get =>
+                (from s in Sections 
+                    where s.Name == 
+                          Enum.GetName(typeof(BinSections), aSection)
+                    select s).FirstOrDefault();
         }
 
         /// <summary>
         /// Creates the RawBinaryFile object represented by a byte array.
         /// </summary>
-        /// <param name="aData">A byte array representing a RawBinaryFile object.</param>
-        /// <returns>A RawBinaryFile containing the deserialized binary data.</returns>
+        /// <param name="aData">
+        /// A byte array representing a RawBinaryFile object.
+        /// </param>
+        /// <returns>
+        /// A RawBinaryFile containing the deserialized binary data.
+        /// </returns>
         public static BinFile Load(byte[] aData)
         {
             using var br = new BinaryReader(new MemoryStream(aData));
             var rbf = new BinFile();
 
             var magic = br.ReadInt32();
-            if (magic != BinFile.MagicNumber)
+            if (magic != MagicNumber)
             {
                 throw new Exception("Load: Unrecognized binary format.");
             }

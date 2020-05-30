@@ -215,7 +215,7 @@ namespace VMCore.VM.Core.Utilities
             var rbi = new BinMeta
             {
                 Version = aVersion ?? new Version("1.0.0.0"),
-                ID = Guid.NewGuid(),
+                Id = Guid.NewGuid(),
             };
 
             rbw.AddMeta(rbi);

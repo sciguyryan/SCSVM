@@ -3,19 +3,19 @@ using VMCore.VM.Core;
 
 namespace VMCore.VM.Instructions.Data
 {
-    internal class PSH_LIT
+    internal class POP
         : Instruction
     {
         public override Type[] ArgumentTypes =>
             new Type[]
             {
-                typeof(int)
+                typeof(Registers)
             };
 
         public override InsArgTypes[] ArgumentRefTypes =>
             new InsArgTypes[]
             {
-                InsArgTypes.LiteralInteger,
+                InsArgTypes.Register,
             };
 
         public override Type[] ExpressionArgumentTypes =>
@@ -25,17 +25,18 @@ namespace VMCore.VM.Instructions.Data
             };
 
         public override OpCode OpCode => 
-            OpCode.PSH_LIT;
+            OpCode.POP;
 
-        public override string AsmName => "push";
+        public override string AsmName => "pop";
 
         public override bool Execute(InstructionData aData, Cpu aCpu)
         {
-            aCpu.Vm.Memory.StackPushInt((int)aData[0]);
+            aCpu.Registers[(Registers)aData[0]] = 
+                aCpu.Vm.Memory.StackPopInt();
 
             // Update the stack pointer register
             // to reflect the new stack position.
-            aCpu.Registers[Registers.SP] =
+            aCpu.Registers[Registers.SP] = 
                 aCpu.Vm.Memory.StackPointer;
 
             return false;
@@ -43,12 +44,10 @@ namespace VMCore.VM.Instructions.Data
 
         public override string ToString(InstructionData aData)
         {
-            var literal = (int)aData[0];
+            var reg = (Registers)aData[0];
 
-            // push $LITERAL
-            return (OutputLiteralsAsHex) ?
-                $"{AsmName} $0x{literal:X}" :
-                $"{AsmName} ${literal}";
+            // pop R1
+            return $"{AsmName} {reg}";
         }
     }
 }

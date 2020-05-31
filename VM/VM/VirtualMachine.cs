@@ -52,10 +52,10 @@ namespace VMCore.VM
                               int aStackCapacity = 100,
                               bool aCanCpuSwapMemoryRegions = false)
         {
-            Cpu = new Cpu(this, aCanCpuSwapMemoryRegions);
             Debugger = new Debugger(this);
 
             Memory = new Memory(aMainMemoryCapacity, aStackCapacity);
+            Cpu = new Cpu(this, aCanCpuSwapMemoryRegions);
 
 #if DEBUG
             _dbgMainMemoryCapacity = aMainMemoryCapacity;

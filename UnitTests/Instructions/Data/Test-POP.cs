@@ -7,29 +7,30 @@ using UnitTests.Instructions.Helpers;
 namespace UnitTests.Instructions.Data
 {
     [TestClass]
-    public class TestPshReg
+    public class TestPop
         : TestInstructionBase
     {
-        public TestPshReg()
+        public TestPop()
         {
         }
 
         /// <summary>
-        /// Test if pushing register values to the stack works as expected.
+        /// Test if popping a value from the stack to a register
+        /// works as expected.
         /// </summary>
         [TestMethod]
-        public void TestPushRegisterValueToStack()
+        public void TestPopIntegerValueToRegister()
         {
             Vm.Memory.SetDebuggingEnabled(true);
 
             var program = new QuickIns[10];
 
-            // Move the values to the registers.
+            // Push the values to the stack.
             for (var i = 0; i < 5; i++)
             {
                 program[i] =
-                    new QuickIns(OpCode.MOV_LIT_REG,
-                            new object[] { i + 1, (Registers)i });
+                    new QuickIns(OpCode.PSH_LIT,
+                            new object[] { i + 1 });
             }
 
             // Push the values to the registers in
@@ -37,20 +38,20 @@ namespace UnitTests.Instructions.Data
             for (int j = 0, r = 4; j < 5; j++, r--)
             {
                 program[j + 5] =
-                    new QuickIns(OpCode.PSH_REG,
+                    new QuickIns(OpCode.POP,
                             new object[] { (Registers)r });
             }
 
             Vm.Run(Utils.QuickRawCompile(program));
 
-            Assert.IsTrue(Vm.Memory.StackTypes.Count == 5);
+            Assert.IsTrue(Vm.Memory.StackTypes.Count == 0);
 
             var sp = Vm.Cpu.Registers[Registers.SP];
-            Assert.IsTrue(sp == Vm.Memory.StackEnd - (sizeof(int) * 5));
+            Assert.IsTrue(sp == Vm.Memory.StackEnd);
 
             for (var k = 4; k >= 0; k--)
             {
-                Assert.IsTrue(Vm.Cpu.Registers[(Registers)k] == k + 1);
+                Assert.IsTrue(Vm.Cpu.Registers[(Registers)k] == k+1);
             }
         }
     }

@@ -324,15 +324,19 @@
         JGE_LIT,
 
         /// <summary>
-        /// Push Literal to stack - push a literal (integer) value onto
+        /// Push (integer) Literal to stack - push a literal value onto
         /// the stack.
         /// </summary>
         PSH_LIT,
         /// <summary>
-        /// Push Register value to stack - push the value of a register
-        /// onto the stack.
+        /// Push (integer) Register value to stack - push the value of a
+        /// register onto the stack.
         /// </summary>
         PSH_REG,
+        /// <summary>
+        /// POP (integer) to Register - pop a value from the stack
+        /// into a register.
+        /// </summary>
         POP,
         CAL_LIT,
         CAL_REG,

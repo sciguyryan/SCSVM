@@ -36,7 +36,8 @@ namespace VMCore.VM.Instructions.Data
 
             // Update the stack pointer register
             // to reflect the new stack position.
-            aCpu.Registers[Registers.SP] -= sizeof(int);
+            aCpu.Registers[Registers.SP] =
+                aCpu.Vm.Memory.StackPointer;
 
             return false;
         }

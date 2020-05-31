@@ -128,6 +128,8 @@ namespace VMCore.VM
             Registers = new RegisterCollection(this);
 
             _canSwapMemoryRegions = aCanSwapMemoryRegions;
+
+            ResetStackPointer();
         }
 
         /// <summary>
@@ -191,10 +193,7 @@ namespace VMCore.VM
             // Reset the flags register.
             Registers[Core.Registers.FL] = 0;
 
-            // Reset the stack pointer to the bottom of the
-            // stack memory region.
-            Registers[Core.Registers.SP] = 
-                Vm.Memory.StackEnd;
+            ResetStackPointer();
 
             SetHaltedState(false);
         }
@@ -820,6 +819,18 @@ namespace VMCore.VM
         private void SetHaltedState(bool aState)
         {
             IsHalted = aState;
+        }
+
+        /// <summary>
+        /// Reset the stack pointer to the bottom of the stack
+        /// memory region.
+        /// </summary>
+        private void ResetStackPointer()
+        {
+            // Reset the stack pointer to the bottom of the
+            // stack memory region.
+            Registers[Core.Registers.SP] =
+                Vm.Memory.StackEnd;
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using VMCore.VM.Core;
+using VMCore.VM.Core.Register;
 
 namespace VMCore.VM.Instructions
 {

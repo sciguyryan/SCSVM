@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
-using VMCore;
 using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
+using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UnitTests.Instructions.Helpers;
+
 namespace UnitTests.Instructions.Branching
 {
     [TestClass]

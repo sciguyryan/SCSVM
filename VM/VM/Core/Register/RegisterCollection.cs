@@ -34,36 +34,35 @@ namespace VMCore.VM.Core.Register
             const RegisterAccess r = RegisterAccess.R;
 
             const RegisterAccess pw = RegisterAccess.PW;
-            const RegisterAccess prpw = RegisterAccess.PR | pw;
 
             // Data registers.
-            Registers.Add(Core.Registers.R1,
+            Registers.Add(Core.Register.Registers.R1,
                           new Register(aCpu, rw));
-            Registers.Add(Core.Registers.R2,
+            Registers.Add(Core.Register.Registers.R2,
                           new Register(aCpu, rw));
-            Registers.Add(Core.Registers.R3,
+            Registers.Add(Core.Register.Registers.R3,
                           new Register(aCpu, rw));
-            Registers.Add(Core.Registers.R4,
+            Registers.Add(Core.Register.Registers.R4,
                           new Register(aCpu, rw));
-            Registers.Add(Core.Registers.R5,
+            Registers.Add(Core.Register.Registers.R5,
                           new Register(aCpu, rw));
-            Registers.Add(Core.Registers.R6,
+            Registers.Add(Core.Register.Registers.R6,
                           new Register(aCpu, rw));
-            Registers.Add(Core.Registers.R7,
+            Registers.Add(Core.Register.Registers.R7,
                           new Register(aCpu, rw));
-            Registers.Add(Core.Registers.R8,
+            Registers.Add(Core.Register.Registers.R8,
                           new Register(aCpu, rw));
 
             // Special registers.
-            Registers.Add(Core.Registers.IP,
+            Registers.Add(Core.Register.Registers.IP,
                           new Register(aCpu, rw));
-            Registers.Add(Core.Registers.SP,
+            Registers.Add(Core.Register.Registers.SP,
                           new Register(aCpu, rw));
-            Registers.Add(Core.Registers.AC,
+            Registers.Add(Core.Register.Registers.AC,
                           new Register(aCpu, rw));
-            Registers.Add(Core.Registers.FL,
+            Registers.Add(Core.Register.Registers.FL,
                           new Register(aCpu, rw, typeof(CpuFlags)));
-            Registers.Add(Core.Registers.PC,
+            Registers.Add(Core.Register.Registers.PC,
                           new Register(aCpu, r | pw));
 
 #if DEBUG

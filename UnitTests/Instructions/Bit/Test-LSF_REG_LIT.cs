@@ -1,5 +1,6 @@
 using VMCore;
 using VMCore.VM.Core;
+using VMCore.VM.Core.Register;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UnitTests.Instructions.Helpers;
 

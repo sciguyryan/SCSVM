@@ -30,7 +30,7 @@ namespace UnitTests.Core.Memory
         [TestMethod]
         public void TestRegisterRoundTrip()
         {
-            const VMCore.VM.Core.Registers input = VMCore.VM.Core.Registers.R1;
+            const VMCore.VM.Core.Register.Registers input = VMCore.VM.Core.Register.Registers.R1;
 
             Vm.Memory
                 .SetRegisterIdent(0, input,SecurityContext.System, false);

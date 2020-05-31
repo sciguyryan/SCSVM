@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.Assembler;
+using VMCore.VM.Core.Register;
 
 namespace VMCore.VM.Core.Utilities
 {

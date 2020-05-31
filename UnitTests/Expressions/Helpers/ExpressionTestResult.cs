@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using VMCore.Expressions;
 using VMCore.VM;
-using VMCore.VM.Core;
+using VMCore.VM.Core.Register;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.Expressions.Helpers

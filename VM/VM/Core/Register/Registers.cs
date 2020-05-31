@@ -1,4 +1,4 @@
-﻿namespace VMCore.VM.Core
+﻿namespace VMCore.VM.Core.Register
 {
     public enum Registers : byte
     {

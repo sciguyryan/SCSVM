@@ -53,9 +53,9 @@ namespace VMCore.VM
             ReflectionUtils.InstructionCache;
 
 #if DEBUG
-        private bool IsLoggingEnabled = true;
+        private bool _isLoggingEnabled = true;
 #else
-        private bool IsLoggingEnabled = false;
+        private bool _isLoggingEnabled = false;
 #endif
 
         /// <summary>
@@ -84,13 +84,13 @@ namespace VMCore.VM
         /// A IP/user register tuple to avoid having to repeatedly create one.
         /// </summary>
         private readonly (Registers, SecurityContext) _ipUserTuple
-            = (Core.Registers.IP, UserCtx);
+            = (Core.Register.Registers.IP, UserCtx);
 
         /// <summary>
         /// A PC/system register tuple to avoid having to repeatedly create one.
         /// </summary>
         private readonly (Registers, SecurityContext) _pcSystemTuple
-            = (Core.Registers.PC, SysCtx);
+            = (Core.Register.Registers.PC, SysCtx);
 
         /// <summary>
         /// The lower memory bound from which data can be read or written
@@ -191,7 +191,7 @@ namespace VMCore.VM
             Registers[_pcSystemTuple] = 0;
 
             // Reset the flags register.
-            Registers[Core.Registers.FL] = 0;
+            Registers[Core.Register.Registers.FL] = 0;
 
             ResetStackPointer();
 
@@ -208,7 +208,7 @@ namespace VMCore.VM
         public void SetFlagState(CpuFlags aFlag, bool aState)
         {
             var flags =
-                (CpuFlags)Registers[Core.Registers.FL]
+                (CpuFlags)Registers[Core.Register.Registers.FL]
                 & ~aFlag;
 
             if (aState)
@@ -216,7 +216,7 @@ namespace VMCore.VM
                 flags |= aFlag;
             }
 
-            Registers[Core.Registers.FL] = (int)flags;
+            Registers[Core.Register.Registers.FL] = (int)flags;
         }
 
         /// <summary>
@@ -229,7 +229,7 @@ namespace VMCore.VM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetResultFlagPair(int aResult)
         {
-            var flags = (CpuFlags)Registers[Core.Registers.FL];
+            var flags = (CpuFlags)Registers[Core.Register.Registers.FL];
             flags &= ~CpuFlags.S & ~CpuFlags.Z;
 
             if (aResult < 0)
@@ -241,7 +241,7 @@ namespace VMCore.VM
                 flags |= CpuFlags.Z;
             }
 
-            Registers[Core.Registers.FL] = (int)flags;
+            Registers[Core.Register.Registers.FL] = (int)flags;
         }
 
         /// <summary>
@@ -257,7 +257,7 @@ namespace VMCore.VM
         public bool IsFlagSet(CpuFlags aFlag)
         {
             return
-                ((CpuFlags)Registers[Core.Registers.FL])
+                ((CpuFlags)Registers[Core.Register.Registers.FL])
                 .HasFlag(aFlag);
         }
 
@@ -269,7 +269,7 @@ namespace VMCore.VM
         /// </param>
         public void SetLoggingEnabled(bool aEnabled)
         {
-            IsLoggingEnabled = aEnabled;
+            _isLoggingEnabled = aEnabled;
         }
 
         /// <summary>
@@ -693,7 +693,7 @@ namespace VMCore.VM
                 .HasBreakpointOfType(Breakpoint.BreakpointType.IP))
             {
                 _hasIpBreakpoint = true;
-                Registers.Hook(Core.Registers.IP,
+                Registers.Hook(Core.Register.Registers.IP,
                                InstructionPointerBp,
                                Register.HookTypes.Change);
             }
@@ -707,7 +707,7 @@ namespace VMCore.VM
             }
 
             _hasPcBreakpoint = true;
-            Registers.Hook(Core.Registers.PC,
+            Registers.Hook(Core.Register.Registers.PC,
                            ProgramCounterBp,
                            Register.HookTypes.Change);
         }
@@ -788,7 +788,10 @@ namespace VMCore.VM
                     });
                 }
             }
-            catch { }
+            catch
+            {
+                // Do nothing.
+            }
 
             if (opIns.Args.Count == ins.ArgumentTypes.Length)
             {
@@ -829,7 +832,7 @@ namespace VMCore.VM
         {
             // Reset the stack pointer to the bottom of the
             // stack memory region.
-            Registers[Core.Registers.SP] =
+            Registers[Core.Register.Registers.SP] =
                 Vm.Memory.StackEnd;
         }
     }

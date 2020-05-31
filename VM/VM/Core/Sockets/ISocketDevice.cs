@@ -1,4 +1,5 @@
-﻿using VMCore.VM.IO.DeviceSockets;
+﻿using VMCore.VM.Core.Register;
+using VMCore.VM.IO.DeviceSockets;
 
 namespace VMCore.VM.Core.Sockets
 {

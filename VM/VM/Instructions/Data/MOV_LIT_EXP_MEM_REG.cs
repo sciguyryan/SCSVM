@@ -1,6 +1,7 @@
 ﻿using System;
 using VMCore.Expressions;
 using VMCore.VM.Core;
+using VMCore.VM.Core.Register;
 
 namespace VMCore.VM.Instructions.Data
 {

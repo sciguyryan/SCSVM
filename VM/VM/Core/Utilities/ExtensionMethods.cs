@@ -1,4 +1,5 @@
 ﻿using System;
+using VMCore.VM.Core.Register;
 
 namespace VMCore.VM.Core.Utilities
 {

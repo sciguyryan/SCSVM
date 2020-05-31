@@ -3,6 +3,7 @@ using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UnitTests.Instructions.Helpers;
+using VMCore.VM.Core.Register;
 
 namespace UnitTests.Instructions.Data
 {

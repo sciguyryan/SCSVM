@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
-using VMCore;
 using VMCore.Assembler;
 using VMCore.VM;
 using VMCore.VM.Core;
+using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

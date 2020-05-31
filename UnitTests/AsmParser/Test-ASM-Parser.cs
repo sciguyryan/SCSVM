@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using VMCore;
 using VMCore.AsmParser;
 using VMCore.Assembler;
 using VMCore.VM.Core;
+using VMCore.VM.Core.Register;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.AsmParser

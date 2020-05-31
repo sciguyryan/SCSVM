@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using VMCore;
 using VMCore.Assembler;
 using VMCore.VM.Core;
+using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
 
 namespace UnitTests.Instructions.Helpers

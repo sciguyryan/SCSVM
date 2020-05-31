@@ -1,5 +1,7 @@
-﻿using System;
+﻿using VMCore.VM.Core.Register;
+using System;
 using VMCore.VM.Core;
+using VMCore.VM.Core.Register;
 
 namespace VMCore.VM.Instructions.Data
 {

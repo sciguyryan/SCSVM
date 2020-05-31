@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using VMCore.VM.Core.Exceptions;
+using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
 
 namespace VMCore.VM.Core.Memory

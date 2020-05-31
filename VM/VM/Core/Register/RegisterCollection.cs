@@ -8,7 +8,7 @@ namespace VMCore.VM.Core.Register
         /// <summary>
         /// A list of available registers.
         /// </summary>
-        public Dictionary<Registers, Register> Registers { get; set; } = 
+        public Dictionary<Registers, Register> Registers { get; } = 
             new Dictionary<Registers, Register>();
 
         /// <summary>

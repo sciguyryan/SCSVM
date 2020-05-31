@@ -2,6 +2,7 @@ using VMCore.Assembler;
 using VMCore.VM;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
+using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -16,6 +17,15 @@ namespace UnitTests.Core.Registers
         {
             // In general it should be safe to re-use this here.
             _vm = new VirtualMachine();
+
+            // Add a dummy register to test access.
+            var reg = 
+                new Register(_vm.Cpu,
+                      RegisterAccess.PR | RegisterAccess.PW);
+
+            _vm.Cpu.Registers
+                .Registers.Add(VMCore.VM.Core.Registers.TESTER,
+                               reg);
         }
 
         /// <summary>
@@ -30,7 +40,7 @@ namespace UnitTests.Core.Registers
             {
                 // Attempt to write a value to a protected write register.
                 new QuickIns(OpCode.MOV_LIT_REG,
-                             new object[] { 0x0, VMCore.VM.Core.Registers.SP })
+                             new object[] { 0x0, VMCore.VM.Core.Registers.TESTER })
             };
 
             // This should fail with a RegisterAccessViolationException.
@@ -45,7 +55,7 @@ namespace UnitTests.Core.Registers
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserDirectWriteProtectedRegister()
         {
-            _vm.Cpu.Registers[(VMCore.VM.Core.Registers.SP, SecurityContext.User)] = 0x1;
+            _vm.Cpu.Registers[(VMCore.VM.Core.Registers.TESTER, SecurityContext.User)] = 0x1;
         }
 
         /// <summary>
@@ -55,7 +65,7 @@ namespace UnitTests.Core.Registers
         [TestMethod]
         public void TestSystemDirectWriteProtectedRegister()
         {
-            _vm.Cpu.Registers[(VMCore.VM.Core.Registers.SP, SecurityContext.System)] = 0x1;
+            _vm.Cpu.Registers[(VMCore.VM.Core.Registers.TESTER, SecurityContext.System)] = 0x1;
         }
 
         /// <summary>
@@ -71,7 +81,7 @@ namespace UnitTests.Core.Registers
                 // Attempt to read a value from a protected write register
                 // directly from user code.
                 new QuickIns(OpCode.MOV_REG_MEM,
-                             new object[] { VMCore.VM.Core.Registers.SP, 0x0 })
+                             new object[] { VMCore.VM.Core.Registers.TESTER, 0x0 })
             };
 
             // This should fail with a RegisterAccessViolationException.
@@ -86,7 +96,7 @@ namespace UnitTests.Core.Registers
         [ExpectedException(typeof(RegisterAccessViolationException))]
         public void TestUserDirectReadProtectedRegister()
         {
-            _ = _vm.Cpu.Registers[(VMCore.VM.Core.Registers.SP, SecurityContext.User)];
+            _ = _vm.Cpu.Registers[(VMCore.VM.Core.Registers.TESTER, SecurityContext.User)];
         }
 
         /// <summary>

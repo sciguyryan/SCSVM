@@ -85,6 +85,10 @@
         /// <summary>
         /// Program counter register.
         /// </summary>
-        PC
+        PC,
+        /// <summary>
+        /// A register used for unit testing.
+        /// </summary>
+        TESTER
     }
 }

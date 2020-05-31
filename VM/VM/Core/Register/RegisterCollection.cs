@@ -58,7 +58,7 @@ namespace VMCore.VM.Core.Register
             Registers.Add(Core.Registers.IP,
                           new Register(aCpu, rw));
             Registers.Add(Core.Registers.SP,
-                          new Register(aCpu, prpw));
+                          new Register(aCpu, rw));
             Registers.Add(Core.Registers.AC,
                           new Register(aCpu, rw));
             Registers.Add(Core.Registers.FL,

@@ -191,7 +191,10 @@ namespace VMCore.VM
             // Reset the flags register.
             Registers[Core.Registers.FL] = 0;
 
-            // TODO - reset stack pointer here.
+            // Reset the stack pointer to the bottom of the
+            // stack memory region.
+            Registers[Core.Registers.SP] = 
+                Vm.Memory.StackEnd;
 
             SetHaltedState(false);
         }

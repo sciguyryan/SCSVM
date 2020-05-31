@@ -33,6 +33,10 @@ namespace VMCore.VM.Instructions.Data
         {
             aCpu.Vm.Memory.StackPushInt((int)aData[0]);
 
+            // Update the stack pointer register
+            // to reflect the new stack position.
+            aCpu.Registers[Registers.SP] -= sizeof(int);
+
             return false;
         }
 

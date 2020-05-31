@@ -20,6 +20,8 @@ namespace UnitTests.Instructions.Data
         [TestMethod]
         public void TestPushLiteralToStack()
         {
+            Vm.Memory.SetDebuggingEnabled(true);
+
             var program = new QuickIns[10];
             for (var i = 0; i < 10; i++)
             {
@@ -31,6 +33,9 @@ namespace UnitTests.Instructions.Data
             Vm.Run(Utils.QuickRawCompile(program));
 
             Assert.IsTrue(Vm.Memory.StackTypes.Count == 10);
+
+            var sp = Vm.Cpu.Registers[Registers.SP];
+            Assert.IsTrue(sp == Vm.Memory.StackEnd - 10 * sizeof(int));
 
             for (var j = 9; j >= 0; j--)
             {

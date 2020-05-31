@@ -63,11 +63,6 @@ namespace VMCore.VM
             _dbgFinalMemorySize = Memory.BaseMemorySize;
 #endif
 
-            // Set the default stack pointer position to be at the very
-            // end of our allocated memory block.
-            Cpu.Registers[(Registers.SP, SecurityContext.System)] =
-                Memory.StackEnd;
-
             // Build our instruction cache and apply and
             // hooks that we might need to use in the
             // execution of our program.

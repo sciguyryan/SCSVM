@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
@@ -38,6 +37,9 @@ namespace UnitTests.Instructions.Data
             Vm.Run(Utils.QuickRawCompile(program));
 
             Assert.IsTrue(Vm.Memory.StackTypes.Count == 4);
+
+            var sp = Vm.Cpu.Registers[Registers.SP];
+            Assert.IsTrue(sp == Vm.Memory.StackEnd - 4 * sizeof(int));
 
             for (var j = 6; j >= 0; j -= 2)
             {

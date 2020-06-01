@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using VMCore.VM.Core;
@@ -19,7 +21,7 @@ namespace VMCore.VM.Instructions
         /// instruction. Defaults to user.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual SecurityContext GetSecurityContext()
+        public SecurityContext GetSecurityContext()
         {
             return SecurityContext.User;
         }
@@ -58,12 +60,13 @@ namespace VMCore.VM.Instructions
         /// <summary>
         /// If a given argument should be treated as an expression.
         /// </summary>
-        /// <param name="aArgumentId"
-        /// >The argument ID to be checked.
+        /// <param name="aArgumentId">
+        /// The argument ID to be checked.
         /// </param>
         /// <returns>
         /// A type indicating the expression return type for the argument
-        /// or null if none has been specified.</returns>
+        /// or null if none has been specified.
+        /// </returns>
         public virtual Type ExpressionArgType(int aArgumentId) => 
             ExpressionArgumentTypes[aArgumentId];
 
@@ -201,8 +204,13 @@ namespace VMCore.VM.Instructions
                 {
                     // We cannot use sizeof() here as the type
                     // cannot be determined at compile time.
-                    _argumentByteSize +=
-                        Marshal.SizeOf(Activator.CreateInstance(t));
+                    var i = Activator.CreateInstance(t);
+                    if (i is null)
+                    {
+                        continue;
+                    }
+
+                    _argumentByteSize += Marshal.SizeOf(i);
                 }
 
                 // As the value is defaulted to -1 we need

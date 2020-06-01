@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
 using VMCore.Assembler;
-using VMCore.VM.Core;
 using VMCore.VM.Core.Memory;
 using VMCore.VM.Core.Utilities;
 
@@ -37,8 +37,6 @@ namespace VMCore.VM
         #endregion // Public Properties
 
         #region Private Properties
-
-        private int _stackFrameSize = 0;
 
 #if DEBUG
         private int _dbgMainMemoryCapacity;
@@ -139,19 +137,6 @@ namespace VMCore.VM
             LoadAndInitialize(aRaw, aStartAddr, aCanSwapMemoryRegions);
 
             Cpu.Step();
-
-            /*System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            
-            sw.Start();
-            
-            for (int i = 0; i < 1_000_000; i++)
-            {
-                Cpu.Run();
-            }
-
-            sw.Stop();
-
-            System.Diagnostics.Debug.WriteLine("Elapsed={0}", sw.Elapsed);*/
         }
 
         /// <summary>
@@ -175,29 +160,44 @@ namespace VMCore.VM
             LoadAndInitialize(aRaw, aStartAddr, aCanSwapMemoryRegions);
 
             Cpu.Run();
+        }
 
-            /*System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            
+#if DEBUG
+        public void PerformanceTest(string aInsStr,
+                                    bool aOptimize = false)
+        {
+            var p = new AsmParser.AsmParser();
+
+            var ins = p.Parse(aInsStr);
+
+            var bytes = Utils.QuickRawCompile(ins, aOptimize);
+
+            var insCount = ins.Length;
+
+            LoadAndInitialize(bytes, 0, false);
+
+            const int iterations = 1_000_000;
+
+            var sw = new Stopwatch();
             sw.Start();
-            
-            for (int i = 0; i < 1_000_000; i++)
+
+            for (var i = 0; i < iterations; i++)
             {
                 Cpu.Run();
             }
 
             sw.Stop();
 
-            System.Diagnostics.Debug.WriteLine("Elapsed={0}", sw.Elapsed);*/
-        }
+            var itrPerSec =
+                (iterations * insCount) / sw.Elapsed.TotalSeconds;
 
-#if DEBUG
-        private void LoadRegisterTestData()
-        {
-            /*Cpu.Registers[Registers.R1] = _dbgMainMemoryCapacity;
-
-            Cpu.Registers[Registers.R2] = _dbgMainMemoryCapacity - 1;
-
-            Cpu.Registers[Registers.R3] = sizeof(int);*/
+            Debug.WriteLine
+            (
+                $"Iterations: {iterations:N0}, " +
+                $"Instructions: {insCount * iterations:N0}, " +
+                $"Total Time: {sw.Elapsed}, " +
+                $"Instructions/Second: {itrPerSec:N0}"
+            );
         }
 #endif
     }

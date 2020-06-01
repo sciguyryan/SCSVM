@@ -15,7 +15,6 @@ namespace VMCore.VM.Instructions.Special
         public override InsArgTypes[] ArgumentRefTypes =>
             new InsArgTypes[] { };
 
-
         public override OpCode OpCode => 
             OpCode.NOP;
 

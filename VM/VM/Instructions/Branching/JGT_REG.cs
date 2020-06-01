@@ -27,7 +27,6 @@ namespace VMCore.VM.Instructions.Branching
                 null,
                 null
             };
-
         public override OpCode OpCode =>
             OpCode.JGT_REG;
 
@@ -35,7 +34,7 @@ namespace VMCore.VM.Instructions.Branching
 
         public override bool CanBindToLabel(int aArgumentId)
         {
-            return (aArgumentId == 1);
+            return aArgumentId == 1;
         }
 
         public override bool Execute(InstructionData aData, Cpu aCpu)

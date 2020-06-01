@@ -27,7 +27,6 @@ namespace VMCore.VM.Instructions.Data
                 null,
                 null
             };
-
         public override OpCode OpCode => 
             OpCode.MOV_REG_PTR_REG;
 

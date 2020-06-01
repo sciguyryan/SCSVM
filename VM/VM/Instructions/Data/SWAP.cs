@@ -1,5 +1,4 @@
-﻿using VMCore.VM.Core.Register;
-using System;
+﻿using System;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
 

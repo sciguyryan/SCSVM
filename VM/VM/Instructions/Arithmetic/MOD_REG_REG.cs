@@ -37,7 +37,7 @@ namespace VMCore.VM.Instructions.Arithmetic
         {
             // TODO - modulo is very slow, so if we can find any fast
             // paths here, we should probably do that.
-            long result =
+            var result =
                 (long)aCpu.Registers[(Registers)aData[1]] % 
                 aCpu.Registers[(Registers)aData[0]];
 

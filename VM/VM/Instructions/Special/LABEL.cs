@@ -24,7 +24,6 @@ namespace VMCore.VM.Instructions.Special
                 InsArgTypes.String
             };
 
-
         public override OpCode OpCode => 
             OpCode.LABEL;
 

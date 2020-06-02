@@ -163,6 +163,10 @@ namespace VMCore.VM
         }
 
 #if DEBUG
+        private void LoadRegisterTestData()
+        {
+        }
+
         public void PerformanceTest(string aInsStr,
                                     bool aOptimize = false)
         {

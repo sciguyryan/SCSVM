@@ -345,6 +345,10 @@
         POP,
         CAL_LIT,
         CAL_REG,
+        /// <summary>
+        /// Return from subroutine.
+        /// </summary>
+        RET,
 
         PUSHL,
         OUT,

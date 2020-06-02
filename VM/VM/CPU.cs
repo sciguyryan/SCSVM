@@ -93,6 +93,12 @@ namespace VMCore.VM
             = (Core.Register.Registers.PC, SysCtx);
 
         /// <summary>
+        /// A FP/system register tuple to avoid having to repeatedly create one.
+        /// </summary>
+        private readonly (Registers, SecurityContext) _fpSystemTuple
+            = (Core.Register.Registers.FP, SysCtx);
+
+        /// <summary>
         /// The lower memory bound from which data can be read or written
         /// within the program.
         /// </summary>
@@ -108,6 +114,45 @@ namespace VMCore.VM
         /// If this CPU can swap between executable memory regions.
         /// </summary>
         private readonly bool _canSwapMemoryRegions;
+
+        /// <summary>
+        /// The size of the current stack frame.
+        /// </summary>
+        private int _stackFrameSize;
+
+        /// <summary>
+        /// A list of registers to be saved to the stack when
+        /// entering a subroutine.
+        /// </summary>
+        private readonly Registers[] _stateRegistersSave = 
+        {
+            Core.Register.Registers.R1,
+            Core.Register.Registers.R2,
+            Core.Register.Registers.R3,
+            Core.Register.Registers.R4,
+            Core.Register.Registers.R5,
+            Core.Register.Registers.R6,
+            Core.Register.Registers.R7,
+            Core.Register.Registers.R8,
+            Core.Register.Registers.IP
+        };
+
+        /// <summary>
+        /// A list of registers to be restored from the stack when
+        /// exiting a subroutine.
+        /// </summary>
+        private readonly Registers[] _stateRegistersRestore =
+        {
+            Core.Register.Registers.IP,
+            Core.Register.Registers.R8,
+            Core.Register.Registers.R7,
+            Core.Register.Registers.R6,
+            Core.Register.Registers.R5,
+            Core.Register.Registers.R4,
+            Core.Register.Registers.R3,
+            Core.Register.Registers.R2,
+            Core.Register.Registers.R1,
+        };
 
         #endregion // Private Properties
 
@@ -606,6 +651,59 @@ namespace VMCore.VM
             }
 
             return disInstructions.ToArray();
+        }
+
+        public void PushState()
+        {
+            // Push the state registers to the stack.
+            foreach (var reg in _stateRegistersSave)
+            {
+                Vm.Memory.StackPushInt(Registers[reg]);
+            }
+
+            // Push the current stack frame size.
+            Vm.Memory.StackPushInt(_stackFrameSize);
+
+            Registers[_fpSystemTuple] =
+                Registers[Core.Register.Registers.SP];
+
+            _stackFrameSize = 0;
+        }
+
+        public void PopState()
+        {
+            var framePointerAddress =
+                Registers[_fpSystemTuple];
+
+            Registers[Core.Register.Registers.SP] =
+                framePointerAddress;
+
+            _stackFrameSize =
+                Vm.Memory.StackPopInt();
+
+            var stackFrameSize = _stackFrameSize;
+
+            // Pop the state registers from the stack.
+            foreach (var reg in _stateRegistersRestore)
+            {
+                Registers[reg] =
+                    Vm.Memory.StackPopInt();
+            }
+
+            // We do not know if there will be any
+            // arguments, so we have to use TryStackPopInt
+            // here to avoid throwing an exception.
+            // We do not care about the return value as
+            // it will always return a zero if no value
+            // was popped from the stack.
+            Vm.Memory.TryStackPopInt(out var argCount);
+            for (var i = 0; i < argCount; i++)
+            {
+                Vm.Memory.StackPopInt();
+            }
+
+            Registers[_fpSystemTuple] =
+                framePointerAddress + stackFrameSize;
         }
 
         /// <summary>

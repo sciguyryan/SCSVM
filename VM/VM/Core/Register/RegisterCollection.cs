@@ -8,7 +8,7 @@ namespace VMCore.VM.Core.Register
         /// <summary>
         /// A list of available registers.
         /// </summary>
-        public Dictionary<Registers, Register> Registers { get; } = 
+        public Dictionary<Registers, Register> Registers { get; } =
             new Dictionary<Registers, Register>();
 
         /// <summary>
@@ -28,12 +28,15 @@ namespace VMCore.VM.Core.Register
             // is a shadow register for EAX and cannot be counted
             // as a separate register.
 
-            const RegisterAccess rw = 
+            const RegisterAccess rw =
                 RegisterAccess.R | RegisterAccess.W;
 
             const RegisterAccess r = RegisterAccess.R;
 
             const RegisterAccess pw = RegisterAccess.PW;
+
+            const RegisterAccess pwpr =
+                pw | RegisterAccess.PR;
 
             // Data registers.
             Registers.Add(Core.Register.Registers.R1,
@@ -58,6 +61,8 @@ namespace VMCore.VM.Core.Register
                           new Register(aCpu, rw));
             Registers.Add(Core.Register.Registers.SP,
                           new Register(aCpu, rw));
+            Registers.Add(Core.Register.Registers.FP,
+                          new Register(aCpu, pwpr));
             Registers.Add(Core.Register.Registers.AC,
                           new Register(aCpu, rw));
             Registers.Add(Core.Register.Registers.FL,
@@ -86,9 +91,9 @@ namespace VMCore.VM.Core.Register
         /// </returns>
         public int this[(Registers r, SecurityContext c) aRegTuple]
         {
-            get => 
+            get =>
                 Registers[aRegTuple.r].GetValue(aRegTuple.c);
-            set => 
+            set =>
                 Registers[aRegTuple.r].SetValue(value, aRegTuple.c);
         }
 
@@ -122,9 +127,9 @@ namespace VMCore.VM.Core.Register
         /// </returns>
         public int this[Registers aReg]
         {
-            get => 
+            get =>
                 Registers[aReg].GetValue(SecurityContext.User);
-            set => 
+            set =>
                 Registers[aReg].SetValue(value, SecurityContext.User);
         }
 

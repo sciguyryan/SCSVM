@@ -79,6 +79,10 @@
         /// </summary>
         SP,
         /// <summary>
+        /// Frame pointer register.
+        /// </summary>
+        FP,
+        /// <summary>
         /// Flags register.
         /// </summary>
         FL,

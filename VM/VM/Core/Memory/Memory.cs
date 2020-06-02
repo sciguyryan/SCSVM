@@ -521,6 +521,28 @@ namespace VMCore.VM.Core.Memory
         }
 
         /// <summary>
+        /// Try to pop an integer from the stack.
+        /// </summary>
+        /// <param name="aResult">
+        /// The last integer on the stack if one was present,
+        /// a zero otherwise.
+        /// </param>
+        /// <returns>
+        /// A boolean indicating if a value was popped from the stack.
+        /// </returns>
+        public bool TryStackPopInt(out int aResult)
+        {
+            if (StackPointer < StackEnd)
+            {
+                aResult = StackPopInt();
+                return true;
+            }
+
+            aResult = 0;
+            return false;
+        }
+
+        /// <summary>
         /// Print the contents of the stack.
         /// </summary>
         public void PrintStack()

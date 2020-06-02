@@ -702,13 +702,15 @@ namespace VMCore.AsmParser
                 case "0b":
                     // A binary literal.
                     success =
-                        TryParseBinInt(aData[(2 + offset)..], out result);
+                        Utils.TryParseBinInt(aData[(2 + offset)..],
+                                             out result);
                     break;
 
                 case "0x":
                     // A hexadecimal literal.
                     success =
-                        TryParseHexInt(aData[(2 + offset)..], out result);
+                        Utils.TryParseHexInt(aData[(2 + offset)..],
+                                             out result);
                     break;
 
                 default:
@@ -723,15 +725,16 @@ namespace VMCore.AsmParser
                         {
                             // An octal literal.
                             success =
-                                TryParseOctInt(aData[(1 + offset)..],
-                                               out result);
+                                Utils.TryParseOctInt(aData[(1 + offset)..],
+                                                     out result);
                             break;
                         }
 
                         // If all else fails, we will try a normal
                         // (decimal) integer parse.
                         success =
-                            TryParseInt(aData[offset..], out result);
+                            Utils.TryParseInt(aData[offset..],
+                                              out result);
                         break;
                     }
             }
@@ -761,92 +764,6 @@ namespace VMCore.AsmParser
                                              out Registers aReg)
         {
             return Enum.TryParse(aStr, out aReg);
-        }
-
-        /// <summary>
-        /// Attempt to parse the string as a binary integer.
-        /// </summary>
-        /// <param name="aStr">The string to be parsed.</param>
-        /// <param name="aNum">
-        /// An integer representing the parsed value.
-        /// </param>
-        /// <returns>
-        /// A boolean, true if parsing the string yielded a
-        /// valid integer, false otherwise.
-        /// </returns>
-        private static bool TryParseBinInt(string aStr, out int aNum)
-        {
-            try
-            {
-                aNum = Convert.ToInt32(aStr, 2);
-                return true;
-            }
-            catch
-            {
-                aNum = 0;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Attempt to parse the string as an octal integer.
-        /// </summary>
-        /// <param name="aStr">The string to be parsed.</param>
-        /// <param name="aNum">
-        /// An integer representing the parsed value.
-        /// </param>
-        /// <returns>
-        /// A boolean, true if parsing the string yielded a
-        /// valid integer, false otherwise.
-        /// </returns>
-        private static bool TryParseOctInt(string aStr, out int aNum)
-        {
-            try
-            {
-                aNum = Convert.ToInt32(aStr, 8);
-                return true;
-            }
-            catch
-            {
-                aNum = 0;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Attempt to parse the string as a hexadecimal integer.
-        /// </summary>
-        /// <param name="aStr">The string to be parsed.</param>
-        /// <param name="aNum">
-        /// An integer representing the parsed value.
-        /// </param>
-        /// <returns>
-        /// A boolean, true if parsing the string yielded a
-        /// valid integer, false otherwise.
-        /// </returns>
-        private static bool TryParseHexInt(string aStr, out int aNum)
-        {
-            return
-                int.TryParse(aStr,
-                             NumberStyles.HexNumber,
-                             CultureInfo.CurrentCulture,
-                             out aNum);
-        }
-
-        /// <summary>
-        /// Attempt to parse a string as a decimal integer.
-        /// </summary>
-        /// <param name="aStr">The string to be parsed.</param>
-        /// <param name="aNum">
-        /// An integer representing the parsed value.
-        /// </param>
-        /// <returns>
-        /// A boolean, true if parsing the string yielded a
-        /// valid integer, false otherwise.
-        /// </returns>
-        private static bool TryParseInt(string aStr, out int aNum)
-        {
-            return int.TryParse(aStr, out aNum);
         }
 
         /// <summary>

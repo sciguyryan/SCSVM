@@ -1,7 +1,6 @@
-﻿using System;
-using System.Diagnostics;
-using System.Globalization;
+﻿using System.Diagnostics;
 using System.Text;
+using VMCore.VM.Core.Utilities;
 
 namespace VMCore.Expressions
 {
@@ -237,13 +236,15 @@ namespace VMCore.Expressions
                 case "0b":
                     // A binary literal.
                     success =
-                        TryParseBinInt(sb.ToString(), out result);
+                        Utils.TryParseBinInt(sb.ToString(),
+                                             out result);
                     break;
 
                 case "0x":
                     // A hexadecimal literal.
                     success =
-                        TryParseHexInt(sb.ToString(), out result);
+                        Utils.TryParseHexInt(sb.ToString(),
+                                             out result);
                     break;
 
                 default:
@@ -258,8 +259,8 @@ namespace VMCore.Expressions
                         // the prefix and add it to the start of the
                         // string, otherwise we will be one short.
                         success =
-                            TryParseOctInt($"{prefix[1]}{sb}",
-                                           out result);
+                            Utils.TryParseOctInt(prefix[1] + sb.ToString(),
+                                                 out result);
                         break;
                     }
 
@@ -269,12 +270,11 @@ namespace VMCore.Expressions
                     // string here as it was likely not meant
                     // to be a prefix at all.
                     success =
-                        TryParseInt($"{prefixStr}{sb}", out result);
+                        Utils.TryParseInt(prefixStr + sb,
+                                          out result);
                 }
                 break;
             }
-
-            Debug.WriteLine($"result = {result}");
 
             // Was the input string a successfully parsed?
             if (!success)
@@ -289,92 +289,6 @@ namespace VMCore.Expressions
 
             Number = (!isSigned) ? result : result * -1;
             Token = Tokens.Number;
-        }
-
-        /// <summary>
-        /// Attempt to parse the string as a binary integer.
-        /// </summary>
-        /// <param name="aStr">The string to be parsed.</param>
-        /// <param name="aNum">
-        /// An integer representing the parsed value.
-        /// </param>
-        /// <returns>
-        /// A boolean, true if parsing the string yielded a
-        /// valid integer, false otherwise.
-        /// </returns>
-        private static bool TryParseBinInt(string aStr, out int aNum)
-        {
-            try
-            {
-                aNum = Convert.ToInt32(aStr, 2);
-                return true;
-            }
-            catch
-            {
-                aNum = 0;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Attempt to parse the string as an octal integer.
-        /// </summary>
-        /// <param name="aStr">The string to be parsed.</param>
-        /// <param name="aNum">
-        /// An integer representing the parsed value.
-        /// </param>
-        /// <returns>
-        /// A boolean, true if parsing the string yielded a
-        /// valid integer, false otherwise.
-        /// </returns>
-        private static bool TryParseOctInt(string aStr, out int aNum)
-        {
-            try
-            {
-                aNum = Convert.ToInt32(aStr, 8);
-                return true;
-            }
-            catch
-            {
-                aNum = 0;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Attempt to parse the string as a hexadecimal integer.
-        /// </summary>
-        /// <param name="aStr">The string to be parsed.</param>
-        /// <param name="aNum">
-        /// An integer representing the parsed value.
-        /// </param>
-        /// <returns>
-        /// A boolean, true if parsing the string yielded a
-        /// valid integer, false otherwise.
-        /// </returns>
-        private static bool TryParseHexInt(string aStr, out int aNum)
-        {
-            return
-                int.TryParse(aStr,
-                             NumberStyles.HexNumber,
-                             CultureInfo.CurrentCulture,
-                             out aNum);
-        }
-
-        /// <summary>
-        /// Attempt to parse a string as a decimal integer.
-        /// </summary>
-        /// <param name="aStr">The string to be parsed.</param>
-        /// <param name="aNum">
-        /// An integer representing the parsed value.
-        /// </param>
-        /// <returns>
-        /// A boolean, true if parsing the string yielded a
-        /// valid integer, false otherwise.
-        /// </returns>
-        private static bool TryParseInt(string aStr, out int aNum)
-        {
-            return int.TryParse(aStr, out aNum);
         }
 
         /// <summary>

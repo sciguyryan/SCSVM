@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -225,7 +226,7 @@ namespace VMCore.VM.Core.Utilities
             // were provided.
             if (aSecs is null || aSecs.Length == 0)
             {
-                aSecs = 
+                aSecs =
                     (BinSections[])Enum.GetValues(typeof(BinSections));
             }
 
@@ -249,11 +250,11 @@ namespace VMCore.VM.Core.Utilities
         public static byte[] QuickFileCompile(QuickIns[] aIns)
         {
             // We are only interested in the code section here.
-            var writer = 
+            var writer =
                 BinFileBuilder(new[] { BinSections.Code });
 
             // Add the compiled opcode instructions to the file section.
-            writer.Sections[BinSections.Code].Raw = 
+            writer.Sections[BinSections.Code].Raw =
                 QuickRawCompile(aIns);
 
             // Return the byte stream.
@@ -337,6 +338,94 @@ namespace VMCore.VM.Core.Utilities
                 sw.WriteLine(s);
             }
             sw.Close();
+        }
+
+
+        /// <summary>
+        /// Attempt to parse the string as a binary integer.
+        /// </summary>
+        /// <param name="aStr">The string to be parsed.</param>
+        /// <param name="aNum">
+        /// An integer representing the parsed value.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if parsing the string yielded a
+        /// valid integer, false otherwise.
+        /// </returns>
+        public static bool TryParseBinInt(string aStr, out int aNum)
+        {
+            try
+            {
+                aNum = Convert.ToInt32(aStr, 2);
+                return true;
+            }
+            catch
+            {
+                aNum = 0;
+                return false;
+            }
+        }
+
+
+        /// <summary>
+        /// Attempt to parse the string as an octal integer.
+        /// </summary>
+        /// <param name="aStr">The string to be parsed.</param>
+        /// <param name="aNum">
+        /// An integer representing the parsed value.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if parsing the string yielded a
+        /// valid integer, false otherwise.
+        /// </returns>
+        public static bool TryParseOctInt(string aStr, out int aNum)
+        {
+            try
+            {
+                aNum = Convert.ToInt32(aStr, 8);
+                return true;
+            }
+            catch
+            {
+                aNum = 0;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Attempt to parse the string as a hexadecimal integer.
+        /// </summary>
+        /// <param name="aStr">The string to be parsed.</param>
+        /// <param name="aNum">
+        /// An integer representing the parsed value.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if parsing the string yielded a
+        /// valid integer, false otherwise.
+        /// </returns>
+        public static bool TryParseHexInt(string aStr, out int aNum)
+        {
+            return
+                int.TryParse(aStr,
+                        NumberStyles.HexNumber,
+                             CultureInfo.CurrentCulture,
+                             out aNum);
+        }
+
+        /// <summary>
+        /// Attempt to parse a string as a decimal integer.
+        /// </summary>
+        /// <param name="aStr">The string to be parsed.</param>
+        /// <param name="aNum">
+        /// An integer representing the parsed value.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if parsing the string yielded a
+        /// valid integer, false otherwise.
+        /// </returns>
+        public static bool TryParseInt(string aStr, out int aNum)
+        {
+            return int.TryParse(aStr, out aNum);
         }
     }
 }

@@ -3,6 +3,11 @@
     public enum OpCode
     {
         /// <summary>
+        /// Subroutine - a pseudo-opcode used to identify a
+        /// subroutine position.
+        /// </summary>
+        SUBROUTINE = -2,
+        /// <summary>
         /// Label - a pseudo-opcode used to identify a labels position.
         /// </summary>
         LABEL = -1,

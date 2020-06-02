@@ -33,21 +33,21 @@ namespace VMCore.Assembler
         /// <summary>
         /// A cached of the opcodes to their instruction instances.
         /// </summary>
-        private readonly Dictionary<OpCode, Instruction> _instructionCache = 
+        private readonly Dictionary<OpCode, Instruction> _instructionCache =
             ReflectionUtils.InstructionCache;
 
         /// <summary>
         /// A list of the labels to be replaced and their
         /// position within the data steam.
         /// </summary>
-        private readonly Dictionary<string, long> _labelsToBeReplaced = 
+        private readonly Dictionary<string, long> _labelsToBeReplaced =
             new Dictionary<string, long>();
 
         /// <summary>
         /// A list of label destinations to be substituted within
         /// the data stream.
         /// </summary>
-        private readonly Dictionary<string, long> _labelDestinations = 
+        private readonly Dictionary<string, long> _labelDestinations =
             new Dictionary<string, long>();
 
         public AsmWriter(bool aOptimize)
@@ -127,9 +127,11 @@ namespace VMCore.Assembler
             }
 
             var op = aOpCode;
-            if (op == OpCode.LABEL)
+            if (op == OpCode.LABEL ||
+                op == OpCode.SUBROUTINE)
             {
-                var label = (string)args[0];
+                var argIdx = op == OpCode.LABEL ? 0 : 1;
+                var label = (string)args[argIdx];
                 if (!_labelDestinations.TryAdd(label, _ms.Position))
                 {
                     throw new InvalidDataException
@@ -142,9 +144,12 @@ namespace VMCore.Assembler
                 }
 
                 // We do not want to actually do anything
-                // with this opcode, so we should just return
-                // here.
-                return;
+                // with label opcodes as they are placeholders only.
+                // So we should just return here.
+                if (op == OpCode.LABEL)
+                {
+                    return;
+                }
             }
 
             // Quick exit, no argument data to write.
@@ -172,12 +177,22 @@ namespace VMCore.Assembler
             var hasOpCodeChanged = false;
             for (var i = 0; i < args.Length; i++)
             {
+                // Subroutines are quirky.
+                // We only care about their ID, however a second
+                // argument will be passed via the parser. We do
+                // not need to write this value to the binary file
+                // as it is only needed for processing. Sigh...
+                if (op == OpCode.SUBROUTINE && i > 0)
+                {
+                    break;
+                }
+
                 var argType = ins.ArgumentTypes[i];
                 var arg = args[i];
 
                 if (_optimize)
                 {
-                    (newOp, argType, arg) 
+                    (newOp, argType, arg)
                         = Optimize(newOp, i, ins, args[i]);
 
                     // We cannot change the opcode more than
@@ -290,7 +305,7 @@ namespace VMCore.Assembler
             // intensive.
             if (aIns.ExpressionArgType(aArgIndex) != null)
             {
-                return 
+                return
                     FoldExpressionArg.FoldExpression(aOp,
                                                      aArgIndex,
                                                      aIns,
@@ -299,7 +314,7 @@ namespace VMCore.Assembler
 
             return (aOp, argType, aArg);
         }
-        
+
         /// <summary>
         /// Apply any label substitutions that have been applied.
         /// </summary>

@@ -21,7 +21,7 @@ namespace VMCore.AsmParser
         private readonly Dictionary<OpCode, Instruction> _insCache =
             ReflectionUtils.InstructionCache;
 
-        private readonly Dictionary<InsCacheEntry, OpCode> _insCacheEntries = 
+        private readonly Dictionary<InsCacheEntry, OpCode> _insCacheEntries =
             new Dictionary<InsCacheEntry, OpCode>();
 
         #region EXCEPTIONS
@@ -35,6 +35,7 @@ namespace VMCore.AsmParser
             InvalidBracketPosition,
             MismatchedString,
             InvalidLabel,
+            InvalidSubroutineLabel,
             InvalidIntLiteral,
             InvalidRegisterIdentifier,
             InvalidArgumentType,
@@ -45,8 +46,8 @@ namespace VMCore.AsmParser
         /// <summary>
         /// A list of the exception messages used by this class.
         /// </summary>
-        private readonly Dictionary<ExIDs, string> _exMessages = 
-            new Dictionary<ExIDs, string>() 
+        private readonly Dictionary<ExIDs, string> _exMessages =
+            new Dictionary<ExIDs, string>()
         {
             {
                 ExIDs.MismatchedBrackets,
@@ -68,6 +69,11 @@ namespace VMCore.AsmParser
                 ExIDs.InvalidLabel,
                 "Attempted to parse a label with an invalid or " +
                 "missing identifier."
+            },
+            {
+                ExIDs.InvalidSubroutineLabel,
+                "Attempted to parse a label with an invalid subrotune " +
+                "identifier '{0]'."
             },
             {
                 ExIDs.InvalidIntLiteral,
@@ -99,6 +105,8 @@ namespace VMCore.AsmParser
 
         #endregion // EXCEPTIONS
 
+        private int _subRoutineSeqId;
+
         public AsmParser()
         {
             foreach (var insKvp in _insCache)
@@ -116,7 +124,7 @@ namespace VMCore.AsmParser
                     }
                 }
 
-                var insCacheEntry = 
+                var insCacheEntry =
                     new InsCacheEntry(insData.AsmName,
                                     insData.ArgumentTypes,
                                     insData.ArgumentRefTypes,
@@ -363,7 +371,7 @@ namespace VMCore.AsmParser
             var asmName = aSegments[0];
             var args = aSegments[1..];
 
-            // Is this a label?
+            // Is this a label or subroutine?
             if (asmName[0] != '@')
             {
                 // If the instruction has no arguments then it is simple
@@ -372,8 +380,8 @@ namespace VMCore.AsmParser
                 // If it has arguments then the job is more difficult
                 // as we will have to perform validation on the number
                 // of arguments, their types, etc. to find the best match.
-                return aSegments.Length == 1 ? 
-                    ParseSimple(asmName) : 
+                return aSegments.Length == 1 ?
+                    ParseSimple(asmName) :
                     ParseComplex(asmName, args);
             }
 
@@ -389,9 +397,22 @@ namespace VMCore.AsmParser
             Assert(string.IsNullOrWhiteSpace(label),
                 ExIDs.InvalidLabel);
 
+            if (label[^1] != ':')
+            {
+
+                return
+                    new QuickIns(OpCode.LABEL,
+                            new object[] { label });
+            }
+
+            // This is a bit naughty as the subroutine
+            // instruction has only one argument.
+            // In this instance it doesn't matter though
+            // as we only need this data for use in the
+            // compiler.
             return
-                new QuickIns(OpCode.LABEL,
-                    new object[] { label });
+                new QuickIns(OpCode.SUBROUTINE,
+                             new object[] { _subRoutineSeqId++, label });
         }
 
         /// <summary>
@@ -566,7 +587,7 @@ namespace VMCore.AsmParser
                 asmLabel = new AsmLabel(args.BoundLabels[i], i);
             }
 
-            var pEntry = 
+            var pEntry =
                 new InsCacheEntry(insName,
                                      argTypes,
                                      args.ArgRefTypes,
@@ -600,11 +621,26 @@ namespace VMCore.AsmParser
             // alpha numeric characters.
             var label = new StringBuilder(aData.Length);
 
-            foreach (var c in aData)
+            var len = aData.Length;
+
+            var hasSubMarker = false;
+            for (var i = 0; i < len; i++)
             {
-                if (!char.IsLetterOrDigit(c))
+                var c = aData[i];
+
+                if (!char.IsLetterOrDigit(c) && c != ':')
                 {
                     break;
+                }
+
+                if (c == ':')
+                {
+                    // TODO - add tests for this.
+                    Assert(i == 0 || hasSubMarker,
+                           ExIDs.InvalidSubroutineLabel,
+                           aData);
+
+                    hasSubMarker = true;
                 }
 
                 label.Append(c);
@@ -676,28 +712,28 @@ namespace VMCore.AsmParser
                     break;
 
                 default:
-                {
-                    var octalChar = '\0';
-                    if (prefix.Length > 1)
                     {
-                        octalChar = !isSigned ? aData[0] : aData[1];
-                    }
+                        var octalChar = '\0';
+                        if (prefix.Length > 1)
+                        {
+                            octalChar = !isSigned ? aData[0] : aData[1];
+                        }
 
-                    if (octalChar == '0')
-                    {
-                        // An octal literal.
+                        if (octalChar == '0')
+                        {
+                            // An octal literal.
+                            success =
+                                TryParseOctInt(aData[(1 + offset)..],
+                                               out result);
+                            break;
+                        }
+
+                        // If all else fails, we will try a normal
+                        // (decimal) integer parse.
                         success =
-                            TryParseOctInt(aData[(1 + offset)..],
-                                           out result);
+                            TryParseInt(aData[offset..], out result);
                         break;
                     }
-
-                    // If all else fails, we will try a normal
-                    // (decimal) integer parse.
-                    success = 
-                        TryParseInt(aData[offset..], out result);
-                    break;
-                }
             }
 
             // Was the input string a successfully parsed?

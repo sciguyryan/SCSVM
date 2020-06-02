@@ -35,9 +35,10 @@ namespace VMCore.VM.Instructions.Data
             aCpu.Registers[(Registers)aData[0]] = 
                 aCpu.Vm.Memory.StackPopInt();
 
-            // Update the stack pointer register
-            // to reflect the new stack position.
-            aCpu.Registers[Registers.SP] = 
+            // Update the stack pointer register to reflect
+            // the new stack position.
+            // This must be done with a security-level context.
+            aCpu.Registers[(Registers.SP, SecurityContext.System)] = 
                 aCpu.Vm.Memory.StackPointer;
 
             return false;

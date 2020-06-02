@@ -35,8 +35,8 @@ namespace VMCore.VM.Core.Register
 
             const RegisterAccess pw = RegisterAccess.PW;
 
-            const RegisterAccess pwpr =
-                pw | RegisterAccess.PR;
+            const RegisterAccess prpw =
+                RegisterAccess.PR | pw;
 
             // Data registers.
             Registers.Add(Core.Register.Registers.R1,
@@ -60,9 +60,9 @@ namespace VMCore.VM.Core.Register
             Registers.Add(Core.Register.Registers.IP,
                           new Register(aCpu, rw));
             Registers.Add(Core.Register.Registers.SP,
-                          new Register(aCpu, rw));
+                          new Register(aCpu, prpw));
             Registers.Add(Core.Register.Registers.FP,
-                          new Register(aCpu, pwpr));
+                          new Register(aCpu, prpw));
             Registers.Add(Core.Register.Registers.AC,
                           new Register(aCpu, rw));
             Registers.Add(Core.Register.Registers.FL,

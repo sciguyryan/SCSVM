@@ -47,7 +47,7 @@ namespace UnitTests.Instructions.Data
 
             Assert.IsTrue(Vm.Memory.StackTypes.Count == 0);
 
-            var sp = Vm.Cpu.Registers[Registers.SP];
+            var sp = Vm.Cpu.Registers[(Registers.SP, SystemCtx)];
             Assert.IsTrue(sp == Vm.Memory.StackEnd);
 
             for (var k = 4; k >= 0; k--)

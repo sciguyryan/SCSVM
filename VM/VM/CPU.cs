@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using VMCore.VM.Core;
@@ -82,22 +81,28 @@ namespace VMCore.VM
             SecurityContext.System;
 
         /// <summary>
-        /// A IP/user register tuple to avoid having to repeatedly create one.
+        /// A IP/user tuple to avoid having to repeatedly create one.
         /// </summary>
         private readonly (Registers, SecurityContext) _ipUserTuple
             = (Core.Register.Registers.IP, UserCtx);
 
         /// <summary>
-        /// A PC/system register tuple to avoid having to repeatedly create one.
+        /// A PC/system tuple to avoid having to repeatedly create one.
         /// </summary>
         private readonly (Registers, SecurityContext) _pcSystemTuple
             = (Core.Register.Registers.PC, SysCtx);
 
         /// <summary>
-        /// A FP/system register tuple to avoid having to repeatedly create one.
+        /// A FP/system tuple to avoid having to repeatedly create one.
         /// </summary>
         private readonly (Registers, SecurityContext) _fpSystemTuple
             = (Core.Register.Registers.FP, SysCtx);
+
+        /// <summary>
+        /// A SP/system tuple to avoid having to repeatedly create one.
+        /// </summary>
+        private readonly (Registers, SecurityContext) _spSystemTuple
+            = (Core.Register.Registers.SP, SysCtx);
 
         /// <summary>
         /// The lower memory bound from which data can be read or written
@@ -675,7 +680,7 @@ namespace VMCore.VM
                 var insStr = disInstructions[i];
 
                 int memPtr;
-                var offset = 7; // call &$[0x]
+                var offset = 7;
 
                 // Are we dealing with a hex or normal
                 // integer literal?
@@ -696,6 +701,7 @@ namespace VMCore.VM
                     insStr[..5] + subAddresses[memPtr + basePos + 8];
             }
 
+            // Construct the full disassembled line.
             var output = new string[len];
             for (var i = 0; i < len; i++)
             {
@@ -705,6 +711,7 @@ namespace VMCore.VM
                     addr =
                         $"{disAddresses[i]:X8} : ";
                 }
+
                 output[i] = addr + disInstructions[i];
             }
 
@@ -722,8 +729,7 @@ namespace VMCore.VM
             // Push the current stack frame size.
             Vm.Memory.StackPushInt(_stackFrameSize);
 
-            Registers[_fpSystemTuple] =
-                Registers[Core.Register.Registers.SP];
+            Registers[_fpSystemTuple] = Registers[_spSystemTuple];
 
             _stackFrameSize = 0;
         }
@@ -733,8 +739,7 @@ namespace VMCore.VM
             var framePointerAddress =
                 Registers[_fpSystemTuple];
 
-            Registers[Core.Register.Registers.SP] =
-                framePointerAddress;
+            Registers[_spSystemTuple] = framePointerAddress;
 
             _stackFrameSize =
                 Vm.Memory.StackPopInt();
@@ -1002,8 +1007,7 @@ namespace VMCore.VM
         {
             // Reset the stack pointer to the bottom of the
             // stack memory region.
-            Registers[Core.Register.Registers.SP] =
-                Vm.Memory.StackEnd;
+            Registers[_spSystemTuple] = Vm.Memory.StackEnd;
         }
     }
 }

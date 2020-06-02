@@ -442,6 +442,8 @@ namespace VMCore.VM
 
             // Advance the instruction pointer by the number of bytes
             // corresponding sum of the size of the arguments (in bytes).
+            // Note: the IP register can also be changed upon
+            // executing the instruction, see the comment below.
             Registers[_ipUserTuple] += (pos - iPos);
 
             if (ExecuteInstruction(ins, asmIns))
@@ -450,7 +452,10 @@ namespace VMCore.VM
             }
 
             // Have we executed everything that needs to be executed?
-            if (pos >= _maxExecutableBound)
+            // We need to check against the IP register here and not
+            // the "pos" variable as the register can be changed
+            // while executing certain instructions (e.g. ret).
+            if (Registers[_ipUserTuple] >= _maxExecutableBound)
             {
                 SetHaltedState(true);
             }

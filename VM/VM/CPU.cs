@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using VMCore.VM.Core;
@@ -622,7 +623,8 @@ namespace VMCore.VM
         {
             // Reset the position of the stream back to
             // the start.
-            var pos = aStartAddr + Vm.Memory.BaseMemorySize;
+            var basePos = Vm.Memory.BaseMemorySize;
+            var pos = aStartAddr + basePos;
 
             var region =
                 Vm.Memory.GetMemoryRegion(aMemSeqId);
@@ -638,19 +640,75 @@ namespace VMCore.VM
             var minPos = region.Start;
             var maxPos = region.End;
 
+            var subAddresses = new Dictionary<int, string>();
+            var disOpcodes = new List<OpCode>();
             var disInstructions = new List<string>();
+            var disAddresses = new List<int>();
 
             while (pos >= minPos && pos < maxPos)
             {
-                var s = 
-                    aShowLocation ? $"{pos:X8} : " : string.Empty;
+                disAddresses.Add(pos);
 
-                s += DisassembleNextInstruction(ref pos);
+                var ins =
+                    DisassembleNextInstruction(ref pos, out var op);
+                if (op == OpCode.SUBROUTINE)
+                {
+                    // We have a subroutine.
+                    subAddresses.Add(pos, ins);
+                }
 
-                disInstructions.Add(s);
+                disInstructions.Add(ins);
+                disOpcodes.Add(op);
             }
 
-            return disInstructions.ToArray();
+            // Now we can do a bit of extra clean up.
+            var len = disInstructions.Count;
+            for (var i = 0; i < len; i++)
+            {
+                // We are only interested in call literal address
+                // here, for the moment.
+                if (disOpcodes[i] != OpCode.CAL_LIT)
+                {
+                    continue;
+                }
+
+                var insStr = disInstructions[i];
+
+                int memPtr;
+                var offset = 7; // call &$[0x]
+
+                // Are we dealing with a hex or normal
+                // integer literal?
+                if (insStr[offset..(offset + 2)] == "0x")
+                {
+                    offset += 2;
+                    Utils.TryParseHexInt(insStr[offset..], out memPtr);
+                }
+                else
+                {
+                    Utils.TryParseInt(insStr[offset..], out memPtr);
+                }
+
+                // The address is offset against the base position
+                // of the executable memory region plus 8 for the
+                // size of subroutine instruction plus the argument.
+                disInstructions[i] =
+                    insStr[..5] + subAddresses[memPtr + basePos + 8];
+            }
+
+            var output = new string[len];
+            for (var i = 0; i < len; i++)
+            {
+                var addr = "";
+                if (aShowLocation)
+                {
+                    addr =
+                        $"{disAddresses[i]:X8} : ";
+                }
+                output[i] = addr + disInstructions[i];
+            }
+
+            return output;
         }
 
         public void PushState()
@@ -834,19 +892,26 @@ namespace VMCore.VM
         /// The position in memory from which to begin 
         /// reading the instruction.
         /// </param>
+        /// <param name="aOp">
+        /// The identified opcode for the instruction if one was
+        /// identified. NOP will be returned in the case of malformed
+        /// data.
+        /// </param>
         /// <returns>
         /// A string giving the disassembly of the next instruction.
         /// </returns>
-        private string DisassembleNextInstruction(ref int aPos)
+        private string DisassembleNextInstruction(ref int aPos,
+                                                  out OpCode aOp)
         {
             OpCode op;
             try
             {
-                op = 
+                op =
                     Vm.Memory.GetOpCode(aPos, SysCtx, true);
             }
             catch
             {
+                aOp = OpCode.NOP;
                 return string.Empty;
             }
 
@@ -855,17 +920,18 @@ namespace VMCore.VM
                 // We do not recognize this opcode and so
                 // we would have no meaningful output
                 // here at all. Return the byte code instead.
+                aOp = OpCode.NOP;
                 return $"???? {op:X2}";
             }
 
             // No instruction matching the OpCode was found.
-            // In practice this shouldn't happen, except in a malformed
-            // binary file.
+            // In practice this shouldn't happen.
             if (!_instructionCache.TryGetValue(op,
                                                out var ins))
             {
                 // Return the byte code as that's all we can
                 // safely provide.
+                aOp = OpCode.NOP;
                 return $"???? {op:X2}";
             }
 
@@ -875,6 +941,8 @@ namespace VMCore.VM
             {
                 OpCode = op
             };
+
+            aOp = op;
 
             // The types of the arguments expected for this instruction.
             var argTypes = ins.ArgumentTypes;
@@ -913,7 +981,6 @@ namespace VMCore.VM
             }
 
             return s;
-
         }
 
         /// <summary>

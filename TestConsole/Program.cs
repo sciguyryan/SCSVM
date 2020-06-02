@@ -10,11 +10,11 @@ namespace TestConsole
     {
         private static void Main()
         {
-            var lines = new []
+            var lines = new[]
             {
-                "mov $0x10, R1",
+                /*"mov $0x10, R1",
                 "mov $0x11, R2",
-                "mov $0x100, R3",
+                "mov $0x21, R3",
                 "add R1, R2",
                 "jne R3, @GOOD",
                 "mov $0x3141, R4",
@@ -25,7 +25,19 @@ namespace TestConsole
                 "push R2",
                 "push R3",
                 "push R4",
-                "hlt"
+                "hlt"*/
+                "mov $0x10, R1",
+                "mov $0x11, R2",
+                "mov $0x100, R3",
+                "add R1, R2",
+                "call @TESTER:",
+                "mov $0x123, R5",
+                "hlt",
+                "@TESTER:",
+                "mov $0x1, R1",
+                "mov $0x2, R2",
+                "add R1, R2",
+                "ret"
             };
 
             var progText =
@@ -87,7 +99,7 @@ namespace TestConsole
             // Enable CPU debug logging.
             vm.Cpu.SetLoggingEnabled(true);
 
-            var programBytes = 
+            var programBytes =
                 Utils.QuickRawCompile(p.Parse(progText),
                                       true);
 
@@ -120,7 +132,7 @@ namespace TestConsole
             Console.WriteLine();
 
             Console.WriteLine("------------[Disassembly]-----------");
-            foreach (var s in 
+            foreach (var s in
                      vm.Cpu.Disassemble(vm.Cpu.MemExecutableSeqId, true))
             {
                 Console.WriteLine(s);

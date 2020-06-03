@@ -52,7 +52,7 @@ namespace VMCore.VM.Instructions.Data
         public override string ToString(InstructionData aData)
         {
             var literal = (int)aData[0];
-            var fromReg = (int)aData[1];
+            var fromReg = (Registers)aData[1];
             var toReg = (Registers)aData[2];
 
             // mov $LITERAL, &R1, R2

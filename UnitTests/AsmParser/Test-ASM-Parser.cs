@@ -130,6 +130,25 @@ namespace UnitTests.AsmParser
 
                 #endregion // LABEL TESTS
 
+                #region SUBROUTINE TESTS
+
+                new []
+                {
+                    "call !GOOD",
+                },
+                new []
+                {
+                    // The label name will stop being read
+                    // at the first non-alphanumeric character.
+                    "call !GOOD-",
+                },
+                new []
+                {
+                    "GOOD:",
+                },
+
+                #endregion // SUBROUTINE TESTS
+
                 #region REGISTER TESTS
 
                 new []
@@ -349,6 +368,28 @@ namespace UnitTests.AsmParser
                 },
 
                 #endregion // LABEL TESTS
+
+                #region SUBROUTINE TESTS
+
+                new []
+                {
+                    new QuickIns(OpCode.CAL_LIT,
+                                 new object[] { 0 },
+                                 new AsmLabel("GOOD", 0))
+                },
+                new []
+                {
+                    new QuickIns(OpCode.CAL_LIT,
+                        new object[] { 0 },
+                        new AsmLabel("GOOD", 0))
+                },
+                new []
+                {
+                    new QuickIns(OpCode.SUBROUTINE,
+                                 new object[] { "GOOD" })
+                },
+
+                #endregion // SUBROUTINE TESTS
 
                 #region REGISTER TESTS
 
@@ -627,6 +668,31 @@ namespace UnitTests.AsmParser
                 },
 
                 #endregion // UNMATCHED BRACKETS
+
+                #region INVALID SUBROUTINE LABELS
+
+                new []
+                {
+                    ":",
+                },
+                new []
+                {
+                    "GOOD::",
+                },
+                new []
+                {
+                    ":GOOD",
+                },
+                new []
+                {
+                    ":GOOD:",
+                },
+                new []
+                {
+                    "GOOD-:",
+                },
+
+                #endregion // INVALID SUBROUTINE LABELS
             };
 
             #endregion // TESTS

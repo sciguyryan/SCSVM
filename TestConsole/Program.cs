@@ -26,15 +26,15 @@ namespace TestConsole
                 "push R3",
                 "push R4",
                 "hlt"*/
-                "push $0xAAA",  // should remain in place once the stack is restored.
+                "push $0xAAA",  // Should remain in place once the stack is restored.
                 "push $0xC",    // Argument 3
                 "push $0xB",    // Argument 2
                 "push $0xA",    // Argument 1
-                "push $3",      // the number of arguments for the method
-                "call @TESTER:",
+                "push $3",      // The number of arguments for the method
+                "call !TESTER",
                 "mov $0x123, R5",
                 "hlt",
-                "@TESTER:",
+                "TESTER:",
                 "mov $0x34, &FP, R3",
                 "mov $0x30, &FP, R2",
                 "mov $0x2C, &FP, R1",

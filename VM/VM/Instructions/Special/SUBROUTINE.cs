@@ -36,8 +36,8 @@ namespace VMCore.VM.Instructions.Special
 
         public override string ToString(InstructionData aData)
         {
-            // @SUB[ID]:
-            return $"@SUB{(int)aData[0]}:";
+            // SUB[ID]:
+            return $"SUB{(int)aData[0]}:";
         }
     }
 }

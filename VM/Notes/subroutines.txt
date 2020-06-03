@@ -1,0 +1,35 @@
+The ABI calling convention used by this machine is caller clean-up, so the caller is responsible for cleaning up the stack after the subrotuine is executed.
+See: https://en.wikipedia.org/wiki/X86_calling_conventions
+
+An example subroutine.
+
+push $0xA			; Argument 3
+push $0xB			; Argument 2
+push $0xC			; Argument 1
+push $3				; Number of Arguments
+call !ADDTHREE
+ADDTHREE:
+mov $0x34, &FP, R1  ; See below for address calculations.
+mov $0x30, &FP, R2  ; See below for address calculations.
+mov $0x2C, &FP, R3  ; See below for address calculations.
+add R1, R2
+add R3, AC
+ret
+
+-------------------------------------
+Stack Frame Size   X			; Frame Pointer starts here
+IP                 X + 4	(0x4)
+R8                 X + 8	(0x8)
+R7                 X + 12	(0xC)
+R6                 X + 16	(0x10)
+R5                 X + 20	(0x14)
+R4                 X + 24	(0x18)
+R3                 X + 28	(0x1C)
+R2                 X + 32	(0x20)
+R1                 X + 36	(0x24)
+nArgs              X + 40	(0x28)
+-------------------------------------
+Arg 3             (X + 44)	(0x2C)	(X + 44 + nArgs - 0 * 2)
+Arg 2             (X + 48)	(0x30)	(X + 44 + nArgs - 1 * 2)
+Arg 1             (X + 52)	(0x34)	(X + 44 + nArgs - 2 * 2)
+======================================

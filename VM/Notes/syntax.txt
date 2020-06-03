@@ -35,10 +35,4 @@ if the accumulator is not equal to the value
 of register R1 then jump to the address specified by
 the label "GOOD".
 
-call @SubRoutine1:
-@SubRoutine1:
-mov $0x1, R1
-ret
-A subroutine called SubRoutine1, once called will 
-set the value of the register R1 to 0x1 then return
-to the call point.
+See subroutines.txt for information on the syntax for subroutines.

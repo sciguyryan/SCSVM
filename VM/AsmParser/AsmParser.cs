@@ -2,14 +2,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.Assembler;
-using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
+using OpCode = VMCore.VM.Core.OpCode;
 
 namespace VMCore.AsmParser
 {
@@ -72,8 +74,8 @@ namespace VMCore.AsmParser
             },
             {
                 ExIDs.InvalidSubroutineLabel,
-                "Attempted to parse a label with an invalid subrotune " +
-                "identifier '{0]'."
+                "Attempted to parse a subroutine with an invalid " +
+                "identifier '{0}'."
             },
             {
                 ExIDs.InvalidIntLiteral,
@@ -371,48 +373,58 @@ namespace VMCore.AsmParser
             var asmName = aSegments[0];
             var args = aSegments[1..];
 
-            // Is this a label or subroutine?
-            if (asmName[0] != '@')
+            var lastSignificantChar = '\0';
+            foreach (var c in asmName)
             {
+                if (!char.IsLetterOrDigit(c) && c != ':')
+                {
+                    break;
+                }
+
+                lastSignificantChar = c;
+            }
+
+            // Is this a label?
+            if (asmName[0] != '@' && lastSignificantChar != ':')
+            {
+                // No. This is a normal instruction.
                 // If the instruction has no arguments then it is simple
-                // to identify the opcode for the instruction belonging
-                // to it.
+                // to identify the opcode for the instruction
+                // belonging to it.
                 // If it has arguments then the job is more difficult
                 // as we will have to perform validation on the number
                 // of arguments, their types, etc. to find the best match.
-                return aSegments.Length == 1 ?
-                    ParseSimple(asmName) :
-                    ParseComplex(asmName, args);
+                return
+                    aSegments.Length == 1 ? 
+                        ParseSimple(asmName) : 
+                        ParseComplex(asmName, args);
             }
 
-            // Yes, this is a label. This is a special case
-            // Trying to parse this in the normal way will fail
-            // as it is in a format like this:
-            // @GOOD
-            // In this case we pass "GOOD" as the argument and
-            // then we are done.
-
+            // Yes, this is a label or a subroutine.
+            // These are special cases.
+            // Trying to parse these in the normal way will fail
+            // as it will be formatted like one of these:
+            // @LABEL or SUBROUTINE:
             var label = TryParseLabel(asmName[1..]);
 
-            Assert(string.IsNullOrWhiteSpace(label),
-                ExIDs.InvalidLabel);
-
-            if (label[^1] != ':')
+            // This is a label.
+            if (lastSignificantChar != ':')
             {
-
                 return
                     new QuickIns(OpCode.LABEL,
-                            new object[] { label });
+                        new object[] { label });
             }
 
-            // This is a bit naughty as the subroutine
-            // instruction has only one argument.
-            // In this instance it doesn't matter though
-            // as we only need this data for use in the
-            // compiler.
+            // This is a subroutine label.
+            var subLabel = TryParseSubroutine(asmName);
+
+            // The subroutine instruction only expects
+            // one argument but we pass a second one here.
+            // In this instance it doesn't matter as we only
+            // need this data for use in the compiler.
             return
                 new QuickIns(OpCode.SUBROUTINE,
-                             new object[] { _subRoutineSeqId++, label });
+                    new object[] { _subRoutineSeqId++, subLabel });
         }
 
         /// <summary>
@@ -436,6 +448,7 @@ namespace VMCore.AsmParser
                    ExIDs.InvalidInstruction,
                    aInsName,
                    "", "", "");
+
             return null;
         }
 
@@ -514,6 +527,15 @@ namespace VMCore.AsmParser
 
                     case '@':
                         // This is a label.
+                        // We need to add a dummy value here. This will be
+                        // updated at compile time.
+                        values[i] = 0;
+                        refTypes[i] = InsArgTypes.LiteralPointer;
+                        labels[i] = TryParseLabel(arg[1..]);
+                        continue;
+
+                    case '!':
+                        // This is a subroutine call.
                         // We need to add a dummy value here. This will be
                         // updated at compile time.
                         values[i] = 0;
@@ -607,7 +629,7 @@ namespace VMCore.AsmParser
         }
 
         /// <summary>
-        /// Parse a label argument.
+        /// Parse a label .
         /// </summary>
         /// <param name="aData">
         /// A string containing the name of the label.
@@ -616,6 +638,42 @@ namespace VMCore.AsmParser
         /// A string containing the parsed name of the label.
         /// </returns>
         private string TryParseLabel(string aData)
+        {
+            // A valid label is any one or more
+            // alpha numeric characters.
+            var label = new StringBuilder(aData.Length);
+
+            var len = aData.Length;
+
+            for (var i = 0; i < len; i++)
+            {
+                var c = aData[i];
+
+                if (!char.IsLetterOrDigit(c))
+                {
+                    break;
+                }
+
+                label.Append(c);
+            }
+
+            // We cannot have an empty label.
+            Assert(label.Equals(string.Empty),
+                   ExIDs.InvalidLabel);
+
+            return label.ToString();
+        }
+
+        /// <summary>
+        /// Parse a subroutine label.
+        /// </summary>
+        /// <param name="aData">
+        /// A string containing the name of the subroutine.
+        /// </param>
+        /// <returns>
+        /// A string containing the parsed name of the subroutine.
+        /// </returns>
+        private string TryParseSubroutine(string aData)
         {
             // A valid label is any one or more
             // alpha numeric characters.
@@ -646,11 +704,21 @@ namespace VMCore.AsmParser
                 label.Append(c);
             }
 
-            // We cannot have an empty label.
-            Assert(label.Equals(string.Empty),
-                   ExIDs.InvalidLabel);
+            var lbl = label.ToString();
 
-            return label.ToString();
+            // We cannot have an empty subroutine label.
+            Assert(label.Equals(string.Empty),
+                   ExIDs.InvalidSubroutineLabel,
+                   lbl);
+
+            // A subroutine must end with a colon character.
+            Assert(lbl[^1] != ':',
+                   ExIDs.InvalidSubroutineLabel,
+                   lbl);
+
+            // We do not care about the last character as it
+            // is always a colon.
+            return lbl[..^1];
         }
 
         /// <summary>

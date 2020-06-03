@@ -673,7 +673,9 @@ namespace VMCore.VM
                 if (op == OpCode.SUBROUTINE)
                 {
                     // We have a subroutine.
-                    subAddresses.Add(pos, ins);
+                    // We do not want the colon at the
+                    // end so we strip that away here.
+                    subAddresses.Add(pos, ins[..^1]);
                 }
 
                 disInstructions.Add(ins);
@@ -712,7 +714,8 @@ namespace VMCore.VM
                 // of the executable memory region plus 8 for the
                 // size of subroutine instruction plus the argument.
                 disInstructions[i] =
-                    insStr[..5] + subAddresses[memPtr + basePos + 8];
+                    insStr[..5] + '!' + 
+                    subAddresses[memPtr + basePos + 8];
             }
 
             // Construct the full disassembled line.

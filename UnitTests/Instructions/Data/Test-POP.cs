@@ -22,8 +22,6 @@ namespace UnitTests.Instructions.Data
         [TestMethod]
         public void TestPopIntegerValueToRegister()
         {
-            Vm.Memory.SetDebuggingEnabled(true);
-
             var program = new QuickIns[10];
 
             // Push the values to the stack.

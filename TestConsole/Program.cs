@@ -26,7 +26,7 @@ namespace TestConsole
                 "push R3",
                 "push R4",
                 "hlt"*/
-                "mov $0x10, R1",
+                /*"mov $0x10, R1",
                 "mov $0x11, R2",
                 "mov $0x100, R3",
                 "add R1, R2",
@@ -37,6 +37,21 @@ namespace TestConsole
                 "mov $0x1, R1",
                 "mov $0x2, R2",
                 "add R1, R2",
+                "ret"*/
+                "push $0x321",
+                "push $0x123",
+                "push $0x213",
+                "push $0 ; the number of arguments for the method",
+                "call @TESTER:",
+                "mov $0x123, R5",
+                "hlt",
+                "@TESTER:",
+                "mov $0x1, R1",
+                "mov $0x2, R2",
+                "add R1, R2",
+                "push $0xA",
+                "push $0xB",
+                "push $0xC",
                 "ret"
             };
 

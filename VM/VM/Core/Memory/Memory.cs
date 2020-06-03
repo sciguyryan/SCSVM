@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Register;
@@ -17,20 +18,14 @@ namespace VMCore.VM.Core.Memory
         /// <summary>
         /// The total size of the memory in bytes.
         /// </summary>
-        public int Length
-        {
-            get
-            {
-                return Data.Length;
-            }
-        }
+        public int Length => Data.Length;
 
         /// <summary>
         /// The base size of the main memory block.
         /// This is the size of the memory that does
         /// not include any executable regions.
         /// </summary>
-        public int BaseMemorySize { get; private set; }
+        public int BaseMemorySize { get; }
 
         /// <summary>
         /// A list of the types of data currently held
@@ -52,7 +47,12 @@ namespace VMCore.VM.Core.Memory
         /// The next point in memory available for writing
         /// data.
         /// </summary>
-        public int StackPointer;
+        public int StackPointer { get; private set; }
+
+        /// <summary>
+        /// The VM instance that holds this CPU.
+        /// </summary>
+        public VirtualMachine Vm { get; }
 
         #endregion // Public Properties
 
@@ -74,17 +74,14 @@ namespace VMCore.VM.Core.Memory
         /// </summary>
         private int _seqId;
 
-#if DEBUG
-        private bool IsDebuggingEnabled { get; set; } = true;
-#else
-        private bool IsDebuggingEnabled { get; set; } = false;
-#endif
-
         #endregion // Private Properties
 
-        public Memory(int aMainMemorySize = 2048,
+        public Memory(VirtualMachine aVm,
+                      int aMainMemorySize = 2048,
                       int aStackCapacity = 100)
         {
+            Vm = aVm;
+
             var stackSize = (aStackCapacity * sizeof(int));
 
             // The final memory size is equal to the base memory
@@ -123,24 +120,18 @@ namespace VMCore.VM.Core.Memory
         /// <summary>
         /// Load a pre-populated memory block into the system memory.
         /// </summary>
+        /// <param name="aVm">
+        /// The virtual machine instance to which this memory
+        /// instance belongs.
+        /// </param>
         /// <param name="aPayload">
         /// The byte array used to represent the system memory.
         /// </param>
-        public Memory(byte[] aPayload)
+        public Memory(VirtualMachine aVm,
+                      byte[] aPayload)
         {
+            Vm = aVm;
             Data = aPayload;
-        }
-
-        /// <summary>
-        /// Enable or disable debugging functionality within
-        /// this memory instance.
-        /// </summary>
-        /// <param name="aEnabled">
-        /// The debugging state of this memory instance.
-        /// </param>
-        public void SetDebuggingEnabled(bool aEnabled)
-        {
-            IsDebuggingEnabled = aEnabled;
         }
 
         /// <summary>
@@ -149,6 +140,50 @@ namespace VMCore.VM.Core.Memory
         public void Clear()
         {
             new Span<byte>(Data).Fill(0);
+        }
+
+        public void SetStackPointer(int aNewPos, Type[]? aAddedTypes = null)
+        {
+            if (aNewPos > StackPointer)
+            {
+                // The new value is closer to the bottom of the stack so
+                // we have removed an entry (or entries) from the stack.
+                // We need to adjust the stack types to reflect this.
+                while (StackPointer < aNewPos)
+                {
+                    var t = StackTypes.Pop();
+
+                    StackPointer += Marshal.SizeOf(t);
+                }
+            }
+            else if (aNewPos < StackPointer)
+            {
+                // We require a list of types to be specified when adding
+                // an entry or entries to the stack.
+                if (aAddedTypes is null)
+                {
+                    throw new ArgumentNullException
+                    (
+                        "SetStackPointer: attempted to " +
+                        "increase the stack pointer without providing " +
+                        "a list of the newly added type(s)."
+                    );
+                }
+
+                // The new value is closer to the top of the stack so
+                // we have added an entry (or entries) to the stack.
+                // We need to adjust the stack types to reflect this.
+
+                var i = 0;
+                while (StackPointer > aNewPos)
+                {
+                    var t = aAddedTypes[i];
+                    StackTypes.Push(t);
+
+                    StackPointer -= Marshal.SizeOf(t);
+                    i++;
+                }
+            }
         }
 
         /// <summary>
@@ -215,7 +250,7 @@ namespace VMCore.VM.Core.Memory
                 AddMemoryRegion(memLen,
                                 newMemLen,
                                 flags,
-                                $"Executable");
+                                "Executable");
 
             Array.Copy(aData, 
                        0, 
@@ -465,16 +500,17 @@ namespace VMCore.VM.Core.Memory
             // Write the value to stack memory region.
             SetInt(minPos, aValue, SecurityContext.System, false);
 
-            if (IsDebuggingEnabled)
-            {
-                StackTypes.Push(typeof(int));
-            }
+            // Add the type entry to the stack type hint list.
+            StackTypes.Push(typeof(int));
 
             // Move the stack pointer to the new location.
             // We move this forwards by the size of an integer.
             // As the stack operates in reverse, we move it closer
             // to the start of the stack memory region.
             StackPointer -= sizeof(int);
+
+            // Update the frame size in the CPU.
+            Vm.Cpu.StackFrameSize -= sizeof(int);
         }
 
         /// <summary>
@@ -506,16 +542,18 @@ namespace VMCore.VM.Core.Memory
             var value = 
                 GetInt(maxPos, SecurityContext.System, false);
 
-            if (IsDebuggingEnabled)
-            {
-                _ = StackTypes.Pop();
-            }
+
+            // Remove the type entry from the stack type hint list.
+            _ = StackTypes.Pop();
 
             // Move the stack pointer to the new location.
             // We move this forwards by the size of an integer.
             // As the stack operates in reverse, we move it away
             // from the start of the stack memory region.
             StackPointer += sizeof(int);
+
+            // Update the frame size in the CPU.
+            Vm.Cpu.StackFrameSize += sizeof(int);
 
             return value;
         }
@@ -547,54 +585,6 @@ namespace VMCore.VM.Core.Memory
         /// </summary>
         public void PrintStack()
         {
-            // We can do something a bit fancier if
-            // we have access to the type information.
-            if (IsDebuggingEnabled)
-            {
-                PrintStackDebug();
-                return;
-            }
-
-            // If the stack pointer is currently at
-            // the end of the stack region then there
-            // are no values to be read.
-            if (StackPointer == StackEnd)
-            {
-                return;
-            }
-
-            var index = 0;
-            var curStackPos = StackPointer;
-            while (curStackPos < StackEnd)
-            {
-                // Things are always reverse here.
-                // We need to jump to the "start" of the
-                // value before we read it.
-                var value =
-                    GetInt(curStackPos,
-                           SecurityContext.System,
-                           false);
-
-                Console.WriteLine("{0,5}{1,10:X8}",
-                                  index,
-                                  value);
-
-                curStackPos += sizeof(int);
-                ++index;
-            }
-        }
-
-        /// <summary>
-        /// Print the contents of the stack, with additional
-        /// debugging information.
-        /// </summary>
-        public void PrintStackDebug()
-        {
-            if (!IsDebuggingEnabled)
-            {
-                return;
-            }
-
             // If the stack pointer is currently at
             // the end of the stack region then there
             // are no values to be read.
@@ -621,9 +611,10 @@ namespace VMCore.VM.Core.Memory
                 switch (t)
                 {
                     case { } _ when t == typeof(int):
-                        value = GetInt(curStackPos,
-                                       SecurityContext.System,
-                                       false);
+                        value = 
+                            GetInt(curStackPos,
+                                   SecurityContext.System,
+                                   false);
                         offset = sizeof(int);
                         break;
 
@@ -1133,6 +1124,18 @@ namespace VMCore.VM.Core.Memory
         }
 
         /// <summary>
+        /// Debugging function to view the list of memory regions,
+        /// their bounds and associated permission flags.
+        /// </summary>
+        public void DebugMemoryRegions()
+        {
+            foreach (var l in GetFormattedMemoryRegions())
+            {
+                Debug.WriteLine(l);
+            }
+        }
+
+        /// <summary>
         /// Checks if a given range of memory has a flag set.
         /// </summary>
         /// <param name="aStart">
@@ -1256,18 +1259,6 @@ namespace VMCore.VM.Core.Memory
             }
 
             _memoryRegions[0].End = maxEnd;
-        }
-
-        /// <summary>
-        /// Debugging function to view the list of memory regions,
-        /// their bounds and associated permission flags.
-        /// </summary>
-        private void DebugMemoryRegions()
-        {
-            foreach (var l in GetFormattedMemoryRegions())
-            {
-                Debug.WriteLine(l);
-            }
         }
     }
 }

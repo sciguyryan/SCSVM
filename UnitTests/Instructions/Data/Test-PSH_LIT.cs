@@ -21,8 +21,6 @@ namespace UnitTests.Instructions.Data
         [TestMethod]
         public void TestPushLiteralToStack()
         {
-            Vm.Memory.SetDebuggingEnabled(true);
-
             var program = new QuickIns[10];
             for (var i = 0; i < 10; i++)
             {

@@ -52,7 +52,8 @@ namespace VMCore.VM
         {
             Debugger = new Debugger(this);
 
-            Memory = new Memory(aMainMemoryCapacity, aStackCapacity);
+            Memory = 
+                new Memory(this, aMainMemoryCapacity, aStackCapacity);
             Cpu = new Cpu(this, aCanCpuSwapMemoryRegions);
 
 #if DEBUG

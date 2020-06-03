@@ -56,6 +56,9 @@ namespace VMCore.VM.Core.Register
             Registers.Add(Core.Register.Registers.R8,
                           new Register(aCpu, rw));
 
+            Registers.Add(Core.Register.Registers.AC,
+                new Register(aCpu, rw));
+
             // Special registers.
             Registers.Add(Core.Register.Registers.IP,
                           new Register(aCpu, rw));
@@ -63,8 +66,6 @@ namespace VMCore.VM.Core.Register
                           new Register(aCpu, prpw));
             Registers.Add(Core.Register.Registers.FP,
                           new Register(aCpu, prpw));
-            Registers.Add(Core.Register.Registers.AC,
-                          new Register(aCpu, rw));
             Registers.Add(Core.Register.Registers.FL,
                           new Register(aCpu, rw, typeof(CpuFlags)));
             Registers.Add(Core.Register.Registers.PC,

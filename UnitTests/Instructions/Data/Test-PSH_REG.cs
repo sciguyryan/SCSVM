@@ -21,8 +21,6 @@ namespace UnitTests.Instructions.Data
         [TestMethod]
         public void TestPushRegisterValueToStack()
         {
-            Vm.Memory.SetDebuggingEnabled(true);
-
             var program = new QuickIns[10];
 
             // Move the values to the registers.

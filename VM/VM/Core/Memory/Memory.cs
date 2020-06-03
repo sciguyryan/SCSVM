@@ -1088,6 +1088,35 @@ namespace VMCore.VM.Core.Memory
             }
         }
 
+        public void ResizeMemory(int aNewSize,
+                                 bool aPreserveContents = false)
+        {
+            if (aNewSize < Length)
+            {
+                // TODO - add support for this.
+                // It is a bit more complex than making things larger.
+                throw new NotSupportedException();
+            }
+
+            if (!aPreserveContents)
+            {
+                Data = new byte[aNewSize];
+            }
+            else
+            {
+                var temp = new byte[aNewSize];
+                Buffer.BlockCopy(Data,
+                                 0,
+                                 temp,
+                                 0,
+                                 Data.Length);
+
+                Data = temp;
+            }
+
+            ResizeRootMemoryRegion();
+        }
+
         /// <summary>
         /// Checks if a given range of memory has a flag set.
         /// </summary>

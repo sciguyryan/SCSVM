@@ -13,7 +13,7 @@ namespace UnitTests.Core.Memory
 
         public TestMemoryAccess()
         {
-            // Create a dummy program so that we have
+            // Create a dummy program (lots of NOPs) so that we have
             // an executable memory region to work with.
             var dummy = 
                 new byte[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -58,7 +58,7 @@ namespace UnitTests.Core.Memory
         public void TestUserWriteInPrivateRegion()
         {
             Vm.Memory
-                .SetInt(StackStart, 1, SecurityContext.User, false);
+                .SetInt(PrivateRegionStart, 1, SecurityContext.User, false);
         }
 
         [TestMethod]
@@ -66,7 +66,7 @@ namespace UnitTests.Core.Memory
         public void TestUserReadInPrivateRegion()
         {
             _ = 
-                Vm.Memory.GetInt(StackStart, SecurityContext.User, false);
+                Vm.Memory.GetInt(PrivateRegionStart, SecurityContext.User, false);
         }
 
         [TestMethod]
@@ -233,7 +233,7 @@ namespace UnitTests.Core.Memory
             // a private write region.
             // This should not be permitted with a user
             // security context.
-            var pos = StackStart - 2;
+            var pos = PrivateRegionStart - 2;
 
             _ = Vm.Memory.GetInt(pos, SecurityContext.User, false);
         }

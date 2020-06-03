@@ -66,7 +66,7 @@ namespace VMCore.VM.Core.Memory
         /// <summary>
         /// A list of memory regions and their associated permissions.
         /// </summary>
-        private readonly List<MemoryRegion> _memoryRegions = 
+        private readonly List<MemoryRegion> _memoryRegions =
             new List<MemoryRegion>();
 
         /// <summary>
@@ -143,66 +143,6 @@ namespace VMCore.VM.Core.Memory
         }
 
         /// <summary>
-        /// Sets the stack pointer property to a new value.
-        /// </summary>
-        /// <param name="aNewPos">
-        /// The new stack pointer address.
-        /// </param>
-        /// <param name="aAddedTypes">
-        /// An array of the type(s) that have been added.
-        /// This should be null when we are increasing the
-        /// stack pointer (removing entries from the stack).
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if a list of types is not provided when decreasing
-        /// the stack pointer (adding entries to the stack).
-        /// </exception>
-        public void SetStackPointer(int aNewPos,
-                                    Type[]? aAddedTypes = null)
-        {
-            if (aNewPos > StackPointer)
-            {
-                // The new value is closer to the bottom of the stack so
-                // we have removed an entry (or entries) from the stack.
-                // We need to adjust the stack types to reflect this.
-                while (StackPointer < aNewPos)
-                {
-                    var t = StackTypes.Pop();
-
-                    StackPointer += Marshal.SizeOf(t);
-                }
-            }
-            else if (aNewPos < StackPointer)
-            {
-                // We require a list of types to be specified when adding
-                // an entry or entries to the stack.
-                if (aAddedTypes is null)
-                {
-                    throw new ArgumentNullException
-                    (
-                        "SetStackPointer: attempted to " +
-                        "change the stack pointer without providing " +
-                        "a list of the newly added type(s)."
-                    );
-                }
-
-                // The new value is closer to the top of the stack so
-                // we have added an entry (or entries) to the stack.
-                // We need to adjust the stack types to reflect this.
-
-                var i = 0;
-                while (StackPointer > aNewPos)
-                {
-                    var t = aAddedTypes[i];
-                    StackTypes.Push(t);
-
-                    StackPointer -= Marshal.SizeOf(t);
-                    i++;
-                }
-            }
-        }
-
-        /// <summary>
         /// Remove any executable regions of memory that have
         /// been allocated.
         /// </summary>
@@ -257,21 +197,21 @@ namespace VMCore.VM.Core.Memory
             // Add an executable memory region for the
             // region that will contain the executable
             // code.
-            const MemoryAccess flags = 
+            const MemoryAccess flags =
                 MemoryAccess.R |
                 MemoryAccess.W |
                 MemoryAccess.EX;
 
-            var seqId = 
+            var seqId =
                 AddMemoryRegion(memLen,
                                 newMemLen,
                                 flags,
                                 "Executable");
 
-            Array.Copy(aData, 
-                       0, 
-                       Data, 
-                       memLen, 
+            Array.Copy(aData,
+                       0,
+                       Data,
+                       memLen,
                        aData.Length);
 
             ResizeRootMemoryRegion();
@@ -302,7 +242,7 @@ namespace VMCore.VM.Core.Memory
                                    MemoryAccess aAccess,
                                    string aName)
         {
-            var region = 
+            var region =
                 new MemoryRegion(aStart, aEnd, aAccess, _seqId, aName);
             _memoryRegions.Add(region);
 
@@ -462,7 +402,7 @@ namespace VMCore.VM.Core.Memory
                     matched.Add(region);
                     break;
                 }
-                
+
                 if (aStart <= region.End && region.Start <= aEnd)
                 {
                     // We have a cross-region match.
@@ -527,7 +467,7 @@ namespace VMCore.VM.Core.Memory
             // We move this forwards by the size of an integer.
             // As the stack operates in reverse, we move it closer
             // to the start of the stack memory region.
-            StackPointer -= sizeof(int);
+            SetStackPointer(StackPointer - sizeof(int));
 
             // Update the frame size in the CPU.
             Vm.Cpu.StackFrameSize -= sizeof(int);
@@ -559,45 +499,22 @@ namespace VMCore.VM.Core.Memory
             }
 
             // Read the value from the memory region.
-            var value = 
+            var value =
                 GetInt(maxPos, SecurityContext.System, false);
 
-
             // Remove the type entry from the stack type hint list.
-            _ = StackTypes.Pop();
+            StackTypes.Pop();
 
             // Move the stack pointer to the new location.
             // We move this forwards by the size of an integer.
             // As the stack operates in reverse, we move it away
             // from the start of the stack memory region.
-            StackPointer += sizeof(int);
+            SetStackPointer(StackPointer + sizeof(int));
 
             // Update the frame size in the CPU.
             Vm.Cpu.StackFrameSize += sizeof(int);
 
             return value;
-        }
-
-        /// <summary>
-        /// Try to pop an integer from the stack.
-        /// </summary>
-        /// <param name="aResult">
-        /// The last integer on the stack if one was present,
-        /// a zero otherwise.
-        /// </param>
-        /// <returns>
-        /// A boolean indicating if a value was popped from the stack.
-        /// </returns>
-        public bool TryStackPopInt(out int aResult)
-        {
-            if (StackPointer < StackEnd)
-            {
-                aResult = StackPopInt();
-                return true;
-            }
-
-            aResult = 0;
-            return false;
         }
 
         /// <summary>
@@ -632,12 +549,12 @@ namespace VMCore.VM.Core.Memory
                 // value before we read it.
                 object value = t switch
                 {
-                    { } _ when t == typeof(int) => 
+                    { } _ when t == typeof(int) =>
                         GetInt(curStackPos,
                                SecurityContext.System,
                                false),
 
-                    _ => 
+                    _ =>
                         throw new NotSupportedException
                         (
                             $"PrintStack: the type {t} was " +
@@ -697,9 +614,9 @@ namespace VMCore.VM.Core.Memory
                           bool aExec)
         {
             var bytes =
-                GetValueRange(aStartPos, 
-                              sizeof(int), 
-                              aContext, 
+                GetValueRange(aStartPos,
+                              sizeof(int),
+                              aContext,
                               aExec);
 
             return BitConverter.ToInt32(bytes);
@@ -913,14 +830,14 @@ namespace VMCore.VM.Core.Memory
             // This is the number of bytes
             // that made up the string, not the
             // string length.
-            var bytesCount = 
+            var bytesCount =
                 GetInt(aStartPos, aContext, aExec);
 
             // We need to skip over the length
             // of the string length indicator
             // as we do not want that data to contaminate
             // out string.
-            var bytes = 
+            var bytes =
                 GetValueRange(aStartPos + sizeof(int),
                               bytesCount,
                               aContext,
@@ -1048,7 +965,7 @@ namespace VMCore.VM.Core.Memory
                            aContext,
                            aExec);
 
-            return 
+            return
                 new Span<byte>(Data).Slice(aPos, aLength).ToArray();
         }
 
@@ -1249,17 +1166,17 @@ namespace VMCore.VM.Core.Memory
 
             hasFlags &= aType switch
             {
-                DataAccessType.Read => 
+                DataAccessType.Read =>
                     flags.HasFlag(MemoryAccess.R) ||
-                    (flags.HasFlag(MemoryAccess.PR) && 
+                    (flags.HasFlag(MemoryAccess.PR) &&
                      aContext == SecurityContext.System),
 
-                DataAccessType.Write => 
+                DataAccessType.Write =>
                     flags.HasFlag(MemoryAccess.W) ||
-                    (flags.HasFlag(MemoryAccess.PW) && 
+                    (flags.HasFlag(MemoryAccess.PW) &&
                      aContext == SecurityContext.System),
 
-                _ => 
+                _ =>
                     throw new NotSupportedException
                     (
                         "ValidateAccess: attempted to check a " +
@@ -1295,6 +1212,24 @@ namespace VMCore.VM.Core.Memory
             }
 
             _memoryRegions[0].End = maxEnd;
+        }
+
+        /// <summary>
+        /// Sets the stack pointer to a new address.
+        /// </summary>
+        /// <param name="aNewPos">
+        /// The new stack pointer address.
+        /// </param>
+
+        private void SetStackPointer(int aNewPos)
+        {
+            // Update the stack pointer to the new address.
+            StackPointer = aNewPos;
+
+            // Ensure that the stack pointer register in the CPU
+            // is equal to the stack pointer here.
+            Vm.Cpu.Registers[(Registers.SP, SecurityContext.System)]
+                = StackPointer;
         }
     }
 }

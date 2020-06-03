@@ -180,21 +180,6 @@ namespace VMCore.VM
             Registers = new RegisterCollection(this);
 
             _canSwapMemoryRegions = aCanSwapMemoryRegions;
-
-            // TODO - decide if forcing a stack pointer update on SP
-            // register changes would be beneficial.
-            // This would make the code in the POP/PUSH instructions
-            // cleaner.
-            /*Registers.Registers[Core.Register.Registers.SP].OnChange =
-                delegate(int aI)
-                {
-                    if (Vm.Memory.StackPointer != aI)
-                    {
-                        Vm.Memory.StackPointer = aI;
-                    }
-                };*/
-
-            ResetStackPointer();
         }
 
         /// <summary>
@@ -743,17 +728,12 @@ namespace VMCore.VM
                 Vm.Memory.StackPushInt(Registers[reg]);
             }
 
-            // Push the current stack frame size plus
-            // the size of the value in bytes.
+            // Push the current stack frame size.
             Vm.Memory.StackPushInt(StackFrameSize);
-
-            // The above methods will not update the stack pointer
-            // register so we need to ensure that is done here.
-            Registers[_spSystemTuple] = Vm.Memory.StackPointer;
 
             // Update the frame pointer to the current stack
             // pointer location.
-            Registers[_fpSystemTuple] = Vm.Memory.StackPointer;
+            Registers[_fpSystemTuple] = Registers[_spSystemTuple];
 
             // Reset the stack frame size so that we can track
             // the stack frames as above again.
@@ -770,13 +750,6 @@ namespace VMCore.VM
             // can be disregarded as they are out of scope
             // from this point forward.
             Registers[_spSystemTuple] = framePointerAddress;
-
-            // We must do this here or our stack pointer
-            // register and the internal one held by the
-            // memory class will not be aligned. This
-            // does bad things.
-            //Vm.Memory.StackPointer = framePointerAddress;
-            Vm.Memory.SetStackPointer(framePointerAddress, null);
 
             // Pop the old stack frame size.
             StackFrameSize =

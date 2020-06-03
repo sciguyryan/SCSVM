@@ -142,7 +142,23 @@ namespace VMCore.VM.Core.Memory
             new Span<byte>(Data).Fill(0);
         }
 
-        public void SetStackPointer(int aNewPos, Type[]? aAddedTypes = null)
+        /// <summary>
+        /// Sets the stack pointer property to a new value.
+        /// </summary>
+        /// <param name="aNewPos">
+        /// The new stack pointer address.
+        /// </param>
+        /// <param name="aAddedTypes">
+        /// An array of the type(s) that have been added.
+        /// This should be null when we are increasing the
+        /// stack pointer (removing entries from the stack).
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if a list of types is not provided when decreasing
+        /// the stack pointer (adding entries to the stack).
+        /// </exception>
+        public void SetStackPointer(int aNewPos,
+                                    Type[]? aAddedTypes = null)
         {
             if (aNewPos > StackPointer)
             {
@@ -165,7 +181,7 @@ namespace VMCore.VM.Core.Memory
                     throw new ArgumentNullException
                     (
                         "SetStackPointer: attempted to " +
-                        "increase the stack pointer without providing " +
+                        "change the stack pointer without providing " +
                         "a list of the newly added type(s)."
                     );
                 }
@@ -422,6 +438,10 @@ namespace VMCore.VM.Core.Memory
         /// An array of the regions that intersect with the
         /// specified address range.
         /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown if the start or end position falls outside
+        /// of a valid memory range.
+        /// </exception>
         public MemoryRegion[] GetMemoryPermissions(int aStart, int aEnd)
         {
             var regions = _memoryRegions.ToArray();
@@ -459,9 +479,9 @@ namespace VMCore.VM.Core.Memory
                 return matched.ToArray();
             }
 
-            // This cannot happen with any valid address as
-            // the root memory region will always match a valid address.
-            throw new MemoryAccessViolationException
+            // This cannot happen with any valid address as the
+            // root memory region will always match a valid address.
+            throw new ArgumentOutOfRangeException
             (
                 "GetMemoryPermissions: attempted to access a memory " +
                 "region that does not exist. " +
@@ -583,7 +603,11 @@ namespace VMCore.VM.Core.Memory
         /// <summary>
         /// Print the contents of the stack.
         /// </summary>
-        public void PrintStack()
+        /// <exception cref="NotSupportedException">
+        /// Thrown if a type is present in the stack hint cache
+        /// for which no support has been added.
+        /// </exception>
+        public void PrintStack(bool aToDebug = false)
         {
             // If the stack pointer is currently at
             // the end of the stack region then there
@@ -606,33 +630,38 @@ namespace VMCore.VM.Core.Memory
                 // Things are always reverse here.
                 // We need to jump to the "start" of the
                 // value before we read it.
-                object value;
-                int offset;
-                switch (t)
+                object value = t switch
                 {
-                    case { } _ when t == typeof(int):
-                        value = 
-                            GetInt(curStackPos,
-                                   SecurityContext.System,
-                                   false);
-                        offset = sizeof(int);
-                        break;
+                    { } _ when t == typeof(int) => 
+                        GetInt(curStackPos,
+                               SecurityContext.System,
+                               false),
 
-                    default:
+                    _ => 
                         throw new NotSupportedException
                         (
-                            $"PrintStackDebug: the type {t} was passed " +
-                            "specified as the stack type, but no " +
-                            "support has been provided for that type."
-                        );
+                            $"PrintStack: the type {t} was " +
+                            "passed specified as the stack type but " +
+                            "no support has been provided for that type."
+                        )
+                };
+
+                if (!aToDebug)
+                {
+                    Console.WriteLine("{0,5}{1,10}{2,10:X8}",
+                                      i,
+                                      t.GetFriendlyName(),
+                                      value);
+                }
+                else
+                {
+                    Debug.WriteLine("{0,5}{1,10}{2,10:X8}",
+                                    i,
+                                    t.GetFriendlyName(),
+                                    value);
                 }
 
-                Console.WriteLine("{0,5}{1,10}{2,10:X8}",
-                                  i,
-                                  t.GetFriendlyName(),
-                                  value);
-
-                curStackPos += offset;
+                curStackPos += Marshal.SizeOf(t);
                 ++i;
             }
         }
@@ -711,9 +740,11 @@ namespace VMCore.VM.Core.Memory
 
             SetValueRange(aStartPos, bytes, aContext, aExec);
         }
+
         #endregion
 
         #region OpCode IO
+
         /// <summary>
         /// Read an opcode from memory.
         /// </summary>
@@ -778,9 +809,11 @@ namespace VMCore.VM.Core.Memory
 
             SetValueRange(aStartPos, bytes, aContext, aExec);
         }
+
         #endregion
 
         #region Register Identifier IO
+
         /// <summary>
         /// Read a register identifier from memory.
         /// </summary>
@@ -842,9 +875,11 @@ namespace VMCore.VM.Core.Memory
         {
             SetValue(aStartPos, (byte)aValue, aContext, aExec);
         }
+
         #endregion
 
         #region String IO
+
         /// <summary>
         /// Read a string from memory.
         /// </summary>
@@ -939,6 +974,7 @@ namespace VMCore.VM.Core.Memory
                           aContext,
                           aExec);
         }
+
         #endregion
 
         /// <summary>

@@ -103,13 +103,13 @@ namespace VMCore.VM.Core.Memory
             // The region directly after the main memory
             // is reserved for the stack memory.
             // The stack memory region should be marked
-            // as no read/write as the only methods
-            // accessing or modifying it should be system only.
+            // as public read and private write.
+            // The only methods modifying it should be system only.
             StackStart = aMainMemorySize;
             StackEnd = memoryCapacity;
             AddMemoryRegion(StackStart,
                             StackEnd,
-                            MemoryAccess.PR | MemoryAccess.PW,
+                            MemoryAccess.R | MemoryAccess.PW,
                             "Stack");
 
             // We always start working with the stack at

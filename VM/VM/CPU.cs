@@ -740,7 +740,8 @@ namespace VMCore.VM
                 Vm.Memory.StackPushInt(Registers[reg]);
             }
 
-            // Push the current stack frame size.
+            // Push the current stack frame size plus
+            // the size of the value in bytes.
             Vm.Memory.StackPushInt(StackFrameSize);
 
             // The above methods will not update the stack pointer
@@ -789,17 +790,12 @@ namespace VMCore.VM
                     Vm.Memory.StackPopInt();
             }
 
-            // We do not know if there will be any
-            // arguments, so we have to use TryStackPopInt
-            // here to avoid throwing an exception.
-            // We do not care about the return value as
-            // it will always return a zero if no value
-            // was popped from the stack.
-            /*Vm.Memory.TryStackPopInt(out var argCount);
+            // Clear the arguments from the stack.
+            var argCount = Vm.Memory.StackPopInt();
             for (var i = 0; i < argCount; i++)
             {
                 Vm.Memory.StackPopInt();
-            }*/
+            }
 
             // Adjust our frame pointer position to the original
             // frame pointer address plus the stack frame size.

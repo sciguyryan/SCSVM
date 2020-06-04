@@ -343,7 +343,14 @@
         /// into a register.
         /// </summary>
         POP,
+        /// <summary>
+        /// Call Literal Address - call a subroutine by a literal address
+        /// pointer.
+        /// </summary>
         CAL_LIT,
+        /// <summary>
+        /// Call Register Address - call a subroutine by a register pointer.
+        /// </summary>
         CAL_REG,
         /// <summary>
         /// Return from subroutine.

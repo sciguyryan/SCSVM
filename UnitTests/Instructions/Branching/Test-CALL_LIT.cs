@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
@@ -24,6 +23,10 @@ namespace UnitTests.Instructions.Branching
         [TestMethod]
         public void TestUserAssemblySubDirectExecution()
         {
+            // Ensure that the stack is clean
+            // before running each test.
+            Vm.Memory.ClearStack();
+
             const Registers r1 = Registers.R1;
             const Registers ac = Registers.AC;
 
@@ -86,7 +89,7 @@ namespace UnitTests.Instructions.Branching
 
             // Ensure that the execution order for the operations
             // is correct.
-            ExecutionOrderTest(ops, lines);
+            TestUtilities.ExecutionOrderTest(Vm, ops, lines);
 
             // Ensure that the execution returns to the correct place
             // after the subroutine returns.
@@ -99,6 +102,10 @@ namespace UnitTests.Instructions.Branching
         [TestMethod]
         public void TestUserAssemblySubLabelExecution()
         {
+            // Ensure that the stack is clean
+            // before running each test.
+            Vm.Memory.ClearStack();
+
             const Registers r1 = Registers.R1;
             const Registers ac = Registers.AC;
 
@@ -151,7 +158,7 @@ namespace UnitTests.Instructions.Branching
 
             // Ensure that the execution order for the operations
             // is correct.
-            ExecutionOrderTest(ops, lines);
+            TestUtilities.ExecutionOrderTest(Vm, ops, lines);
 
             // Ensure that the execution returns to the correct place
             // after the subroutine returns.
@@ -164,6 +171,10 @@ namespace UnitTests.Instructions.Branching
         [TestMethod]
         public void TestUserAssemblyNestedSubLabelExecution()
         {
+            // Ensure that the stack is clean
+            // before running each test.
+            Vm.Memory.ClearStack();
+
             const Registers r1 = Registers.R1;
             const Registers ac = Registers.AC;
 
@@ -242,7 +253,7 @@ namespace UnitTests.Instructions.Branching
 
             // Ensure that the execution order for the operations
             // is correct.
-            ExecutionOrderTest(ops, lines);
+            TestUtilities.ExecutionOrderTest(Vm, ops, lines);
 
             // Ensure that the execution returns to the correct place
             // after the subroutine returns.
@@ -255,6 +266,10 @@ namespace UnitTests.Instructions.Branching
         [TestMethod]
         public void TestUserAssemblyNestedSubDirectExecution()
         {
+            // Ensure that the stack is clean
+            // before running each test.
+            Vm.Memory.ClearStack();
+
             // This is calculated as follows.
             // sizeof(OpCode) * 7 for the number of
             // instructions to skip.
@@ -361,7 +376,7 @@ namespace UnitTests.Instructions.Branching
 
             // Ensure that the execution order for the operations
             // is correct.
-            ExecutionOrderTest(ops, lines);
+            TestUtilities.ExecutionOrderTest(Vm, ops, lines);
 
             // Ensure that the execution returns to the correct place
             // after the subroutine returns.
@@ -388,31 +403,6 @@ namespace UnitTests.Instructions.Branching
             };
 
             Vm.Run(Utils.QuickRawCompile(program));
-        }
-
-        private void ExecutionOrderTest(OpCode[] aOpCodes,
-                                        string[] aProgram)
-        {
-            var pStr = string.Join(Environment.NewLine, aProgram);
-
-            var program = _p.Parse(pStr);
-
-            Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
-
-            var i = 0;
-            var ins = Vm.Cpu.Step();
-            while (!(ins is null))
-            {
-                Assert.IsTrue
-                (
-                    ins.OpCode == aOpCodes[i],
-                    $"OpCode at position {i} mismatched. " +
-                    $"Expected {ins.OpCode}, got {aOpCodes[i]}."
-                );
-
-                ins = Vm.Cpu.Step();
-                ++i;
-            }
         }
     }
 }

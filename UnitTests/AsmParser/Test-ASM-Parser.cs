@@ -605,6 +605,12 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
+                    // For some reason Enum.Parse was detecting
+                    // the first argument as a valid Registers entry.
+                    "mov 53, R8",
+                },
+                new []
+                {
                     "mov $10, R12",
                 },
                 new []

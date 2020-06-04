@@ -2,14 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using VMCore.Assembler;
+using VMCore.VM;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.Instructions.Helpers
 {
     public static class TestUtilities
     {
+        public static readonly VMCore.AsmParser.AsmParser AsmParser =
+            new VMCore.AsmParser.AsmParser();
+
         /// <summary>
         /// A method to generate the required instructions
         /// to test a given opcode.
@@ -110,6 +115,33 @@ namespace UnitTests.Instructions.Helpers
             instructionList.Add(new QuickIns(OpCode.HLT));
 
             return instructionList.ToArray();
+        }
+
+
+        public static void ExecutionOrderTest(VirtualMachine aVm,
+                                              OpCode[] aOpCodes,
+                                              string[] aProgram)
+        {
+            var pStr = string.Join(Environment.NewLine, aProgram);
+
+            var program = AsmParser.Parse(pStr);
+
+            aVm.LoadAndInitialize(Utils.QuickRawCompile(program));
+
+            var i = 0;
+            var ins = aVm.Cpu.Step();
+            while (!(ins is null))
+            {
+                Assert.IsTrue
+                (
+                    ins.OpCode == aOpCodes[i],
+                    $"OpCode at position {i} mismatched. " +
+                    $"Expected {ins.OpCode}, got {aOpCodes[i]}."
+                );
+
+                ins = aVm.Cpu.Step();
+                ++i;
+            }
         }
     }
 }

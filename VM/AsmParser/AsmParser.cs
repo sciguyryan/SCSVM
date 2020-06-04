@@ -24,6 +24,9 @@ namespace VMCore.AsmParser
         private readonly Dictionary<InsCacheEntry, OpCode> _insCacheEntries =
             new Dictionary<InsCacheEntry, OpCode>();
 
+        private readonly Dictionary<string, Registers> 
+            _registerLookUp = new Dictionary<string, Registers>();
+
         #region EXCEPTIONS
 
         /// <summary>
@@ -119,6 +122,12 @@ namespace VMCore.AsmParser
                                      insData.ArgumentRefTypes);
 
                 _insCacheEntries.Add(insCacheEntry, opCode);
+            }
+
+            var registers = (Registers[])Enum.GetValues(typeof(Registers));
+            foreach (var register in registers)
+            {
+                _registerLookUp.Add(register.ToString().ToLower(), register);
             }
         }
 
@@ -506,6 +515,8 @@ namespace VMCore.AsmParser
                                        arg[1..]);
                             }
 
+                            Debug.WriteLine("here = " + regPtr);
+
                             values[i] = regPtr;
                             refTypes[i] = InsArgTypes.RegisterPointer;
                             continue;
@@ -534,7 +545,8 @@ namespace VMCore.AsmParser
                 // indicators of the type.
                 // Currently the only thing that we have left to
                 // check if a register identifier.
-                if (TryParseRegister(arg, out var reg))
+                var lowerStr = arg.ToLower();
+                if (_registerLookUp.TryGetValue(lowerStr, out var reg))
                 {
                     // This is a register identifier.
                     values[i] = reg;

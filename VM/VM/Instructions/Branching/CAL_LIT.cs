@@ -50,12 +50,12 @@ namespace VMCore.VM.Instructions.Branching
 
         public override string ToString(InstructionData aData)
         {
-            var literal = (int)aData[0];
+            var address = (int)aData[0];
 
             // call &$LITERAL
             return (OutputLiteralsAsHex) ?
-                $"{AsmName} &$0x{literal:X}" :
-                $"{AsmName} &${literal:X}";
+                $"{AsmName} &$0x{address:X}" :
+                $"{AsmName} &${address:X}";
         }
     }
 }

@@ -3,8 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.Assembler;
@@ -115,22 +113,10 @@ namespace VMCore.AsmParser
             {
                 var (opCode, insData) = insKvp;
 
-                var boundLabelIds = new List<int>();
-
-                var argLen = insData.ArgumentTypes.Length;
-                for (var i = 0; i < argLen; i++)
-                {
-                    if (insData.CanBindToLabel(i))
-                    {
-                        boundLabelIds.Add(i);
-                    }
-                }
-
                 var insCacheEntry =
                     new InsCacheEntry(insData.AsmName,
-                                    insData.ArgumentTypes,
-                                    insData.ArgumentRefTypes,
-                                    boundLabelIds.ToArray());
+                                     insData.ArgumentTypes,
+                                     insData.ArgumentRefTypes);
 
                 _insCacheEntries.Add(insCacheEntry, opCode);
             }
@@ -611,9 +597,8 @@ namespace VMCore.AsmParser
 
             var pEntry =
                 new InsCacheEntry(insName,
-                                     argTypes,
-                                     args.ArgRefTypes,
-                                     labelIndices.ToArray());
+                                  argTypes,
+                                  args.ArgRefTypes);
 
             if (!_insCacheEntries.TryGetValue(pEntry, out var op))
             {
@@ -623,6 +608,17 @@ namespace VMCore.AsmParser
                        string.Join(", ", aRawArgs),
                        string.Join<Type>(", ", argTypes),
                        string.Join(", ", args.ArgRefTypes));
+            }
+
+            // We have a potential match.
+            // Now we need to check if we can bind labels to the
+            // arguments, if specified.
+            foreach (var labelIndex in labelIndices)
+            {
+                if (!_insCache[op].CanBindToLabel(labelIndex))
+                {
+                    return null;
+                }
             }
 
             return new QuickIns(op, args.Arguments, asmLabel);

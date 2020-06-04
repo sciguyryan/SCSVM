@@ -134,6 +134,10 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
+                    "call &$0x123",
+                },
+                new []
+                {
                     "call !GOOD",
                 },
                 new []
@@ -374,14 +378,19 @@ namespace UnitTests.AsmParser
                 new []
                 {
                     new QuickIns(OpCode.CAL_LIT,
+                                 new object[] { 0x123 })
+                },
+                new []
+                {
+                    new QuickIns(OpCode.CAL_LIT,
                                  new object[] { 0 },
                                  new AsmLabel("GOOD", 0))
                 },
                 new []
                 {
                     new QuickIns(OpCode.CAL_LIT,
-                        new object[] { 0 },
-                        new AsmLabel("GOOD", 0))
+                                 new object[] { 0 },
+                                 new AsmLabel("GOOD", 0))
                 },
                 new []
                 {

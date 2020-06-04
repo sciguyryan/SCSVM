@@ -37,7 +37,7 @@ namespace UnitTests.Instructions.Helpers
             // The number of arguments that
             // take the Register type.
             var registerArgs =
-                types.Count(x => x == typeof(Registers));
+                types.Count(aX => aX == typeof(Registers));
 
             // Load our arguments into a queue
             // to avoid things being accidentally
@@ -69,38 +69,40 @@ namespace UnitTests.Instructions.Helpers
             // list that we are actually testing.
             var args = new List<object>();
             var registerId = 0;
-            for (var i = 0; i < types.Length; i++)
+            foreach (var t in types)
             {
-                switch (types[i])
+                switch (t)
                 {
-                    case Type _ when types[i] == typeof(Registers):
-                        {
-                            // Keep track of which register
-                            // IDs have already been used.
-                            // Argument 1 will point to register 0
-                            // (R1), argument 2 will point to
-                            // register 1 (R2), etc.
-                            args.Add((Registers)registerId);
-                            ++registerId;
-                        }
-                        break;
+                    case { } _ when t == typeof(Registers):
+                    {
+                        // Keep track of which register
+                        // IDs have already been used.
+                        // Argument 1 will point to register 0
+                        // (R1), argument 2 will point to
+                        // register 1 (R2), etc.
+                        args.Add((Registers)registerId);
+                        ++registerId;
+                    }
+                    break;
 
-                    case Type _ when types[i] == typeof(int):
-                        {
-                            // Ensure that we are not reusing
-                            // the same values.
-                            args.Add(Convert.ChangeType(argQueue.Dequeue(),
-                                                        typeof(int)));
-                        }
-                        break;
+                    case { } _ when t == typeof(int):
+                    {
+                        // Ensure that we are not reusing
+                        // the same values.
+                        var o =
+                            Convert.ChangeType(argQueue.Dequeue(),
+                                               typeof(int));
+                        args.Add(o);
+                    }
+                    break;
 
                     default:
                         throw new NotSupportedException
-                         (
-                            $"GenerateProgram: the type {types[i]} " +
+                        (
+                            $"GenerateProgram: the type {t} " +
                             "was passed as an argument type, but no " +
                             "support has been provided for that type."
-                         );
+                        );
                 }
             }
 

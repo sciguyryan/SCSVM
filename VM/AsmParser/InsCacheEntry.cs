@@ -15,17 +15,13 @@ namespace VMCore.AsmParser
 
         public InsArgTypes[] ArgRefTypes { get; }
 
-        public int[] BoundLabelIndices { get; }
-
         public InsCacheEntry(string aAsmName,
                              Type[] aArgTypes,
-                             InsArgTypes[] aRefTypes,
-                             int[] aBoundLabelIndices)
+                             InsArgTypes[] aRefTypes)
         {
             InsAsmName = aAsmName;
             ArgTypes = aArgTypes;
             ArgRefTypes = aRefTypes;
-            BoundLabelIndices = aBoundLabelIndices;
         }
 
         public override bool Equals(object? aObj)
@@ -49,16 +45,10 @@ namespace VMCore.AsmParser
                 return false;
             }
 
-            if (BoundLabelIndices.Length != p.BoundLabelIndices.Length)
-            {
-                return false;
-            }
-
             return
                 InsAsmName == p.InsAsmName &&
                 ArgTypes.SequenceEqual(p.ArgTypes) &&
-                ArgRefTypes.SequenceEqual(p.ArgRefTypes) &&
-                BoundLabelIndices.SequenceEqual(p.BoundLabelIndices);
+                ArgRefTypes.SequenceEqual(p.ArgRefTypes);
         }
 
         public override int GetHashCode()
@@ -75,12 +65,6 @@ namespace VMCore.AsmParser
             foreach (var b in ArgRefTypes)
             {
                 hash = (hash * 47) + b.GetHashCode();
-            }
-
-            hash = (hash * 83) + BoundLabelIndices.Length;
-            foreach (var c in BoundLabelIndices)
-            {
-                hash = (hash * 83) + c.GetHashCode();
             }
 
             return hash;

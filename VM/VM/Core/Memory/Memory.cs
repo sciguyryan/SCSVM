@@ -432,6 +432,15 @@ namespace VMCore.VM.Core.Memory
         #region Stack Methods
 
         /// <summary>
+        /// Empty the stack.
+        /// </summary>
+        public void ClearStack()
+        {
+            StackTypes.Clear();
+            StackPointer = StackEnd;
+        }
+
+        /// <summary>
         /// Push an integer value to the stack.
         /// </summary>
         /// <param name="aValue">
@@ -520,6 +529,11 @@ namespace VMCore.VM.Core.Memory
         /// <summary>
         /// Print the contents of the stack.
         /// </summary>
+        /// <param name="aToDebug">
+        /// A boolean. True if the output should be sent via
+        /// Debug.Write, otherwise it should be sent via
+        /// Console.Write instead.
+        /// </param>
         /// <exception cref="NotSupportedException">
         /// Thrown if a type is present in the stack hint cache
         /// for which no support has been added.
@@ -1080,11 +1094,23 @@ namespace VMCore.VM.Core.Memory
         /// Debugging function to view the list of memory regions,
         /// their bounds and associated permission flags.
         /// </summary>
-        public void DebugMemoryRegions()
+        /// <param name="aToDebug">
+        /// A boolean. True if the output should be sent via
+        /// Debug.Write, otherwise it should be sent via
+        /// Console.Write instead.
+        /// </param>
+        public void DebugMemoryRegions(bool aToDebug)
         {
             foreach (var l in GetFormattedMemoryRegions())
             {
-                Debug.WriteLine(l);
+                if (!aToDebug)
+                {
+                    Debug.WriteLine(l);
+                }
+                else
+                {
+                    Console.WriteLine(l);
+                }
             }
         }
 
@@ -1093,8 +1119,11 @@ namespace VMCore.VM.Core.Memory
         {
             if (aNewSize < Length)
             {
-                // TODO - add support for this.
-                // It is a bit more complex than making things larger.
+                // It is likely better not to support this as
+                // it comes with a lot of complexities such
+                // as how to contract regions, etc.
+                // TODO - if this is needed add support
+                // later.
                 throw new NotSupportedException();
             }
 

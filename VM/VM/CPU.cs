@@ -692,15 +692,22 @@ namespace VMCore.VM
                 }
                 else
                 {
-                    Utils.TryParseInt(insStr[offset..], out memPtr);
+                    if (!Utils.TryParseInt(insStr[offset..], out memPtr))
+                    {
+                        // This was a register pointer. We cannot do
+                        // substitution here.
+                        continue;
+                    }
                 }
 
                 // The address is offset against the base position
                 // of the executable memory region plus 8 for the
                 // size of subroutine instruction plus the argument.
-                disInstructions[i] =
-                    insStr[..5] + '!' + 
-                    subAddresses[memPtr + basePos + 8];
+                if (subAddresses.TryGetValue(memPtr + basePos + 8,
+                                             out var subName))
+                {
+                    disInstructions[i] = insStr[..5] + '!' + subName;
+                }
             }
 
             // Construct the full disassembled line.

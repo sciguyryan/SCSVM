@@ -174,8 +174,7 @@ namespace TestConsole
             Console.WriteLine();
 
             Console.WriteLine("------------[Disassembly]-----------");
-            foreach (var s in
-                     vm.Cpu.Disassemble(vm.Cpu.MemExecutableSeqId, true))
+            foreach (var s in vm.Disassembler.Disassemble(true))
             {
                 Console.WriteLine(s);
             }

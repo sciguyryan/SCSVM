@@ -20,19 +20,25 @@ namespace VMCore.VM
         /// The memory block that has been assigned to this
         /// virtual machine instance.
         /// </summary>
-        public Memory Memory { get; set; }
+        public Memory Memory { get; }
 
         /// <summary>
         /// The CPU that has been assigned to this virtual
         /// machine instance.
         /// </summary>
-        public Cpu Cpu { get;}
+        public Cpu Cpu { get; }
 
         /// <summary>
         /// The debugger that has been assigned to this
         /// virtual machine instance.
         /// </summary>
         public Debugger Debugger { get; }
+
+        /// <summary>
+        /// The disassembler that has been assigned to this
+        /// virtual machine instance.
+        /// </summary>
+        public Disassembler Disassembler { get; }
 
         #endregion // Public Properties
 
@@ -54,7 +60,10 @@ namespace VMCore.VM
 
             Memory = 
                 new Memory(this, aMainMemoryCapacity, aStackCapacity);
+
             Cpu = new Cpu(this, aCanCpuSwapMemoryRegions);
+
+            Disassembler = new Disassembler(this);
 
 #if DEBUG
             _dbgMainMemoryCapacity = aMainMemoryCapacity;

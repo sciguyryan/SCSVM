@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using VMCore.VM.Core;
@@ -45,11 +44,6 @@ namespace VMCore.VM
         /// <summary>
         /// A cached of the opcodes to their instruction instances.
         /// </summary>
-        /// <remarks>
-        /// Since the CPU cannot be run on its own then this is safe
-        /// to use here as the virtual machine parent will always
-        /// have called the method to build these caches.
-        /// </remarks>
         private readonly Dictionary<OpCode, Instruction> _instructionCache =
             ReflectionUtils.InstructionCache;
 
@@ -604,129 +598,6 @@ namespace VMCore.VM
             }
         }
 
-        /// <summary>
-        /// Converts the byte code of a program back into assembly.
-        /// This will skip any exceptions that would otherwise be thrown
-        /// when executing this code.
-        /// </summary>
-        /// <param name="aMemSeqId">
-        /// The sequence ID for the memory region containing the code.
-        /// </param>
-        /// <param name="aShowLocation">
-        /// If the binary locations of the commands should be shown.
-        /// </param>
-        /// <param name="aStartAddr">
-        /// The address from which the execution should commence.
-        /// </param>
-        /// <returns>
-        /// A string array containing one instruction per entry.
-        /// </returns>
-        public string[] Disassemble(int aMemSeqId,
-                                    bool aShowLocation = false,
-                                    int aStartAddr = 0)
-        {
-            // Reset the position of the stream back to
-            // the start.
-            var basePos = Vm.Memory.BaseMemorySize;
-            var pos = aStartAddr + basePos;
-
-            var region =
-                Vm.Memory.GetMemoryRegion(aMemSeqId);
-            if (region is null)
-            {
-                throw new Exception
-                (
-                    "Disassemble: the specified memory sequence ID " +
-                    $"{aMemSeqId} is invalid. No disassembly is possible."
-                );
-            }
-
-            var minPos = region.Start;
-            var maxPos = region.End;
-
-            var subAddresses = new Dictionary<int, string>();
-            var disOpcodes = new List<OpCode>();
-            var disInstructions = new List<string>();
-            var disAddresses = new List<int>();
-
-            while (pos >= minPos && pos < maxPos)
-            {
-                disAddresses.Add(pos);
-
-                var ins =
-                    DisassembleNextInstruction(ref pos, out var op);
-                if (op == OpCode.SUBROUTINE)
-                {
-                    // We have a subroutine.
-                    // We do not want the colon at the
-                    // end so we strip that away here.
-                    subAddresses.Add(pos, ins[..^1]);
-                }
-
-                disInstructions.Add(ins);
-                disOpcodes.Add(op);
-            }
-
-            // Now we can do a bit of extra clean up.
-            var len = disInstructions.Count;
-            for (var i = 0; i < len; i++)
-            {
-                // We are only interested in call literal address
-                // here, for the moment.
-                if (disOpcodes[i] != OpCode.CAL_LIT)
-                {
-                    continue;
-                }
-
-                var insStr = disInstructions[i];
-
-                int memPtr;
-                var offset = 7;
-
-                // Are we dealing with a hex or normal
-                // integer literal?
-                if (insStr[offset..(offset + 2)] == "0x")
-                {
-                    offset += 2;
-                    Utils.TryParseHexInt(insStr[offset..], out memPtr);
-                }
-                else
-                {
-                    if (!Utils.TryParseInt(insStr[offset..], out memPtr))
-                    {
-                        // This was a register pointer. We cannot do
-                        // substitution here.
-                        continue;
-                    }
-                }
-
-                // The address is offset against the base position
-                // of the executable memory region plus 8 for the
-                // size of subroutine instruction plus the argument.
-                if (subAddresses.TryGetValue(memPtr + basePos + 8,
-                                             out var subName))
-                {
-                    disInstructions[i] = insStr[..5] + '!' + subName;
-                }
-            }
-
-            // Construct the full disassembled line.
-            var output = new string[len];
-            for (var i = 0; i < len; i++)
-            {
-                var addr = "";
-                if (aShowLocation)
-                {
-                    addr =
-                        $"{disAddresses[i]:X8} : ";
-                }
-
-                output[i] = addr + disInstructions[i];
-            }
-
-            return output;
-        }
-
         public void PushState()
         {
             // Push the state registers to the stack.
@@ -799,7 +670,7 @@ namespace VMCore.VM
         /// <returns>
         /// An object containing the opcode instruction data.
         /// </returns>
-        private object GetNextInstructionArgument(ref int aPos, Type aT)
+        public object GetNextInstructionArgument(ref int aPos, Type aT)
         {
             object arg;
             switch (aT)
@@ -903,106 +774,6 @@ namespace VMCore.VM
             Vm.Debugger.RemoveAllBreakpoints();
             _hasIpBreakpoint = false;
             _hasPcBreakpoint = false;
-        }
-
-        /// <summary>
-        /// Used to disassemble the next instruction.
-        /// Essentially a clone of FetchExecuteNextInstruction
-        /// but without the exception throwing code.
-        /// </summary>
-        /// <param name="aPos">
-        /// The position in memory from which to begin 
-        /// reading the instruction.
-        /// </param>
-        /// <param name="aOp">
-        /// The identified opcode for the instruction if one was
-        /// identified. NOP will be returned in the case of malformed
-        /// data.
-        /// </param>
-        /// <returns>
-        /// A string giving the disassembly of the next instruction.
-        /// </returns>
-        private string DisassembleNextInstruction(ref int aPos,
-                                                  out OpCode aOp)
-        {
-            OpCode op;
-            try
-            {
-                op =
-                    Vm.Memory.GetOpCode(aPos, SysCtx, true);
-            }
-            catch
-            {
-                aOp = OpCode.NOP;
-                return string.Empty;
-            }
-
-            if (!Enum.IsDefined(typeof(OpCode), op))
-            {
-                // We do not recognize this opcode and so
-                // we would have no meaningful output
-                // here at all. Return the byte code instead.
-                aOp = OpCode.NOP;
-                return $"???? {op:X2}";
-            }
-
-            // No instruction matching the OpCode was found.
-            // In practice this shouldn't happen.
-            if (!_instructionCache.TryGetValue(op,
-                                               out var ins))
-            {
-                // Return the byte code as that's all we can
-                // safely provide.
-                aOp = OpCode.NOP;
-                return $"???? {op:X2}";
-            }
-
-            aPos += sizeof(OpCode);
-
-            var opIns = new InstructionData
-            {
-                OpCode = op
-            };
-
-            aOp = op;
-
-            // The types of the arguments expected for this instruction.
-            var argTypes = ins.ArgumentTypes;
-
-            // Iterate through the list of arguments and attempt
-            // to populate the data.
-            try
-            {
-                foreach (var t in argTypes)
-                {
-                    opIns.Args.Add(new InstructionArg
-                    {
-                        Value = GetNextInstructionArgument(ref aPos, t)
-                    });
-                }
-            }
-            catch
-            {
-                // Do nothing.
-            }
-
-            if (opIns.Args.Count == ins.ArgumentTypes.Length)
-            {
-                return ins.ToString(opIns);
-            }
-
-            // If the number of arguments is not equal to the expected
-            // number then the data is malformed.
-            // Try to get the most information that we can
-            // from this but the data is likely to be useless.
-
-            var s = $"{ins.AsmName}";
-            foreach (var arg in opIns.Args)
-            {
-                s += $" {arg:X2}";
-            }
-
-            return s;
         }
 
         /// <summary>

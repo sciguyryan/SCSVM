@@ -1114,6 +1114,20 @@ namespace VMCore.VM.Core.Memory
             }
         }
 
+        /// <summary>
+        /// Resize the memory data array.
+        /// </summary>
+        /// <param name="aNewSize">
+        /// The new size of the memory array.
+        /// </param>
+        /// <param name="aPreserveContents">
+        /// A boolean, true if the contents of the memory should be
+        /// preserved, false otherwise.
+        /// </param>
+        /// <exception cref="NotSupportedException">
+        /// Thrown if the new memory size is smaller than the current
+        /// memory size.
+        /// </exception>
         public void ResizeMemory(int aNewSize,
                                  bool aPreserveContents = false)
         {

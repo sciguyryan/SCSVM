@@ -54,16 +54,6 @@ namespace VMCore.VM
 #endif
 
         /// <summary>
-        /// An internal indicator of if an IP breakpoint has been triggered.
-        /// </summary>
-        private bool _hasIpBreakpoint;
-
-        /// <summary>
-        /// An internal indicator of if a PC breakpoint has been triggered.
-        /// </summary>
-        private bool _hasPcBreakpoint;
-
-        /// <summary>
         /// A shorthand for the user security context.
         /// </summary>
         private const SecurityContext UserCtx =
@@ -192,7 +182,6 @@ namespace VMCore.VM
             if (_minExecutableBound != -1)
             {
                 SetStartAddress(aStartAddr);
-                SetBreakpointObservers();
                 return;
             }
 
@@ -219,7 +208,6 @@ namespace VMCore.VM
             }
 
             SetStartAddress(aStartAddr);
-            SetBreakpointObservers();
         }
 
         /// <summary>
@@ -716,54 +704,14 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Sets any breakpoint trigger hooks that have been specified.
+        /// Enable or disable the halted state of the CPU.
         /// </summary>
-        private void SetBreakpointObservers()
+        /// <param name="aState">
+        /// The halt state to apply to the CPU.
+        /// </param>
+        public void SetHaltedState(bool aState)
         {
-            if (Vm.Debugger.Breakpoints.Count == 0)
-            {
-                return;
-            }
-
-            void InstructionPointerBp(int aPos)
-            {
-                var halt = Vm.Debugger
-                    .TriggerBreakpoint(aPos, Breakpoint.BreakpointType.PC);
-
-                SetHaltedState(halt);
-            }
-
-            void ProgramCounterBp(int aPos)
-            {
-                var halt = Vm.Debugger
-                    .TriggerBreakpoint(aPos, Breakpoint.BreakpointType.PC);
-
-                SetHaltedState(halt);
-            }
-
-            // If we have any instruction pointer breakpoints
-            // then we need to add the handler for those now.
-            if (Vm.Debugger
-                .HasBreakpointOfType(Breakpoint.BreakpointType.IP))
-            {
-                _hasIpBreakpoint = true;
-                Registers.Hook(Core.Register.Registers.IP,
-                               InstructionPointerBp,
-                               Register.HookTypes.Change);
-            }
-
-            // If we have any program counter breakpoints
-            // then we need to add the handler for those now.
-            if (!Vm.Debugger
-                .HasBreakpointOfType(Breakpoint.BreakpointType.PC))
-            {
-                return;
-            }
-
-            _hasPcBreakpoint = true;
-            Registers.Hook(Core.Register.Registers.PC,
-                           ProgramCounterBp,
-                           Register.HookTypes.Change);
+            IsHalted = aState;
         }
 
         /// <summary>
@@ -772,19 +720,6 @@ namespace VMCore.VM
         private void ClearBreakpoints()
         {
             Vm.Debugger.RemoveAllBreakpoints();
-            _hasIpBreakpoint = false;
-            _hasPcBreakpoint = false;
-        }
-
-        /// <summary>
-        /// Enable or disable the halted state of the CPU.
-        /// </summary>
-        /// <param name="aState">
-        /// The halt state to apply to the CPU.
-        /// </param>
-        private void SetHaltedState(bool aState)
-        {
-            IsHalted = aState;
         }
 
         /// <summary>

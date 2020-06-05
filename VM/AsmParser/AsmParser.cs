@@ -515,8 +515,6 @@ namespace VMCore.AsmParser
                                        arg[1..]);
                             }
 
-                            Debug.WriteLine("here = " + regPtr);
-
                             values[i] = regPtr;
                             refTypes[i] = InsArgTypes.RegisterPointer;
                             continue;

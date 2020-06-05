@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using VMCore.Assembler;
+using VMCore.VM.Core;
+using VMCore.VM.Core.Breakpoints;
 using VMCore.VM.Core.Memory;
+using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
 
 namespace VMCore.VM
@@ -123,6 +126,10 @@ namespace VMCore.VM
 
             Cpu.Initialize(seqId, aStartAddr);
 
+            // Load any break point observers that have been
+            // specified.
+            SetBreakpointObservers();
+
             return seqId;
         }
 
@@ -172,11 +179,105 @@ namespace VMCore.VM
             Cpu.Run();
         }
 
-#if DEBUG
-        private void LoadRegisterTestData()
+        /// <summary>
+        /// Sets any breakpoint trigger hooks that have been specified.
+        /// </summary>
+        private void SetBreakpointObservers()
         {
+            if (Debugger.Breakpoints.Count == 0)
+            {
+                return;
+            }
+
+            const BreakpointType regRead = 
+                BreakpointType.RegisterRead;
+
+            const BreakpointType regWrite = 
+                BreakpointType.RegisterWrite;
+
+            const BreakpointType memRead =
+                BreakpointType.MemoryRead;
+
+            const BreakpointType memWrite =
+                BreakpointType.MemoryWrite;
+
+            // Add the handlers for each specified type.
+            foreach (var bp in Debugger.Breakpoints)
+            {
+                Registers regId;
+
+                switch (bp.Type)
+                {
+                    case BreakpointType.MemoryRead:
+                        Memory.OnRead = aPos =>
+                        {
+                            var halt =
+                                Debugger
+                                    .TriggerBreakpoint(aPos, memRead);
+                            Cpu.SetHaltedState(halt);
+                        };
+                        break;
+
+                    case BreakpointType.MemoryWrite:
+                        Memory.OnWrite = aPos =>
+                        {
+                            var halt =
+                                Debugger
+                                    .TriggerBreakpoint(aPos, memWrite);
+                            Cpu.SetHaltedState(halt);
+                        };
+                        break;
+
+                    case BreakpointType.RegisterRead:
+                        if (bp.RegisterId is null)
+                        {
+                            continue;
+                        }
+
+                        regId = (Registers)bp.RegisterId;
+                        Cpu.Registers.Registers[regId].OnRead = 
+                            (aPos, aRegId) =>
+                        {
+                            var halt =
+                                Debugger
+                                    .TriggerBreakpoint(aPos, regRead, aRegId);
+                            Cpu.SetHaltedState(halt);
+                        };
+                        break;
+
+                    case BreakpointType.RegisterWrite:
+                        if (bp.RegisterId is null)
+                        {
+                            continue;
+                        }
+
+                        regId = (Registers)bp.RegisterId;
+                        Cpu.Registers.Registers[regId].OnRead = 
+                            (aPos, aRegId) =>
+                        {
+                            var halt =
+                                Debugger
+                                    .TriggerBreakpoint(aPos, regWrite, aRegId);
+                            Cpu.SetHaltedState(halt);
+                        };
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
         }
 
+        /// <summary>
+        /// Remove any breakpoints currently hooked within this
+        /// virtual machine instance.
+        /// </summary>
+        public void ClearBreakpoints()
+        {
+            Debugger.RemoveAllBreakpoints();
+        }
+
+#if DEBUG
         public void PerformanceTest(string aInsStr,
                                     bool aOptimize = false)
         {
@@ -212,6 +313,10 @@ namespace VMCore.VM
                 $"Total Time: {sw.Elapsed}, " +
                 $"Instructions/Second: {itrPerSec:N0}"
             );
+        }
+
+        private void LoadRegisterTestData()
+        {
         }
 #endif
     }

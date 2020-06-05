@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using VMCore.VM.Core;
+using VMCore.VM.Core.Breakpoints;
 using VMCore.VM.Core.Register;
 
 namespace VMCore.VM
@@ -13,9 +14,9 @@ namespace VMCore.VM
     public class Debugger
     {
         /// <summary>
-        /// The virtual machine instance to which this debugger is bound.
+        /// The virtual machine instance to which this debugger belongs.
         /// </summary>
-        private VirtualMachine _vm;
+        private readonly VirtualMachine _vm;
 
         public Debugger(VirtualMachine aVm)
         {
@@ -41,11 +42,37 @@ namespace VMCore.VM
         /// <param name="aAction">
         /// The action to be performed when the breakpoint is triggered.
         /// </param>
-        public void AddBreakpoint(int aBreakAt, 
-                                  Breakpoint.BreakpointType aType,
-                                  Breakpoint.BreakpointAction aAction)
+        /// <param name="aRegId">
+        /// The register to which this breakpoint should be hooked.
+        /// </param>
+        /// <param name="aBreakAtAny">
+        /// If this breakpoint should disregard the break at
+        /// value and trigger whenever the base condition is met.
+        /// </param>
+        public void AddBreakpoint(int aBreakAt,
+                                  BreakpointType aType,
+                                  Breakpoint.BreakpointAction aAction,
+                                  Registers? aRegId = null,
+                                  bool aBreakAtAny = false)
         {
-            Breakpoints.Add(new Breakpoint(aBreakAt, aType, aAction));
+            if (aRegId is null &&
+                (aType == BreakpointType.RegisterRead ||
+                 aType == BreakpointType.RegisterWrite))
+            {
+                throw new ArgumentNullException
+                (
+                    "AddBreakpoint: no register ID was specified " +
+                    "a register-type breakpoint. This is not permitted."
+                );
+            }
+
+            var bp =
+                new Breakpoint(aBreakAt,
+                    aType,
+                    aAction,
+                    aRegId,
+                    aBreakAtAny);
+            Breakpoints.Add(bp);
         }
 
         /// <summary>
@@ -54,15 +81,23 @@ namespace VMCore.VM
         /// <param name="aBreakAt">
         /// The position at which the breakpoint should trigger.
         /// </param>
-        /// <param name="aType">The type of breakpoint to apply.</param>
+        /// <param name="aType">The type of breakpoint.</param>
+        /// <param name="aRegId">
+        /// The register to which this breakpoint is hooked.
+        /// Expected to be null when dealing with non-register
+        /// breakpoints.
+        /// </param>
         public void RemoveBreakpoint(int aBreakAt,
-                                     Breakpoint.BreakpointType aType)
+                                     BreakpointType aType,
+                                     Registers? aRegId = null)
         {
             var bpClone = Breakpoints.ToArray();
             for (var i = 0; i < bpClone.Length; i++)
             {
                 var bp = bpClone[i];
-                if (bp.BreakAt == aBreakAt && bp.Type == aType)
+                if (bp.Type == aType &&
+                    (bp.BreakAt == aBreakAt || bp.BreakAtAnyValue) &&
+                    bp.RegisterId == aRegId)
                 {
                     Breakpoints.RemoveAt(i);
                 }
@@ -78,28 +113,38 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Returns a breakpoint for a given position and type if one exists.
+        /// Returns an array of breakpoints that match the criteria.
         /// </summary>
         /// <param name="aBreakAt">
         /// The position at which the breakpoint should trigger.
         /// </param>
-        /// <param name="aType">The type of breakpoint to apply.</param>>
+        /// <param name="aType">The type of breakpoint to apply.</param>
+        /// <param name="aRegId">
+        /// The register to which this breakpoint is hooked.
+        /// Expected to be null when dealing with non-register
+        /// breakpoints.
+        /// </param>
         /// <returns>
-        /// A Breakpoint object is a valid breakpoint is located,
-        /// null otherwise.
+        /// An array of objects that match the criteria. An empty array
+        /// if none were found.
         /// </returns>
-        public Breakpoint? GetBreakpoint(int aBreakAt,
-                                        Breakpoint.BreakpointType aType)
+        public Breakpoint[] GetBreakpoints(int aBreakAt,
+                                           BreakpointType aType,
+                                           Registers? aRegId = null)
         {
+            List<Breakpoint> bps = new List<Breakpoint>();
+
             foreach (var bp in Breakpoints)
             {
-                if (bp.Type == aType && bp.BreakAt == aBreakAt)
+                if (bp.Type == aType &&
+                    (bp.BreakAt == aBreakAt || bp.BreakAtAnyValue) &&
+                    bp.RegisterId == aRegId)
                 {
-                    return bp;
+                    bps.Add(bp);
                 }
             }
 
-            return null;
+            return bps.ToArray();
         }
 
         /// <summary>
@@ -110,55 +155,51 @@ namespace VMCore.VM
         /// The position at which the breakpoint is expected to trigger.
         /// </param>
         /// <param name="aType">The type of breakpoint.</param>
+        /// <param name="aRegId">
+        /// The register to which this breakpoint is hooked.
+        /// Expected to be null when dealing with non-register
+        /// breakpoints.
+        /// </param>
         /// <returns>
         /// A boolean indicating true if a breakpoint exists, false otherwise.
         /// </returns>
         public bool HasBreakpoint(int aBreakAt,
-                                  Breakpoint.BreakpointType aType)
+                                  BreakpointType aType,
+                                  Registers? aRegId = null)
         {
             foreach (var bp in Breakpoints)
             {
-                if (bp.Type == aType && bp.BreakAt == aBreakAt)
+                if (bp.Type == aType && 
+                    (bp.BreakAt == aBreakAt || bp.BreakAtAnyValue) &&
+                    bp.RegisterId == aRegId)
                 {
                     return true;
                 }
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// Check if a breakpoint exists for a given register value.
-        /// </summary>
-        /// <param name="aReg">
-        /// The register who's value should be checked.
-        /// </param>
-        /// <param name="aType">The type of breakpoint.</param>
-        /// <returns>
-        /// A boolean indicating true if a breakpoint exists, false otherwise.
-        /// </returns>
-        public bool HasBreakpoint(Registers aReg,
-                                  Breakpoint.BreakpointType aType)
-        {
-            var breakAt = 
-                _vm.Cpu.Registers[(aReg, SecurityContext.System)];
-
-            return HasBreakpoint(breakAt, aType);
         }
 
         /// <summary>
         /// Checks if one or more breakpoints of a given type exists.
         /// </summary>
         /// <param name="aType">The type of breakpoint.</param>
+        /// <param name="aRegId">
+        /// The register to which the breakpoint is hooked.
+        /// Expected to be null when dealing with non-register
+        /// breakpoints.
+        /// </param>
         /// <returns>
-        /// A boolean true if one or more breakpoints have been added of
-        /// this breakpoint type, false otherwise.
+        /// A boolean true if one or more breakpoints of this type
+        /// have been specified, false otherwise.
         /// </returns>
-        public bool HasBreakpointOfType(Breakpoint.BreakpointType aType)
+        public bool HasBreakpointOfType(BreakpointType aType,
+                                        Registers? aRegId = null)
         {
             foreach (var bp in Breakpoints)
             {
-                if (bp.Type == aType)
+                if (bp.Type == aType &&
+                    bp.RegisterId == aRegId)
                 {
                     return true;
                 }
@@ -168,32 +209,43 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Trigger an action associated with a breakpoint, if one is set.
+        /// Trigger an action associated with one or more 
         /// </summary>
         /// <param name="aBreakAt">
         /// The position at which the breakpoint is expected to trigger.
         /// </param>
         /// <param name="aType">The type of breakpoint.</param>
+        /// <param name="aRegId">
+        /// The register to which the breakpoint is hooked.
+        /// Expected to be null when dealing with non-register
+        /// breakpoints.
+        /// </param>
         /// <returns>
-        /// A boolean true if the breakpoint should halt the CPU,
-        /// false otherwise.
+        /// A boolean true if any breakpoint has specified that the CPU
+        /// should halt, false otherwise.
         /// </returns>
         public bool TriggerBreakpoint(int aBreakAt,
-                                      Breakpoint.BreakpointType aType)
+                                      BreakpointType aType,
+                                      Registers? aRegId = null)
         {
-            if (!HasBreakpoint(aBreakAt, aType))
+            if (!HasBreakpoint(aBreakAt, aType, aRegId))
             {
                 return false;
             }
 
-            var breakpoint = GetBreakpoint(aBreakAt, aType);
-            return breakpoint?.Action != null && 
-                   breakpoint.Action.Invoke(aBreakAt);
-        }
+            var shouldHalt = false;
+            var bpd = 
+                GetBreakpoints(aBreakAt, aType, aRegId);
 
-        public void Step()
-        {
-            throw new NotImplementedException();
+            foreach (var bp in bpd)
+            {
+                if (bp?.Action != null && bp.Action.Invoke(aBreakAt))
+                {
+                    shouldHalt = true;
+                }
+            }
+
+            return shouldHalt;
         }
     }
 }

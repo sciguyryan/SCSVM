@@ -16,6 +16,23 @@ namespace VMCore.VM.Core.Memory
         #region Public Properties
 
         /// <summary>
+        /// The type of hook requested.
+        /// </summary>
+        public enum HookTypes
+        {
+            /// <summary>
+            /// A hook that fires when a value is written to an
+            /// address.
+            /// </summary>
+            Write,
+            /// <summary>
+            /// A hook that fires when a value is read from an
+            /// address.
+            /// </summary>
+            Read
+        }
+
+        /// <summary>
         /// The total size of the memory in bytes.
         /// </summary>
         public int Length => Data.Length;
@@ -53,6 +70,18 @@ namespace VMCore.VM.Core.Memory
         /// The VM instance that holds this CPU.
         /// </summary>
         public VirtualMachine Vm { get; }
+
+        /// <summary>
+        /// The hook that should be fired when the value of a memory
+        /// address is changed.
+        /// </summary>
+        public Action<int>? OnWrite;
+
+        /// <summary>
+        /// The hook that should be fired when the value of a memory
+        /// address is read.
+        /// </summary>
+        public Action<int>? OnRead;
 
         #endregion // Public Properties
 
@@ -940,6 +969,8 @@ namespace VMCore.VM.Core.Memory
                            aContext,
                            aExec);
 
+            OnRead?.Invoke(aPos);
+
             return Data[aPos];
         }
 
@@ -978,6 +1009,8 @@ namespace VMCore.VM.Core.Memory
                            DataAccessType.Read,
                            aContext,
                            aExec);
+
+            OnRead?.Invoke(aPos);
 
             return
                 new Span<byte>(Data).Slice(aPos, aLength).ToArray();
@@ -1019,6 +1052,8 @@ namespace VMCore.VM.Core.Memory
                            aContext,
                            aExec);
 
+            OnWrite?.Invoke(aPos);
+
             Data[aPos] = aValue;
         }
 
@@ -1057,6 +1092,8 @@ namespace VMCore.VM.Core.Memory
                            DataAccessType.Write,
                            aContext,
                            aExec);
+
+            OnWrite?.Invoke(aPos);
 
             // Sigh... why couldn't array ranges for writing too :(
             for (var i = 0; i < aBytes.Length; i++)

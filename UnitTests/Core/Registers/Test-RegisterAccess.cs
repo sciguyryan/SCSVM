@@ -21,7 +21,8 @@ namespace UnitTests.Core.Registers
             // Add a dummy register to test access.
             var reg = 
                 new Register(_vm.Cpu,
-                      RegisterAccess.PR | RegisterAccess.PW);
+                      RegisterAccess.PR | RegisterAccess.PW,
+                      VMCore.VM.Core.Register.Registers.TESTER);
 
             _vm.Cpu.Registers
                 .Registers.Add(VMCore.VM.Core.Register.Registers.TESTER,

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace VMCore.VM.Core.Register
 {
@@ -20,14 +21,6 @@ namespace VMCore.VM.Core.Register
         {
             Cpu = aCpu;
 
-            // Initialization here is done manually as, if I ever
-            // decide to re-add the shadow registers this
-            // will be important.
-            // Auto-initializing by enumerating over the enum is
-            // cleaner but will add registers such as AX, which
-            // is a shadow register for EAX and cannot be counted
-            // as a separate register.
-
             const RegisterAccess rw =
                 RegisterAccess.R | RegisterAccess.W;
 
@@ -40,46 +33,63 @@ namespace VMCore.VM.Core.Register
             const RegisterAccess prpw =
                 RegisterAccess.PR | pw;
 
-            // Data registers.
-            Registers.Add(Core.Register.Registers.R1,
-                          new Register(aCpu, rw));
-            Registers.Add(Core.Register.Registers.R2,
-                          new Register(aCpu, rw));
-            Registers.Add(Core.Register.Registers.R3,
-                          new Register(aCpu, rw));
-            Registers.Add(Core.Register.Registers.R4,
-                          new Register(aCpu, rw));
-            Registers.Add(Core.Register.Registers.R5,
-                          new Register(aCpu, rw));
-            Registers.Add(Core.Register.Registers.R6,
-                          new Register(aCpu, rw));
-            Registers.Add(Core.Register.Registers.R7,
-                          new Register(aCpu, rw));
-            Registers.Add(Core.Register.Registers.R8,
-                          new Register(aCpu, rw));
+            #region Register Decelerations
 
-            Registers.Add(Core.Register.Registers.AC,
-                new Register(aCpu, rw));
+            // --------------- Data Registers ---------------
+            var regR1 =
+                new Register(aCpu, rw, Core.Register.Registers.R1);
+            var regR2 =
+                new Register(aCpu, rw, Core.Register.Registers.R2);
+            var regR3 =
+                new Register(aCpu, rw, Core.Register.Registers.R3);
+            var regR4 =
+                new Register(aCpu, rw, Core.Register.Registers.R4);
+            var regR5 =
+                new Register(aCpu, rw, Core.Register.Registers.R5);
+            var regR6 =
+                new Register(aCpu, rw, Core.Register.Registers.R6);
+            var regR7 =
+                new Register(aCpu, rw, Core.Register.Registers.R7);
+            var regR8 =
+                new Register(aCpu, rw, Core.Register.Registers.R8);
 
-            // Special registers.
-            Registers.Add(Core.Register.Registers.IP,
-                          new Register(aCpu, rw));
-            Registers.Add(Core.Register.Registers.SP,
-                          new Register(aCpu, prpw));
-            Registers.Add(Core.Register.Registers.FP,
-                          new Register(aCpu, rpw));
-            Registers.Add(Core.Register.Registers.FL,
-                          new Register(aCpu, rw, typeof(CpuFlags)));
-            Registers.Add(Core.Register.Registers.PC,
-                          new Register(aCpu, r | pw));
+            // --------------- Special Registers ---------------
+            var regAc =
+                new Register(aCpu, rw, Core.Register.Registers.AC);
+            var regIp =
+                new Register(aCpu, rw, Core.Register.Registers.IP);
+            var regSp =
+                new Register(aCpu, prpw, Core.Register.Registers.SP);
+            var regFp =
+                new Register(aCpu, rpw, Core.Register.Registers.FP);
+            var regFl =
+                new Register(aCpu,
+                             rw,
+                             Core.Register.Registers.FL,
+                             typeof(CpuFlags));
+            var regPc =
+                new Register(aCpu, rpw, Core.Register.Registers.PC);
 
-#if DEBUG
-            // For debugging.
-            foreach (var (key, _) in Registers)
-            {
-                Registers[key].SetId(key);
-            }
-#endif
+            #endregion // Register Decelerations
+
+            #region Register Binding
+
+            Registers.Add(Core.Register.Registers.R1, regR1);
+            Registers.Add(Core.Register.Registers.R2, regR2);
+            Registers.Add(Core.Register.Registers.R3, regR3);
+            Registers.Add(Core.Register.Registers.R4, regR4);
+            Registers.Add(Core.Register.Registers.R5, regR5);
+            Registers.Add(Core.Register.Registers.R6, regR6);
+            Registers.Add(Core.Register.Registers.R7, regR7);
+            Registers.Add(Core.Register.Registers.R8, regR8);
+            Registers.Add(Core.Register.Registers.AC, regAc);
+            Registers.Add(Core.Register.Registers.IP, regIp);
+            Registers.Add(Core.Register.Registers.SP, regSp);
+            Registers.Add(Core.Register.Registers.FP, regFp);
+            Registers.Add(Core.Register.Registers.FL, regFl);
+            Registers.Add(Core.Register.Registers.PC, regPc);
+
+            #endregion // Register Binding
         }
 
         /// <summary>
@@ -203,58 +213,30 @@ namespace VMCore.VM.Core.Register
         }*/
 
         /// <summary>
-        /// Apply a hook to a register.
-        /// </summary>
-        /// <param name="aReg">
-        /// The register to which the hook should be applied.
-        /// </param>
-        /// <param name="aHook">
-        /// The hook to be executed when the hook is triggered.
-        /// </param>
-        /// <param name="aHookType">
-        /// The type of hook to be applied.
-        /// </param>
-        public void Hook(Registers aReg,
-                         Action<int> aHook,
-                         Register.HookTypes aHookType)
-        {
-            switch (aHookType)
-            {
-                case Register.HookTypes.Change:
-                    Registers[aReg].OnChange = aHook;
-                    break;
-
-                case Register.HookTypes.Read:
-                    Registers[aReg].OnRead = aHook;
-                    break;
-
-                default:
-                    // TODO - handle this better.
-                    break;
-            }
-        }
-
-        /// <summary>
         /// Print a formatted list registers and their
-        /// contents directly to the console.
+        /// contents directly.
         /// </summary>
-        public void PrintRegisters()
+        public void PrintRegisters(bool aToDebug = false)
         {
             foreach (var (key, value) in Registers)
             {
                 var reg = Enum.GetName(typeof(Registers), key);
                 var val = value.GetValue(SecurityContext.System);
 
-                Console.Write("{0,5}{1,10:X8}", reg, val);
+                var str = $"{reg,5}{val,10:X8}";
 
-                if (!value.IsFlagRegister())
+                if (value.IsFlagRegister())
                 {
-                    Console.WriteLine();
+                    str += $" ({value.ToFlagStateString()})";
+                }
+
+                if (!aToDebug)
+                {
+                    Console.WriteLine(str);
                 }
                 else
                 {
-                    var fs = value.ToFlagStateString();
-                    Console.WriteLine(" (" + fs + ")");
+                    Debug.WriteLine(str);
                 }
             }
         }

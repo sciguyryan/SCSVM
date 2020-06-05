@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Utilities;
 
@@ -6,6 +8,8 @@ namespace VMCore.VM.Core.Register
 {
     public class Register
     {
+        #region Public Properties
+
         /// <summary>
         /// The type of hook requested for this register.
         /// </summary>
@@ -14,7 +18,7 @@ namespace VMCore.VM.Core.Register
             /// <summary>
             /// A hook that fires when a value is written to the register.
             /// </summary>
-            Change,
+            Write,
             /// <summary>
             /// A hook that fires when a value is read from the register.
             /// </summary>
@@ -27,13 +31,13 @@ namespace VMCore.VM.Core.Register
         /// The hook that should be fired when the value of this register
         /// is changed.
         /// </summary>
-        public Action<int> OnChange;
+        public Action<int, Registers>? OnWrite;
 
         /// <summary>
         /// The hook that should be fired when the value of this register
         /// is read.
         /// </summary>
-        public Action<int> OnRead;
+        public Action<int, Registers>? OnRead;
 
         /// <summary>
         /// The permission access flags for this register.
@@ -46,41 +50,37 @@ namespace VMCore.VM.Core.Register
         public Cpu Cpu { get; }
 
         /// <summary>
+        /// The internal ID of this register, mainly used for debugging.
+        /// </summary>
+        public Registers RegisterId;
+
+        #endregion // Public Properties
+
+        #region Private Properties
+
+        /// <summary>
         /// The internal value of this register.
         /// </summary>
         private int _value;
-
-        /// <summary>
-        /// The internal ID of this register, mainly used for debugging.
-        /// </summary>
-        private Registers _registerId;
 
         /// <summary>
         /// The internal enum instance for the flag type of
         /// this register. Will be null if the register
         /// is not a flag-type register.
         /// </summary>
-        private readonly Type _flagType;
+        private readonly Type? _flagType;
+
+        #endregion // Private Properties
 
         public Register(Cpu aCpu,
                         RegisterAccess aAccess,
-                        Type aFlagType = null)
+                        Registers aRegId,
+                        Type? aFlagType = null)
         {
             Cpu = aCpu;
             AccessFlags = aAccess;
+            RegisterId = aRegId;
             _flagType = aFlagType;
-        }
-
-        /// <summary>
-        /// Set the internal ID of this register.
-        /// Mainly used for debugging.
-        /// </summary>
-        /// <param name="aId">
-        /// The ID to be applied to this register.
-        /// </param>
-        public void SetId(Registers aId)
-        {
-            _registerId = aId;
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace VMCore.VM.Core.Register
         {
             ValidateAccess(DataAccessType.Read, aContext);
 
-            OnRead?.Invoke(_value);
+            OnRead?.Invoke(_value, RegisterId);
 
             return _value;
         }
@@ -118,7 +118,7 @@ namespace VMCore.VM.Core.Register
             ValidateAccess(DataAccessType.Write, aContext);
             _value = aValue;
 
-            OnChange?.Invoke(aValue);
+            OnWrite?.Invoke(aValue, RegisterId);
         }
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace VMCore.VM.Core.Register
         /// </returns>
         public bool IsFlagRegister()
         {
-            return _flagType != null;
+            return !(_flagType is null);
         }
 
         /// <summary>
@@ -152,7 +152,10 @@ namespace VMCore.VM.Core.Register
         /// <returns>A string giving the state of the flags.</returns>
         public string ToFlagStateString()
         {
-            return Utils.MapIntegerBitsToFlagsEnum(_flagType, _value);
+            return 
+                _flagType is null ? 
+                    string.Empty : 
+                    Utils.MapIntegerBitsToFlagsEnum(_flagType, _value);
         }
 
         /// <summary>

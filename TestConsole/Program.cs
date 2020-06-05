@@ -3,6 +3,7 @@ using System.Diagnostics;
 using VMCore.VM;
 using VMCore.AsmParser;
 using VMCore.VM.Core;
+using VMCore.VM.Core.Breakpoints;
 using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
 
@@ -118,25 +119,28 @@ namespace TestConsole
 
             var vm = new VirtualMachine();
 
-            // Break point stuff for experimenting.
-            /*Breakpoint.BreakpointAction ipBP = delegate (int x)
+            /*Breakpoint.BreakpointAction regBp = delegate (int aX)
             {
-                Debug.WriteLine($"Instruction Pointer breakpoint = {x}");
+                Debug.WriteLine($"Register breakpoint = {aX}");
                 return false;
             };
 
-            // Break at IP = 9
-            vm.Debugger.AddBreakpoint(9, Breakpoint.BreakpointType.IP, ipBP);
+            // Trigger breakpoint when the value 0x123 is written to R1.
+            vm.Debugger.AddBreakpoint(0x123,
+                                      BreakpointType.RegisterWrite,
+                                      regBp,
+                                      Registers.R1);
 
-
-            Breakpoint.BreakpointAction pcBP = delegate (int x)
+            Breakpoint.BreakpointAction memBP = delegate (int aX)
             {
-                Debug.WriteLine($"Program Counter breakpoint = {x}");
+                Debug.WriteLine($"Memory position {aX} was written too!");
                 return false;
             };
 
-            // Break at PC = 1
-            vm.Debugger.AddBreakpoint(2, Breakpoint.BreakpointType.PC, pcBP);*/
+            // Trigger breakpoint upon write to memory address 0x1.
+            vm.Debugger.AddBreakpoint(0,
+                                      BreakpointType.MemoryWrite,
+                                      memBP);*/
 
             // Enable CPU debug logging.
             vm.Cpu.SetLoggingEnabled(true);

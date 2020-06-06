@@ -7,7 +7,6 @@
         DebugInfo,
         TypeInfo,
         Code,
-        Data,
-        Undefined
+        Data
     }
 }

@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.Assembler;
@@ -42,6 +41,7 @@ namespace VMCore.AsmParser
             InvalidLabel,
             InvalidSubroutineLabel,
             InvalidIntLiteral,
+            InvalidByteLiteral,
             InvalidRegisterIdentifier,
             InvalidArgumentType,
             MultipleArgumentLabels,
@@ -84,6 +84,10 @@ namespace VMCore.AsmParser
                 ExIDs.InvalidIntLiteral,
                 "Failed to parse an integer literal. " +
                 "Value = '{0}', AllowNegative = {1}."
+            },
+            {
+                ExIDs.InvalidByteLiteral,
+                "Failed to parse a byte literal. Value = '{0}'"
             },
             {
                 ExIDs.InvalidRegisterIdentifier,
@@ -151,7 +155,7 @@ namespace VMCore.AsmParser
             var lineNo = 0;
             var isLine = false;
             var inString = false;
-            var section = BinSections.Undefined;
+            BinSections? section = null;
 
             var skipChars = 0;
             var startPos = 0;
@@ -214,10 +218,12 @@ namespace VMCore.AsmParser
                 }
                 else
                 {
-                    ParseDataOrDirectiveLine(section,
-                                             span[startPos..endPos],
-                                             ref insList,
-                                             ref dirList);
+                    // Parse a line based on the type
+                    // of section we are currently within.
+                    ParseLineByType(section,
+                                    span[startPos..endPos],
+                                    ref insList,
+                                    ref dirList);
                 }
 
                 startPos = i + skipChars;
@@ -228,40 +234,59 @@ namespace VMCore.AsmParser
             return insList.ToArray();
         }
 
-        private void ParseDataOrDirectiveLine(BinSections aSec,
-                                              ReadOnlySpan<char> aLine,
-                                              ref List<QuickIns> aInsList,
-                                              ref List<QuickDir> aDirList)
+        private void ParseLineByType(BinSections? aSec,
+                                     ReadOnlySpan<char> aLine,
+                                     ref List<QuickIns> aInsList,
+                                     ref List<QuickDir> aDirList)
         {
-            switch (aSec)
+            // If no section has been specified then
+            // we assume that this is a code section.
+            var sec = aSec ?? BinSections.Code;
+
+            switch (sec)
             {
                 case BinSections.Code:
-                {
-                    var ins =
-                        ParseInsLine(aLine);
-                    if (!(ins is null))
                     {
-                        aInsList.Add(ins);
-                    }
+                        var ins = ParseInsLine(aLine);
+                        if (!(ins is null))
+                        {
+                            aInsList.Add(ins);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
 
                 case BinSections.Data:
-                {
-                    var directive =
-                        ParseDirLine(aLine);
-                    if (!(directive is null))
                     {
-                        aDirList.Add(directive);
+                        var directive = ParseDirLine(aLine);
+                        if (!(directive is null))
+                        {
+                            aDirList.Add(directive);
+                        }
+
+                        break;
                     }
 
-                    break;
-                }
+                case BinSections.Metadata:
+                    throw new NotImplementedException();
+
+                case BinSections.ReadOnly:
+                    throw new NotImplementedException();
+
+                case BinSections.DebugInfo:
+                    throw new NotImplementedException();
+
+                case BinSections.TypeInfo:
+                    throw new NotImplementedException();
+
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
-        private BinSections ParseSectionLine(ReadOnlySpan<char> aLine)
+        #region Section Line Parsing
+
+        private BinSections? ParseSectionLine(ReadOnlySpan<char> aLine)
         {
             var len = aLine.Length;
             var buffer = new StringBuilder(len);
@@ -305,15 +330,17 @@ namespace VMCore.AsmParser
                 buffer.Append(c);
             }
 
-            var section = sectionId.ToLower() switch
+            return sectionId.ToLower() switch
             {
                 ".section code" => BinSections.Code,
                 ".section data" => BinSections.Data,
-                _               => BinSections.Undefined
+                _ => null
             };
-
-            return section;
         }
+
+        #endregion // Section Line Parsing
+
+        #region Directive Line Parsing
 
         private QuickDir? ParseDirLine(ReadOnlySpan<char> aLine)
         {
@@ -423,6 +450,7 @@ namespace VMCore.AsmParser
             Debug.WriteLine($"dirType = {dirType}");
             Debug.WriteLine($"Args = {string.Join(", ", args)}");
 
+            // Do we have a valid directive type?
             if (!Enum.TryParse(typeof(DirectiveCodes),
                                dirType,
                                out var dirCode))
@@ -435,13 +463,16 @@ namespace VMCore.AsmParser
             switch (dirCode)
             {
                 case DirectiveCodes.DB:
-                    Debug.WriteLine("DB directive code.");
                     directiveData =
                         ConvertDbDirectiveArgs(args);
                     break;
 
                 case DirectiveCodes.EQU:
-                    Debug.WriteLine("EQU directive code.");
+                    // There really should only be one argument
+                    // supplied to this directive.
+                    // If there are others then they will be
+                    // disregarded.
+                    directiveStrData = args[0];
                     break;
 
                 default:
@@ -449,15 +480,19 @@ namespace VMCore.AsmParser
                     break;
             }
 
-            return 
-                new QuickDir((DirectiveCodes)dirCode,
+            var qd = 
+                new QuickDir((DirectiveCodes) dirCode,
+                             dirLabel,
                              directiveData,
                              directiveStrData);
+            Debug.WriteLine(qd);
+
+            return qd;
         }
 
         private byte[] ConvertDbDirectiveArgs(IEnumerable<string> aArgs)
         {
-            List<byte> bytes = new List<byte>();
+            var bytes = new List<byte>(10000);
 
             foreach (var str in aArgs)
             {
@@ -471,9 +506,8 @@ namespace VMCore.AsmParser
                         break;
 
                     case '$':
-                        var value =
-                            ParseIntegerLiteral(str[1..]);
-                        bytes.AddRange(BitConverter.GetBytes(value));
+                        // This is a byte literal.
+                        bytes.Add(ParseByteLiteral(str[1..]));
                         break;
 
                     default:
@@ -486,6 +520,10 @@ namespace VMCore.AsmParser
 
             return bytes.ToArray();
         }
+
+        #endregion // Directive Line Parsing
+
+        #region Instruction Parsing
 
         /// <summary>
         /// Parse a string and convert it into an instruction.
@@ -904,8 +942,12 @@ namespace VMCore.AsmParser
             return new QuickIns(op, args.Arguments, asmLabel);
         }
 
+        #endregion // Instruction Line Parsing
+
+        #region Argument Type Parsing
+
         /// <summary>
-        /// Parse a label .
+        /// Parse a label.
         /// </summary>
         /// <param name="aData">
         /// A string containing the name of the label.
@@ -998,6 +1040,83 @@ namespace VMCore.AsmParser
         }
 
         /// <summary>
+        /// Parse a byte literal argument.
+        /// </summary>
+        /// <param name="aData">
+        /// A string containing the byte to be parsed.
+        /// </param>
+        /// <returns>
+        /// A byte resulting from parsing the string.
+        /// </returns>
+        private byte ParseByteLiteral(string aData)
+        {
+            // An empty string cannot be considered a valid
+            // byte literal.
+            Assert(string.IsNullOrWhiteSpace(aData),
+                   ExIDs.InvalidByteLiteral,
+                   aData);
+
+            byte result;
+            bool success;
+
+            // The prefix is the section that indicates
+            // the type of integer that we are dealing
+            // with. This is usually the first or second
+            // character of the value.
+            var prefix = "";
+            if (aData.Length > 2)
+            {
+                prefix = aData[..2];
+            }
+
+            switch (prefix)
+            {
+                case "0b":
+                    // A binary literal.
+                    success =
+                        Utils.TryParseBinByte(aData[2..], out result);
+                    break;
+
+                case "0x":
+                    // A hexadecimal literal.
+                    success =
+                        Utils.TryParseHexByte(aData[2..], out result);
+                    break;
+
+                default:
+                    {
+                        var octalChar = '\0';
+                        if (prefix.Length > 1)
+                        {
+                            octalChar = aData[0];
+                        }
+
+                        if (octalChar == '0')
+                        {
+                            // An octal literal.
+                            success =
+                                Utils.TryParseOctByte(aData[1..],
+                                                      out result);
+                            break;
+                        }
+
+                        // If all else fails, we will try a normal
+                        // (decimal) byte parse.
+                        success =
+                            Utils.TryParseByte(aData, out result);
+                        break;
+                    }
+            }
+
+            // Was the input string a successfully parsed?
+            Assert(!success,
+                   ExIDs.InvalidByteLiteral,
+                   aData);
+
+            return result;
+        }
+
+        /// <summary>
         /// Parse an integer literal argument.
         /// </summary>
         /// <param name="aData">
@@ -1007,7 +1126,7 @@ namespace VMCore.AsmParser
         /// If negative values should be permitted during parsing.
         /// </param>
         /// <returns>
-        /// An integer containing the parsed value.
+        /// An integer resulting from the parsed string.
         /// </returns>
         private int ParseIntegerLiteral(string aData,
                                         bool aAllowNegative = true)
@@ -1111,6 +1230,8 @@ namespace VMCore.AsmParser
                 _registerLookUp.TryGetValue(aStr.ToLower(),
                                             out aReg);
         }
+
+        #endregion // Argument Type Parsing
 
         /// <summary>
         /// Throw an exception if a given condition is true.

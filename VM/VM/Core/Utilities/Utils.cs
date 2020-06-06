@@ -366,6 +366,30 @@ namespace VMCore.VM.Core.Utilities
             }
         }
 
+        /// <summary>
+        /// Attempt to parse the string as a binary byte.
+        /// </summary>
+        /// <param name="aStr">The string to be parsed.</param>
+        /// <param name="aByte">
+        /// A byte representing the parsed value.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if parsing the string yielded a
+        /// valid byte, false otherwise.
+        /// </returns>
+        public static bool TryParseBinByte(string aStr, out byte aByte)
+        {
+            try
+            {
+                aByte = Convert.ToByte(aStr, 2);
+                return true;
+            }
+            catch
+            {
+                aByte = 0;
+                return false;
+            }
+        }
 
         /// <summary>
         /// Attempt to parse the string as an octal integer.
@@ -393,6 +417,31 @@ namespace VMCore.VM.Core.Utilities
         }
 
         /// <summary>
+        /// Attempt to parse the string as an octal byte.
+        /// </summary>
+        /// <param name="aStr">The string to be parsed.</param>
+        /// <param name="aByte">
+        /// A byte representing the parsed value.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if parsing the string yielded a
+        /// valid byte, false otherwise.
+        /// </returns>
+        public static bool TryParseOctByte(string aStr, out byte aByte)
+        {
+            try
+            {
+                aByte = Convert.ToByte(aStr, 8);
+                return true;
+            }
+            catch
+            {
+                aByte = 0;
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Attempt to parse the string as a hexadecimal integer.
         /// </summary>
         /// <param name="aStr">The string to be parsed.</param>
@@ -413,6 +462,26 @@ namespace VMCore.VM.Core.Utilities
         }
 
         /// <summary>
+        /// Attempt to parse the string as a hexadecimal byte.
+        /// </summary>
+        /// <param name="aStr">The string to be parsed.</param>
+        /// <param name="aByte">
+        /// A byte representing the parsed value.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if parsing the string yielded a
+        /// valid byte, false otherwise.
+        /// </returns>
+        public static bool TryParseHexByte(string aStr, out byte aByte)
+        {
+            return
+                byte.TryParse(aStr,
+                    NumberStyles.HexNumber,
+                    CultureInfo.CurrentCulture,
+                    out aByte);
+        }
+
+        /// <summary>
         /// Attempt to parse a string as a decimal integer.
         /// </summary>
         /// <param name="aStr">The string to be parsed.</param>
@@ -426,6 +495,22 @@ namespace VMCore.VM.Core.Utilities
         public static bool TryParseInt(string aStr, out int aNum)
         {
             return int.TryParse(aStr, out aNum);
+        }
+
+        /// <summary>
+        /// Attempt to parse a string as a decimal byte.
+        /// </summary>
+        /// <param name="aStr">The string to be parsed.</param>
+        /// <param name="aByte">
+        /// A byte representing the parsed value.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if parsing the string yielded a
+        /// valid byte, false otherwise.
+        /// </returns>
+        public static bool TryParseByte(string aStr, out byte aByte)
+        {
+            return byte.TryParse(aStr, out aByte);
         }
     }
 }

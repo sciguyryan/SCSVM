@@ -36,6 +36,7 @@ namespace TestConsole
                 "hlt"*/
                 ".section data",
                 "str db 'Hello, world!',$0xA",
+                "strLen equ $-str",
                 ".section code",
                 "push $0xAAA",  // Should remain in place once the stack is restored
                 "push $0xC",    // TESTER Argument 3

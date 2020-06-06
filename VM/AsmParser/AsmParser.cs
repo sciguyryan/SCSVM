@@ -3,9 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.Assembler;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
@@ -24,8 +26,8 @@ namespace VMCore.AsmParser
         private readonly Dictionary<InsCacheEntry, OpCode> _insCacheEntries =
             new Dictionary<InsCacheEntry, OpCode>();
 
-        private readonly Dictionary<string, Registers> 
-            _registerLookUp = new Dictionary<string, Registers>();
+        private readonly Dictionary<string, Registers> _registerLookUp 
+            = new Dictionary<string, Registers>();
 
         #region EXCEPTIONS
 
@@ -144,10 +146,12 @@ namespace VMCore.AsmParser
                 Environment.NewLine.Length - 1;
 
             var insList = new List<QuickIns>();
+            var dirList = new List<QuickDir>();
 
             var lineNo = 0;
             var isLine = false;
             var inString = false;
+            var section = BinSections.Undefined;
 
             var skipChars = 0;
             var startPos = 0;
@@ -200,12 +204,20 @@ namespace VMCore.AsmParser
                        lineNo,
                        i);
 
-                // We have a line. Pass the span into
-                // the next stage of the parser.
-                var ins = ParseLine(span[startPos..endPos]);
-                if (!(ins is null))
+                // We have a line.
+                // Pass the span into the next stage of the parser.
+                if (span[startPos] == '.')
                 {
-                    insList.Add(ins);
+                    // The line is a section identifier.
+                    section = 
+                        ParseSectionLine(span[startPos..endPos]);
+                }
+                else
+                {
+                    ParseDataOrDirectiveLine(section,
+                                             span[startPos..endPos],
+                                             ref insList,
+                                             ref dirList);
                 }
 
                 startPos = i + skipChars;
@@ -216,6 +228,265 @@ namespace VMCore.AsmParser
             return insList.ToArray();
         }
 
+        private void ParseDataOrDirectiveLine(BinSections aSec,
+                                              ReadOnlySpan<char> aLine,
+                                              ref List<QuickIns> aInsList,
+                                              ref List<QuickDir> aDirList)
+        {
+            switch (aSec)
+            {
+                case BinSections.Code:
+                {
+                    var ins =
+                        ParseInsLine(aLine);
+                    if (!(ins is null))
+                    {
+                        aInsList.Add(ins);
+                    }
+
+                    break;
+                }
+
+                case BinSections.Data:
+                {
+                    var directive =
+                        ParseDirLine(aLine);
+                    if (!(directive is null))
+                    {
+                        aDirList.Add(directive);
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        private BinSections ParseSectionLine(ReadOnlySpan<char> aLine)
+        {
+            var len = aLine.Length;
+            var buffer = new StringBuilder(len);
+            var sectionId = string.Empty;
+
+            var hasSeparator = false;
+            var skipNext = false;
+            var skipUntilEnd = false;
+
+            for (var i = 0; i <= len; i++)
+            {
+                if (i == len)
+                {
+                    if (buffer.Length > 0)
+                    {
+                        sectionId = buffer.ToString();
+                    }
+                    break;
+                }
+
+                var c = aLine[i];
+                switch (c)
+                {
+                    case ';':
+                        skipUntilEnd = true;
+                        break;
+
+                    case { } when char.IsWhiteSpace(c):
+                        skipNext = hasSeparator;
+                        hasSeparator = true;
+                        break;
+                }
+
+                // Do we need to skip this character?
+                if (skipNext || skipUntilEnd)
+                {
+                    skipNext = false;
+                    continue;
+                }
+
+                buffer.Append(c);
+            }
+
+            var section = sectionId.ToLower() switch
+            {
+                ".section code" => BinSections.Code,
+                ".section data" => BinSections.Data,
+                _               => BinSections.Undefined
+            };
+
+            return section;
+        }
+
+        private QuickDir? ParseDirLine(ReadOnlySpan<char> aLine)
+        {
+            // Fast path return for lines that are comments.
+            if (aLine[0] == ';')
+            {
+                return null;
+            }
+
+            var len = aLine.Length;
+            var buffer = new StringBuilder(len);
+            var segments = new List<string>();
+
+            var skipNext = false;
+            var inString = false;
+            var skipUntilEnd = false;
+            var pushString = false;
+
+            for (var i = 0; i <= len; i++)
+            {
+                // Always ensure that we push the last segment to
+                // the list.
+                // This needs to be done here otherwise we might end
+                // up skipping the entire last segment of the line.
+                if (i == len)
+                {
+                    // We should not be attempting to push a line
+                    // that has an unmatched string.
+                    Assert(inString,
+                           ExIDs.MismatchedString,
+                           segments.Count + 1,
+                           i);
+
+                    if (buffer.Length > 0)
+                    {
+                        segments.Add(buffer.ToString());
+                    }
+
+                    break;
+                }
+
+                var c = aLine[i];
+                switch (c)
+                {
+                    case '"':
+                    case '\'':
+                        inString = !inString;
+                        break;
+
+                    case ';':
+                        skipUntilEnd = !inString;
+                        break;
+
+                    case ',':
+                        skipNext = !inString;
+                        pushString = !inString;
+                        break;
+
+                    case { } when char.IsWhiteSpace(c):
+                        pushString = !inString;
+                        skipNext = !inString;
+                        break;
+                }
+
+                // Do we need to push the contents of the buffer
+                // into the segment list?
+                if (pushString)
+                {
+                    if (buffer.Length > 0)
+                    {
+                        segments.Add(buffer.ToString());
+                        buffer.Clear();
+                    }
+
+                    pushString = false;
+                }
+
+                // Do we need to skip this character?
+                if (skipNext || skipUntilEnd)
+                {
+                    skipNext = false;
+                    continue;
+                }
+
+                buffer.Append(c);
+            }
+
+            return BuildDirective(segments.ToArray());
+        }
+
+        private QuickDir? BuildDirective(string[] aSegments)
+        {
+            // The line could not be a valid directive with
+            // less than three segments.
+            if (aSegments.Length < 3)
+            {
+                return null;
+            }
+
+            // Decompose the segments array into the instruction
+            // name and the argument data.
+            var dirLabel = aSegments[0];
+            var dirType = aSegments[1].ToUpper();
+            var args = aSegments[2..];
+
+            Debug.WriteLine($"dirLabel = {dirLabel}");
+            Debug.WriteLine($"dirType = {dirType}");
+            Debug.WriteLine($"Args = {string.Join(", ", args)}");
+
+            if (!Enum.TryParse(typeof(DirectiveCodes),
+                               dirType,
+                               out var dirCode))
+            {
+                throw new Exception();
+            }
+
+            string? directiveStrData = null;
+            byte[]? directiveData = null;
+            switch (dirCode)
+            {
+                case DirectiveCodes.DB:
+                    Debug.WriteLine("DB directive code.");
+                    directiveData =
+                        ConvertDbDirectiveArgs(args);
+                    break;
+
+                case DirectiveCodes.EQU:
+                    Debug.WriteLine("EQU directive code.");
+                    break;
+
+                default:
+                    throw new Exception();
+                    break;
+            }
+
+            return 
+                new QuickDir((DirectiveCodes)dirCode,
+                             directiveData,
+                             directiveStrData);
+        }
+
+        private byte[] ConvertDbDirectiveArgs(IEnumerable<string> aArgs)
+        {
+            List<byte> bytes = new List<byte>();
+
+            foreach (var str in aArgs)
+            {
+                switch (str[0])
+                {
+                    case '\'':
+                    case '"':
+                        // This is a string.
+                        // We do not care about the quotation marks.
+                        bytes.AddRange(Encoding.UTF8.GetBytes(str[1..^2]));
+                        break;
+
+                    case '$':
+                        var value =
+                            ParseIntegerLiteral(str[1..]);
+                        bytes.AddRange(BitConverter.GetBytes(value));
+                        break;
+
+                    default:
+                        // TODO - What to do here?
+                        break;
+                }
+            }
+
+            Debug.WriteLine(bytes.Count);
+
+            return bytes.ToArray();
+        }
+
         /// <summary>
         /// Parse a string and convert it into an instruction.
         /// </summary>
@@ -224,7 +495,7 @@ namespace VMCore.AsmParser
         /// A nullable QuickIns object representing the parsed data.
         /// This can be null if there was no instruction to output.
         /// </returns>
-        private QuickIns? ParseLine(ReadOnlySpan<char> aLine)
+        private QuickIns? ParseInsLine(ReadOnlySpan<char> aLine)
         {
             // Fast path return for lines that are comments.
             if (aLine[0] == ';')
@@ -543,8 +814,7 @@ namespace VMCore.AsmParser
                 // indicators of the type.
                 // Currently the only thing that we have left to
                 // check if a register identifier.
-                var lowerStr = arg.ToLower();
-                if (_registerLookUp.TryGetValue(lowerStr, out var reg))
+                if (TryParseRegister(arg, out var reg))
                 {
                     // This is a register identifier.
                     values[i] = reg;
@@ -834,10 +1104,12 @@ namespace VMCore.AsmParser
         /// A boolean, true parsing the string yielded a valid
         /// Register identifier, false otherwise.
         /// </returns>
-        private static bool TryParseRegister(string aStr,
-                                             out Registers aReg)
+        private bool TryParseRegister(string aStr,
+                                      out Registers aReg)
         {
-            return Enum.TryParse(aStr, out aReg);
+            return 
+                _registerLookUp.TryGetValue(aStr.ToLower(),
+                                            out aReg);
         }
 
         /// <summary>

@@ -54,7 +54,9 @@ namespace VMCore.Assembler
         /// <summary>
         /// Save the compiled binary data into a binary file.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// A byte array containing the data for the binary file.
+        /// </returns>
         public byte[] Save()
         {
             using var ms = new MemoryStream();

@@ -34,6 +34,9 @@ namespace TestConsole
                 "push R3",
                 "push R4",
                 "hlt"*/
+                ".section data",
+                "str db 'Hello, world!',$0xA",
+                ".section code",
                 "push $0xAAA",  // Should remain in place once the stack is restored
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2

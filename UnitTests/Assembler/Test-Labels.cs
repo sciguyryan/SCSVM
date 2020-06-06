@@ -34,12 +34,12 @@ namespace UnitTests.Assembler
 
             var program = new []
             {
-                new QuickIns(OpCode.JNE_REG,
+                new CompilerIns(OpCode.JNE_REG,
                              new object[] { Registers.R1, 0 },
                              new AsmLabel("A", 1)),
-                new QuickIns(OpCode.NOP),
-                new QuickIns(OpCode.LABEL, new object[] { "A" }),
-                new QuickIns(OpCode.NOP),
+                new CompilerIns(OpCode.NOP),
+                new CompilerIns(OpCode.LABEL, new object[] { "A" }),
+                new CompilerIns(OpCode.NOP),
             };
 
             Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
@@ -68,13 +68,13 @@ namespace UnitTests.Assembler
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { 1, Registers.R1 }),
-                new QuickIns(OpCode.NOP),
-                new QuickIns(OpCode.LABEL, new object[] { "A" }),
-                new QuickIns(OpCode.NOP),
+                new CompilerIns(OpCode.NOP),
+                new CompilerIns(OpCode.LABEL, new object[] { "A" }),
+                new CompilerIns(OpCode.NOP),
 
-                new QuickIns(OpCode.JNE_REG,
+                new CompilerIns(OpCode.JNE_REG,
                              new object[] { Registers.R1, 0 },
                              new AsmLabel("A", 1)),
             };
@@ -111,7 +111,7 @@ namespace UnitTests.Assembler
         {
             var program = new []
             {
-                new QuickIns(OpCode.JNE_REG,
+                new CompilerIns(OpCode.JNE_REG,
                              new object[] { Registers.R1, 0 },
                              new AsmLabel("A", 1)),
             };
@@ -129,9 +129,9 @@ namespace UnitTests.Assembler
         {
             var program = new []
             {
-                new QuickIns(OpCode.LABEL, new object[] { "A" }),
-                new QuickIns(OpCode.LABEL, new object[] { "A" }),
-                new QuickIns(OpCode.NOP),
+                new CompilerIns(OpCode.LABEL, new object[] { "A" }),
+                new CompilerIns(OpCode.LABEL, new object[] { "A" }),
+                new CompilerIns(OpCode.NOP),
             };
 
             Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
@@ -147,8 +147,8 @@ namespace UnitTests.Assembler
         {
             var program = new []
             {
-                new QuickIns(OpCode.LABEL, new object[] { "A" }),
-                new QuickIns(OpCode.JNE_REG,
+                new CompilerIns(OpCode.LABEL, new object[] { "A" }),
+                new CompilerIns(OpCode.JNE_REG,
                              new object[] { Registers.R1, 0 },
                              new AsmLabel("A", 0)),
             };

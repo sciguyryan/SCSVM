@@ -55,9 +55,9 @@ namespace UnitTests.Instructions.Bit
 
                 var program = new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG, 
+                    new CompilerIns(OpCode.MOV_LIT_REG, 
                                 new object[] { (int)entry[1], Registers.R1 }),
-                    new QuickIns(OpCode.BIT, 
+                    new CompilerIns(OpCode.BIT, 
                                 new object[] { (int)entry[0], Registers.R1 }),
                 };
 

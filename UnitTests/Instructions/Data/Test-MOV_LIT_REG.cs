@@ -27,7 +27,7 @@ namespace UnitTests.Instructions.Data
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                              new object[] { expected, register }),
             };
 

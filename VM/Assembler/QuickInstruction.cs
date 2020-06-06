@@ -9,10 +9,10 @@ using VMCore.VM.Core.Utilities;
 namespace VMCore.Assembler
 {
     /// <summary>
-    /// A simple instruction class primarily for use
+    /// A compiler instruction class primarily for use
     /// with the quick compiler.
     /// </summary>
-    public class QuickIns : IEquatable<QuickIns>
+    public class CompilerIns : IEquatable<CompilerIns>
     {
         public OpCode Op { get; }
 
@@ -20,7 +20,7 @@ namespace VMCore.Assembler
 
         public AsmLabel? Label { get; }
 
-        public QuickIns(OpCode aOpCode,
+        public CompilerIns(OpCode aOpCode,
                         object[]? aArgs = null,
                         AsmLabel? aLabel = null)
         {
@@ -51,10 +51,10 @@ namespace VMCore.Assembler
 
         public override bool Equals(object? aObj)
         {
-            return Equals(aObj as QuickIns);
+            return Equals(aObj as CompilerIns);
         }
 
-        public bool Equals([AllowNull] QuickIns aOther)
+        public bool Equals([AllowNull] CompilerIns aOther)
         {
             // Check for null and compare run-time types.
             if (aOther is null || GetType() != aOther.GetType())
@@ -103,14 +103,14 @@ namespace VMCore.Assembler
             return hash;
         }
 
-        public static bool operator ==(QuickIns aLeft,
-                                       QuickIns aRight)
+        public static bool operator ==(CompilerIns aLeft,
+                                       CompilerIns aRight)
         {
             return Equals(aLeft, aRight);
         }
 
-        public static bool operator !=(QuickIns aLeft,
-                                       QuickIns aRight)
+        public static bool operator !=(CompilerIns aLeft,
+                                       CompilerIns aRight)
         {
             return !(aLeft == aRight);
         }

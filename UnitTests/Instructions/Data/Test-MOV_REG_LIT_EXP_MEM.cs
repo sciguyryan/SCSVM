@@ -30,11 +30,11 @@ namespace UnitTests.Instructions.Data
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                         new object[] { expected, r1 }),     // mov $12, R1
-                new QuickIns(OpCode.MOV_REG_REG, 
+                new CompilerIns(OpCode.MOV_REG_REG, 
                         new object[] { r1, r2 }),           // mov R1, R2
-                new QuickIns(OpCode.MOV_REG_LIT_EXP_MEM, 
+                new CompilerIns(OpCode.MOV_REG_LIT_EXP_MEM, 
                         new object[] { r1, "R2 + $3" })     // mov R1, [R2 + $3]
             };
 
@@ -62,11 +62,11 @@ namespace UnitTests.Instructions.Data
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                         new object[] { expected, r1 }),     // mov $12, R1
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                         new object[] { -0x5, r2 }),         // mov -$5, R2
-                new QuickIns(OpCode.MOV_REG_LIT_EXP_MEM, 
+                new CompilerIns(OpCode.MOV_REG_LIT_EXP_MEM, 
                         new object[] { r1, "R2 + $0x1A" })  // mov R3, [R2 + $1A]
             };
 
@@ -94,9 +94,9 @@ namespace UnitTests.Instructions.Data
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                              new object[] { 0, r1 }),           // mov $0, R1
-                new QuickIns(OpCode.MOV_REG_LIT_EXP_MEM, 
+                new CompilerIns(OpCode.MOV_REG_LIT_EXP_MEM, 
                              new object[] { r2, "R1 + -$1" })   // mov R2, [R1 + -$1]
             };
 

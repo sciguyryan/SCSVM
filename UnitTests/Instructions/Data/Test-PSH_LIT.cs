@@ -21,11 +21,11 @@ namespace UnitTests.Instructions.Data
         [TestMethod]
         public void TestPushLiteralToStack()
         {
-            var program = new QuickIns[10];
+            var program = new CompilerIns[10];
             for (var i = 0; i < 10; i++)
             {
                 program[i] =
-                    new QuickIns(OpCode.PSH_LIT,
+                    new CompilerIns(OpCode.PSH_LIT,
                             new object[] { i });
             }
 

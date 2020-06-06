@@ -31,13 +31,13 @@ namespace UnitTests.Instructions.Data
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                         new object[] { expected, r1 }),     // mov $12, R1
-                new QuickIns(OpCode.MOV_REG_MEM, 
+                new CompilerIns(OpCode.MOV_REG_MEM, 
                         new object[] { r1, 0x15 }),         // mov R1, [$15]
-                new QuickIns(OpCode.MOV_REG_REG, 
+                new CompilerIns(OpCode.MOV_REG_REG, 
                         new object[] { r1, r2 }),           // mov R1, R2
-                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, 
+                new CompilerIns(OpCode.MOV_LIT_EXP_MEM_REG, 
                         new object[] { "R2 + $3", r3 })     // mov [R2 + $3], R3
             };
 
@@ -61,13 +61,13 @@ namespace UnitTests.Instructions.Data
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                         new object[] { expected, r1 }),     // mov $12, R1
-                new QuickIns(OpCode.MOV_REG_MEM, 
+                new CompilerIns(OpCode.MOV_REG_MEM, 
                         new object[] { r1, 0x15 }),         // mov R1, [$15]
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                         new object[] { -0x5, r2 }),         // mov -$5, R2
-                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, 
+                new CompilerIns(OpCode.MOV_LIT_EXP_MEM_REG, 
                         new object[] { "R2 + $0x1A", r3 })  // mov [R2 + $1A], R3
             };
 
@@ -90,9 +90,9 @@ namespace UnitTests.Instructions.Data
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                         new object[] { 0, r1 }),            // mov $0, R1
-                new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG, 
+                new CompilerIns(OpCode.MOV_LIT_EXP_MEM_REG, 
                         new object[] { "R1 + -$1", r2 })    // mov [R1 + -$1], R2
             };
 

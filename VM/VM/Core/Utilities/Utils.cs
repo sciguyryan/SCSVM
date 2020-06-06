@@ -247,7 +247,7 @@ namespace VMCore.VM.Core.Utilities
         /// <returns>
         /// A byte array containing the bytecode data for the binary file.
         /// </returns>
-        public static byte[] QuickFileCompile(QuickIns[] aIns)
+        public static byte[] QuickFileCompile(CompilerIns[] aIns)
         {
             // We are only interested in the code section here.
             var writer =
@@ -274,7 +274,7 @@ namespace VMCore.VM.Core.Utilities
         /// <returns>
         /// A byte array containing the bytecode data for the program.
         /// </returns>
-        public static byte[] QuickRawCompile(QuickIns[] aIns,
+        public static byte[] QuickRawCompile(CompilerIns[] aIns,
                                              bool aOptimize = false)
         {
             var aw = new AsmWriter(aOptimize);

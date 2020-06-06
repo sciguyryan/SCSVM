@@ -26,9 +26,9 @@ namespace UnitTests.Instructions.Data
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_MEM, 
+                new CompilerIns(OpCode.MOV_LIT_MEM, 
                         new object[] { expected, 0x0 }),
-                new QuickIns(OpCode.MOV_MEM_REG, 
+                new CompilerIns(OpCode.MOV_MEM_REG, 
                         new object[] { 0x0, Registers.R1 }),
             };
 
@@ -47,7 +47,7 @@ namespace UnitTests.Instructions.Data
         {
             var program = new []
             {
-                new QuickIns(OpCode.MOV_MEM_REG, 
+                new CompilerIns(OpCode.MOV_MEM_REG, 
                         new object[] { int.MaxValue, Registers.R1 }),
             };
 

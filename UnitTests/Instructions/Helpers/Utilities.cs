@@ -29,10 +29,10 @@ namespace UnitTests.Instructions.Helpers
         /// </param>
         /// <returns>A list of QuickInstruction objects to be
         /// executed for the test.</returns>
-        public static QuickIns[] Generate<T>(OpCode aOp, T[] aVals)
+        public static CompilerIns[] Generate<T>(OpCode aOp, T[] aVals)
         {
             var instructionList
-                = new List<QuickIns>();
+                = new List<CompilerIns>();
 
             // The types of argument that we expect for this
             // instruction.
@@ -62,7 +62,7 @@ namespace UnitTests.Instructions.Helpers
             {
                 instructionList.Add
                 (
-                    new QuickIns
+                    new CompilerIns
                     (
                         OpCode.MOV_LIT_REG, 
                         new object[] { argQueue.Dequeue(), (byte)i }
@@ -111,8 +111,8 @@ namespace UnitTests.Instructions.Helpers
                 }
             }
 
-            instructionList.Add(new QuickIns(aOp, args.ToArray()));
-            instructionList.Add(new QuickIns(OpCode.HLT));
+            instructionList.Add(new CompilerIns(aOp, args.ToArray()));
+            instructionList.Add(new CompilerIns(OpCode.HLT));
 
             return instructionList.ToArray();
         }

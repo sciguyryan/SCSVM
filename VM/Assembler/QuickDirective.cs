@@ -6,10 +6,10 @@ using VMCore.VM.Core;
 namespace VMCore.Assembler
 {
     /// <summary>
-    /// A simple directive class primarily for use
+    /// A compiler directive class primarily for use
     /// with the quick compiler.
     /// </summary>
-    public class QuickDir
+    public class CompilerDir
     {
         public DirectiveCodes DirCode { get; }
 
@@ -19,7 +19,7 @@ namespace VMCore.Assembler
 
         public string StringData { get; }
 
-        public QuickDir(DirectiveCodes aDirCode,
+        public CompilerDir(DirectiveCodes aDirCode,
                         string aDirLabel,
                         byte[]? aByteData = null,
                         string? aStringData = null)

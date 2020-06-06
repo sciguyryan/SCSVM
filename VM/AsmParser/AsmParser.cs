@@ -144,13 +144,13 @@ namespace VMCore.AsmParser
         /// <returns>
         /// An array of instructions representing the input data.
         /// </returns>
-        public QuickIns[] Parse(string aInput)
+        public CompilerIns[] Parse(string aInput)
         {
             var newLineSkip =
                 Environment.NewLine.Length - 1;
 
-            var insList = new List<QuickIns>();
-            var dirList = new List<QuickDir>();
+            var insList = new List<CompilerIns>();
+            var dirList = new List<CompilerDir>();
 
             var lineNo = 0;
             var isLine = false;
@@ -236,8 +236,8 @@ namespace VMCore.AsmParser
 
         private void ParseLineByType(BinSections? aSec,
                                      ReadOnlySpan<char> aLine,
-                                     ref List<QuickIns> aInsList,
-                                     ref List<QuickDir> aDirList)
+                                     ref List<CompilerIns> aInsList,
+                                     ref List<CompilerDir> aDirList)
         {
             // If no section has been specified then
             // we assume that this is a code section.
@@ -342,7 +342,7 @@ namespace VMCore.AsmParser
 
         #region Directive Line Parsing
 
-        private QuickDir? ParseDirLine(ReadOnlySpan<char> aLine)
+        private CompilerDir? ParseDirLine(ReadOnlySpan<char> aLine)
         {
             // Fast path return for lines that are comments.
             if (aLine[0] == ';')
@@ -431,7 +431,7 @@ namespace VMCore.AsmParser
             return BuildDirective(segments.ToArray());
         }
 
-        private QuickDir? BuildDirective(string[] aSegments)
+        private CompilerDir? BuildDirective(string[] aSegments)
         {
             // The line could not be a valid directive with
             // less than three segments.
@@ -481,7 +481,7 @@ namespace VMCore.AsmParser
             }
 
             var qd = 
-                new QuickDir((DirectiveCodes) dirCode,
+                new CompilerDir((DirectiveCodes) dirCode,
                              dirLabel,
                              directiveData,
                              directiveStrData);
@@ -530,10 +530,10 @@ namespace VMCore.AsmParser
         /// </summary>
         /// <param name="aLine">The string to be parsed.</param>
         /// <returns>
-        /// A nullable QuickIns object representing the parsed data.
+        /// A nullable CompilerIns object representing the parsed data.
         /// This can be null if there was no instruction to output.
         /// </returns>
-        private QuickIns? ParseInsLine(ReadOnlySpan<char> aLine)
+        private CompilerIns? ParseInsLine(ReadOnlySpan<char> aLine)
         {
             // Fast path return for lines that are comments.
             if (aLine[0] == ';')
@@ -652,7 +652,7 @@ namespace VMCore.AsmParser
         }
 
         /// <summary>
-        /// Build a QuickIns object based on the parsed data. 
+        /// Build a CompilerIns object based on the parsed data. 
         /// </summary>
         /// <param name="aSegments">
         /// An array of strings representing the segments of the
@@ -661,10 +661,10 @@ namespace VMCore.AsmParser
         /// represent the arguments provided to the instruction.
         /// </param>
         /// <returns>
-        /// A nullable QuickIns object representing the parsed data.
+        /// A nullable CompilerIns object representing the parsed data.
         /// This can be null if there was no instruction to output.
         /// </returns>
-        private QuickIns? BuildInstruction(string[] aSegments)
+        private CompilerIns? BuildInstruction(string[] aSegments)
         {
             // The line was likely a comment line.
             if (aSegments.Length == 0)
@@ -715,7 +715,7 @@ namespace VMCore.AsmParser
             if (lastSignificantChar != ':')
             {
                 return
-                    new QuickIns(OpCode.LABEL,
+                    new CompilerIns(OpCode.LABEL,
                         new object[] { label });
             }
 
@@ -727,7 +727,7 @@ namespace VMCore.AsmParser
             // In this instance it doesn't matter as we only
             // need this data for use in the compiler.
             return
-                new QuickIns(OpCode.SUBROUTINE,
+                new CompilerIns(OpCode.SUBROUTINE,
                     new object[] { _subRoutineSeqId++, subLabel });
         }
 
@@ -739,13 +739,13 @@ namespace VMCore.AsmParser
         /// The mnemonic of the instruction.
         /// </param>
         /// <returns>
-        /// A nullable QuickIns object containing the parsed data.
+        /// A nullable CompilerIns object containing the parsed data.
         /// </returns>
-        private QuickIns? ParseSimple(string aInsName)
+        private CompilerIns? ParseSimple(string aInsName)
         {
             if (Enum.TryParse(aInsName, true, out OpCode op))
             {
-                return new QuickIns(op);
+                return new CompilerIns(op);
             }
 
             Assert(true,
@@ -879,9 +879,9 @@ namespace VMCore.AsmParser
         /// The name of the instruction.
         /// </param>
         /// <returns>
-        /// A nullable QuickIns object containing the parsed data.
+        /// A nullable CompilerIns object containing the parsed data.
         /// </returns>
-        private QuickIns? ParseComplex(string aInsName,
+        private CompilerIns? ParseComplex(string aInsName,
                                        IReadOnlyList<string> aRawArgs)
         {
             var args = ParseArgs(aRawArgs);
@@ -939,7 +939,7 @@ namespace VMCore.AsmParser
                 }
             }
 
-            return new QuickIns(op, args.Arguments, asmLabel);
+            return new CompilerIns(op, args.Arguments, asmLabel);
         }
 
         #endregion // Instruction Line Parsing

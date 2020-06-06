@@ -40,7 +40,7 @@ namespace UnitTests.Core.Registers
             var program = new []
             {
                 // Attempt to write a value to a protected write register.
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { 0x0, VMCore.VM.Core.Register.Registers.TESTER })
             };
 
@@ -81,7 +81,7 @@ namespace UnitTests.Core.Registers
             {
                 // Attempt to read a value from a protected write register
                 // directly from user code.
-                new QuickIns(OpCode.MOV_REG_MEM,
+                new CompilerIns(OpCode.MOV_REG_MEM,
                              new object[] { VMCore.VM.Core.Register.Registers.TESTER, 0x0 })
             };
 
@@ -120,7 +120,7 @@ namespace UnitTests.Core.Registers
             var program = new []
             {
                 // Attempt to write a value to a protected write register.
-                new QuickIns(OpCode.MOV_REG_MEM,
+                new CompilerIns(OpCode.MOV_REG_MEM,
                              new object[] { VMCore.VM.Core.Register.Registers.R1, 0x0 })
             };
 
@@ -158,7 +158,7 @@ namespace UnitTests.Core.Registers
         {
             var program = new []
             {
-                new QuickIns(OpCode.MOV_REG_MEM,
+                new CompilerIns(OpCode.MOV_REG_MEM,
                              new object[] { (VMCore.VM.Core.Register.Registers)0xFF, 0x0 }),
             };
 
@@ -177,7 +177,7 @@ namespace UnitTests.Core.Registers
         {
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { 0x123, (VMCore.VM.Core.Register.Registers)0xFF }),
             };
 

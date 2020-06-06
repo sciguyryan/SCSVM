@@ -29,11 +29,11 @@ namespace UnitTests.Instructions.Data
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                              new object[] { expected1, r1 }),
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                              new object[] { expected2, r2 }),
-                new QuickIns(OpCode.SWAP, 
+                new CompilerIns(OpCode.SWAP, 
                              new object[] { r1, r2 }),
             };
 

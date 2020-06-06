@@ -249,68 +249,68 @@ namespace UnitTests.AsmParser
 
             #region RESULTS
 
-            var results = new QuickIns[][]
+            var results = new CompilerIns[][]
             {
                 #region INTEGER LITERAL TESTS
 
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { 0b10, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { -0b10, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                             new object[] { 8, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { -8, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { 10, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { -10, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { 0x10, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { -0x10, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { 0, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { 0, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { -1, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { -1, Registers.R1 })
                 },
 
@@ -320,27 +320,27 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
-                    new QuickIns(OpCode.MOV_MEM_REG,
+                    new CompilerIns(OpCode.MOV_MEM_REG,
                                  new object[] { 0b10, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_MEM_REG,
+                    new CompilerIns(OpCode.MOV_MEM_REG,
                         new object[] { 8, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_MEM_REG,
+                    new CompilerIns(OpCode.MOV_MEM_REG,
                         new object[] { 10, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_MEM_REG,
+                    new CompilerIns(OpCode.MOV_MEM_REG,
                         new object[] { 0x10, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_MEM_REG,
+                    new CompilerIns(OpCode.MOV_MEM_REG,
                         new object[] { 0, Registers.R1 })
                 },
 
@@ -350,24 +350,24 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
-                    new QuickIns(OpCode.JNE_REG,
+                    new CompilerIns(OpCode.JNE_REG,
                                  new object[] { Registers.R1, 0 },
                                  new AsmLabel("GOOD", 1))
                 },
                 new []
                 {
-                    new QuickIns(OpCode.JNE_REG,
+                    new CompilerIns(OpCode.JNE_REG,
                                  new object[] { Registers.R1, 0 },
                                  new AsmLabel("GOOD", 1))
                 },
                 new []
                 {
-                    new QuickIns(OpCode.LABEL,
+                    new CompilerIns(OpCode.LABEL,
                                  new object[] { "GOOD" })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.LABEL,
+                    new CompilerIns(OpCode.LABEL,
                                  new object[] { "GOOD" })
                 },
 
@@ -377,24 +377,24 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
-                    new QuickIns(OpCode.CAL_LIT,
+                    new CompilerIns(OpCode.CAL_LIT,
                                  new object[] { 0x123 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.CAL_LIT,
+                    new CompilerIns(OpCode.CAL_LIT,
                                  new object[] { 0 },
                                  new AsmLabel("GOOD", 0))
                 },
                 new []
                 {
-                    new QuickIns(OpCode.CAL_LIT,
+                    new CompilerIns(OpCode.CAL_LIT,
                                  new object[] { 0 },
                                  new AsmLabel("GOOD", 0))
                 },
                 new []
                 {
-                    new QuickIns(OpCode.SUBROUTINE,
+                    new CompilerIns(OpCode.SUBROUTINE,
                                  new object[] { "GOOD" })
                 },
 
@@ -404,7 +404,7 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
-                    new QuickIns(OpCode.MOV_REG_REG,
+                    new CompilerIns(OpCode.MOV_REG_REG,
                                  new object[] { Registers.R1, Registers.R2 })
                 },
 
@@ -414,12 +414,12 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
-                    new QuickIns(OpCode.MOV_REG_PTR_REG,
+                    new CompilerIns(OpCode.MOV_REG_PTR_REG,
                                 new object[] { Registers.R1, Registers.R2 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_OFF_REG,
+                    new CompilerIns(OpCode.MOV_LIT_OFF_REG,
                                  new object[] { 0x10, Registers.R1, Registers.R2 })
                 },
 
@@ -429,12 +429,12 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
-                    new QuickIns(OpCode.MOV_REG_PTR_REG,
+                    new CompilerIns(OpCode.MOV_REG_PTR_REG,
                                  new object[] { Registers.R1, Registers.R2 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_REG_PTR_REG,
+                    new CompilerIns(OpCode.MOV_REG_PTR_REG,
                                  new object[] { Registers.R1, Registers.R2 })
                 },
 
@@ -444,7 +444,7 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { 0b10, Registers.R1 })
                 },
 
@@ -454,16 +454,16 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
-                    new QuickIns(OpCode.HLT)
+                    new CompilerIns(OpCode.HLT)
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { 0x10, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_OFF_REG,
+                    new CompilerIns(OpCode.MOV_LIT_OFF_REG,
                         new object[] { 0x10, Registers.R1, Registers.R2 })
                 },
 
@@ -473,17 +473,17 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG,
+                    new CompilerIns(OpCode.MOV_LIT_EXP_MEM_REG,
                             new object[] { "$10+R1", Registers.R2 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG,
+                    new CompilerIns(OpCode.MOV_LIT_EXP_MEM_REG,
                                  new object[] { Registers.R2, "$10+R1" })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_EXP_MEM_REG,
+                    new CompilerIns(OpCode.MOV_LIT_EXP_MEM_REG,
                                  new object[] { Registers.R2, "($10+R1)+1" })
                 },
 
@@ -493,12 +493,12 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { 0b10, Registers.R1 })
                 },
                 new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                                  new object[] { 0b10, Registers.R1 })
                 },
 
@@ -729,8 +729,8 @@ namespace UnitTests.AsmParser
             }
         }
 
-        private static bool FastArrayEquals(IReadOnlyList<QuickIns> a1,
-                                            IReadOnlyList<QuickIns> a2)
+        private static bool FastArrayEquals(IReadOnlyList<CompilerIns> a1,
+                                            IReadOnlyList<CompilerIns> a2)
         {
             if (a1 == null || a2 == null)
             {

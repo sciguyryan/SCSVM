@@ -151,7 +151,7 @@ namespace UnitTests.Instructions.Branching
         {
             var program = new []
             {
-                new QuickIns(OpCode.RET)
+                new CompilerIns(OpCode.RET)
             };
 
             Vm.Run(Utils.QuickRawCompile(program));

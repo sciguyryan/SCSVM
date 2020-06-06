@@ -58,9 +58,9 @@ namespace UnitTests.Instructions.Arithmetic
 
                 var program = new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG, 
+                    new CompilerIns(OpCode.MOV_LIT_REG, 
                             new object[] { entry[0], (byte)Registers.R1 }),
-                    new QuickIns(OpCode.MOD_LIT_REG, 
+                    new CompilerIns(OpCode.MOD_LIT_REG, 
                             new object[] { entry[1], (byte)Registers.R1 }),
                 };
 

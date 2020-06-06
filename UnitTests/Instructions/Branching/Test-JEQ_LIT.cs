@@ -43,14 +43,14 @@ namespace UnitTests.Instructions.Branching
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { 100, r1 }),
-                new QuickIns(OpCode.SUB_LIT_REG,
+                new CompilerIns(OpCode.SUB_LIT_REG,
                              new object[] { 50, r1 }),
-                new QuickIns(OpCode.JEQ_LIT,
+                new CompilerIns(OpCode.JEQ_LIT,
                              new object[] { 50, destOffset }),
-                new QuickIns(OpCode.HLT),
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.HLT),
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { expected, r2 }),
             };
 
@@ -85,16 +85,16 @@ namespace UnitTests.Instructions.Branching
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { 100, r1 }),
-                new QuickIns(OpCode.SUB_LIT_REG,
+                new CompilerIns(OpCode.SUB_LIT_REG,
                              new object[] { 50, r1 }),  // AC = 50,
-                new QuickIns(OpCode.JEQ_LIT,
+                new CompilerIns(OpCode.JEQ_LIT,
                              new object[] { 100, destOffset }),
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { expected, r2 }),
-                new QuickIns(OpCode.HLT),
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.HLT),
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { fail, r2 }),
             };
 
@@ -116,20 +116,20 @@ namespace UnitTests.Instructions.Branching
             const int expected = 0x123;
             const int fail = 0x321;
 
-            var program = new QuickIns[]
+            var program = new CompilerIns[]
             {
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { 100, r1 }),
-                new QuickIns(OpCode.SUB_LIT_REG,
+                new CompilerIns(OpCode.SUB_LIT_REG,
                              new object[] { 50, r1 }),  // AC = 50
-                new QuickIns(OpCode.JEQ_LIT,
+                new CompilerIns(OpCode.JEQ_LIT,
                              new object[] { 50, 0 },
                              new AsmLabel("GOOD", 1)),
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { fail, r2 }),
-                new QuickIns(OpCode.HLT),
-                new QuickIns(OpCode.LABEL, new object[] { "GOOD" }),
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.HLT),
+                new CompilerIns(OpCode.LABEL, new object[] { "GOOD" }),
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { expected, r2 }),
             };
 
@@ -151,9 +151,9 @@ namespace UnitTests.Instructions.Branching
 
             var program = new []
             {
-                new QuickIns(OpCode.SUB_LIT_REG,
+                new CompilerIns(OpCode.SUB_LIT_REG,
                              new object[] { 50, r1 }),  // AC = -50
-                new QuickIns(OpCode.JEQ_LIT,
+                new CompilerIns(OpCode.JEQ_LIT,
                              new object[] { 0, 0 },
                              new AsmLabel("A", 1)),
             };
@@ -174,12 +174,12 @@ namespace UnitTests.Instructions.Branching
 
             var program = new []
             {
-                new QuickIns(OpCode.SUB_LIT_REG,
+                new CompilerIns(OpCode.SUB_LIT_REG,
                              new object[] { 50, r1 }),  // AC = -50
-                new QuickIns(OpCode.JEQ_LIT,
+                new CompilerIns(OpCode.JEQ_LIT,
                              new object[] { 0, 0 },
                              new AsmLabel("A", 0)),
-                new QuickIns(OpCode.LABEL, new object[] { "A" }),
+                new CompilerIns(OpCode.LABEL, new object[] { "A" }),
             };
 
             Vm.Run(Utils.QuickRawCompile(program));
@@ -199,11 +199,11 @@ namespace UnitTests.Instructions.Branching
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG,
+                new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { 100, r1 }),
-                new QuickIns(OpCode.SUB_LIT_REG,
+                new CompilerIns(OpCode.SUB_LIT_REG,
                              new object[] { 50, r1 }),  // AC = 50
-                new QuickIns(OpCode.JEQ_LIT,
+                new CompilerIns(OpCode.JEQ_LIT,
                              new object[] { 50, -2 }),
             };
 

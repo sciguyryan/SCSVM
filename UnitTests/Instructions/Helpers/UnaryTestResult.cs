@@ -48,9 +48,9 @@ namespace UnitTests.Instructions.Helpers
 
                 var program = new []
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG, 
+                    new CompilerIns(OpCode.MOV_LIT_REG, 
                             new object[] { entry.Value1, (byte)reg }),
-                    new QuickIns(aOp, 
+                    new CompilerIns(aOp, 
                             new object[] { (byte)reg }),
                 };
 

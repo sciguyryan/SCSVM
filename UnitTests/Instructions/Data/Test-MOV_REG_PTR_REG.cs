@@ -31,13 +31,13 @@ namespace UnitTests.Instructions.Data
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                              new object[] { expected, r1 }),    // mov $0x12, R1
-                new QuickIns(OpCode.MOV_REG_MEM, 
+                new CompilerIns(OpCode.MOV_REG_MEM, 
                              new object[] { r1, address }),     // mov R1, $0x15
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                              new object[] { address, r2 }),     // mov $0x15, R2
-                new QuickIns(OpCode.MOV_REG_PTR_REG, 
+                new CompilerIns(OpCode.MOV_REG_PTR_REG, 
                              new object[] { r2, r3 })           // mov *R2, R3
             };
 
@@ -61,9 +61,9 @@ namespace UnitTests.Instructions.Data
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                              new object[] { -0x1, r1 }),    // mov $-0x1, R1
-                new QuickIns(OpCode.MOV_REG_PTR_REG, 
+                new CompilerIns(OpCode.MOV_REG_PTR_REG, 
                              new object[] { r1, r2 })       // mov *R1, R2
             };
 

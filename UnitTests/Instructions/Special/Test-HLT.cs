@@ -25,7 +25,7 @@ namespace UnitTests.Instructions.Special
             var program = new []
             {
                 // Attempt to write a value to a protected write register.
-                new QuickIns(OpCode.HLT)
+                new CompilerIns(OpCode.HLT)
             };
 
             Vm.Run(Utils.QuickRawCompile(program));
@@ -44,11 +44,11 @@ namespace UnitTests.Instructions.Special
 
             var program = new []
             {
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                         new object[] { expected, (byte)Registers.R1 }),
-                new QuickIns(OpCode.HLT),
+                new CompilerIns(OpCode.HLT),
                 // This statement should never execute.
-                new QuickIns(OpCode.MOV_LIT_REG, 
+                new CompilerIns(OpCode.MOV_LIT_REG, 
                         new object[] { 0xABC, (byte)Registers.R1 })
             };
 

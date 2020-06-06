@@ -397,7 +397,7 @@ namespace UnitTests.Instructions.Branching
         {
             var program = new []
             {
-                new QuickIns(OpCode.CAL_LIT,
+                new CompilerIns(OpCode.CAL_LIT,
                              new object[] { 0 },
                              new AsmLabel("GOOD", 0)),
             };

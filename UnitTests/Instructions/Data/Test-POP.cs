@@ -22,13 +22,13 @@ namespace UnitTests.Instructions.Data
         [TestMethod]
         public void TestPopIntegerValueToRegister()
         {
-            var program = new QuickIns[10];
+            var program = new CompilerIns[10];
 
             // Push the values to the stack.
             for (var i = 0; i < 5; i++)
             {
                 program[i] =
-                    new QuickIns(OpCode.PSH_LIT,
+                    new CompilerIns(OpCode.PSH_LIT,
                             new object[] { i + 1 });
             }
 
@@ -37,7 +37,7 @@ namespace UnitTests.Instructions.Data
             for (int j = 0, r = 4; j < 5; j++, r--)
             {
                 program[j + 5] =
-                    new QuickIns(OpCode.POP,
+                    new CompilerIns(OpCode.POP,
                             new object[] { (Registers)r });
             }
 

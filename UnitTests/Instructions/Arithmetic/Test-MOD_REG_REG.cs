@@ -58,13 +58,13 @@ namespace UnitTests.Instructions.Arithmetic
             {
                 var entry = table[i];
 
-                var program = new QuickIns[]
+                var program = new CompilerIns[]
                 {
-                    new QuickIns(OpCode.MOV_LIT_REG, 
+                    new CompilerIns(OpCode.MOV_LIT_REG, 
                             new object[] { entry[0], (byte)Registers.R1 }),
-                    new QuickIns(OpCode.MOV_LIT_REG, 
+                    new CompilerIns(OpCode.MOV_LIT_REG, 
                             new object[] { entry[1], (byte)Registers.R2 }),
-                    new QuickIns(OpCode.MOD_REG_REG, 
+                    new CompilerIns(OpCode.MOD_REG_REG, 
                             new object[] { (byte)Registers.R1, (byte)Registers.R2 }),
                 };
 

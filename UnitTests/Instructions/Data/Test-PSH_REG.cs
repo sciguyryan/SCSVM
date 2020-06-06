@@ -21,13 +21,13 @@ namespace UnitTests.Instructions.Data
         [TestMethod]
         public void TestPushRegisterValueToStack()
         {
-            var program = new QuickIns[10];
+            var program = new CompilerIns[10];
 
             // Move the values to the registers.
             for (var i = 0; i < 5; i++)
             {
                 program[i] =
-                    new QuickIns(OpCode.MOV_LIT_REG,
+                    new CompilerIns(OpCode.MOV_LIT_REG,
                             new object[] { i + 1, (Registers)i });
             }
 
@@ -36,7 +36,7 @@ namespace UnitTests.Instructions.Data
             for (int j = 0, r = 4; j < 5; j++, r--)
             {
                 program[j + 5] =
-                    new QuickIns(OpCode.PSH_REG,
+                    new CompilerIns(OpCode.PSH_REG,
                             new object[] { (Registers)r });
             }
 

@@ -514,7 +514,9 @@ namespace UnitTests.AsmParser
                 try
                 {
                     var p1 =
-                        _parser.Parse(string.Join(_nl, test));
+                        _parser
+                            .Parse(string.Join(_nl, test))
+                            .CodeSectionData;
 
                     var p2 = results[i];
 

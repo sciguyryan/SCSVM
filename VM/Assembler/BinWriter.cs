@@ -13,14 +13,14 @@ namespace VMCore.Assembler
             new Dictionary<BinSections, BinSection>();
 
         /// <summary>
-        /// Add a metadata section to the binary file.
+        /// Add a meta data section to the binary file.
         /// </summary>
         /// <param name="aInfo">
-        /// The binary metadata to be added to the file.
+        /// The binary meta data to be added to the file.
         /// </param>
         public void AddMeta(BinMeta aInfo)
         {
-            var metaSection = CreateSection(BinSections.Metadata);
+            var metaSection = CreateSection(BinSections.Meta);
             metaSection.Raw = aInfo.Serialize();
         }
 

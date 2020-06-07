@@ -124,7 +124,8 @@ namespace UnitTests.Instructions.Helpers
         {
             var pStr = string.Join(Environment.NewLine, aProgram);
 
-            var program = AsmParser.Parse(pStr);
+            var program = 
+                AsmParser.Parse(pStr).CodeSectionData.ToArray();
 
             aVm.LoadAndInitialize(Utils.QuickRawCompile(program));
 

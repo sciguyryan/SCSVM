@@ -37,7 +37,7 @@ namespace TestConsole
                 ".section data",
                 "str db 'Hello, world!',$0xA",
                 "strLen equ $-str",
-                ".section code",
+                ".section text",
                 "push $0xAAA",  // Should remain in place once the stack is restored
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2
@@ -149,9 +149,11 @@ namespace TestConsole
             // Enable CPU debug logging.
             vm.Cpu.SetLoggingEnabled(true);
 
+            var ins = 
+                p.Parse(progText).CodeSectionData.ToArray();
+
             var programBytes =
-                Utils.QuickRawCompile(p.Parse(progText),
-                                      true);
+                Utils.QuickRawCompile(ins, true);
 
             //var programBytes = Utils.QuickRawCompile(program, true);
             //File.WriteAllBytes(@"D:\Downloads\test.bin", programBytes);

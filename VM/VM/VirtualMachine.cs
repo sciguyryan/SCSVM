@@ -283,9 +283,11 @@ namespace VMCore.VM
         {
             var p = new AsmParser.AsmParser();
 
-            var ins = p.Parse(aInsStr);
+            var ins = 
+                p.Parse(aInsStr).CodeSectionData.ToArray();
 
-            var bytes = Utils.QuickRawCompile(ins, aOptimize);
+            var bytes = 
+                Utils.QuickRawCompile(ins, aOptimize);
 
             var insCount = ins.Length;
 

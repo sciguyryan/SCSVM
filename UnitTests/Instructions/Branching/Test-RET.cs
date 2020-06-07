@@ -55,7 +55,8 @@ namespace UnitTests.Instructions.Branching
 
             var pStr = string.Join(Environment.NewLine, lines);
 
-            var program = _p.Parse(pStr);
+            var program = 
+                _p.Parse(pStr).CodeSectionData.ToArray();
 
             Vm.Run(Utils.QuickRawCompile(program));
 
@@ -120,7 +121,8 @@ namespace UnitTests.Instructions.Branching
 
             var pStr = string.Join(Environment.NewLine, lines);
 
-            var program = _p.Parse(pStr);
+            var program = 
+                _p.Parse(pStr).CodeSectionData.ToArray();
 
             Vm.Run(Utils.QuickRawCompile(program));
 

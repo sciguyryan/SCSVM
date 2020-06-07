@@ -14,10 +14,10 @@ namespace VMCore.Assembler
         public static readonly int MagicNumber = 0x03C8;
 
         /// <summary>
-        /// The metadata section for this binary file.
+        /// The meta data section for this binary file.
         /// </summary>
         public BinMeta Meta => 
-            BinMeta.Deserialize(this[BinSections.Metadata].Raw);
+            BinMeta.Deserialize(this[BinSections.Meta].Raw);
 
         /// <summary>
         /// A list of sections within this binary file.
@@ -25,16 +25,13 @@ namespace VMCore.Assembler
         public List<BinSection> Sections { get; set; } = 
             new List<BinSection>();
 
-        public BinSection this[BinSections aSection]
-        {
+        public BinSection this[BinSections aSection] =>
             // TODO - there probably isn't any need to optimize this...
             // but noting this here just in case.
-            get =>
-                (from s in Sections 
-                    where s.Name == 
-                          Enum.GetName(typeof(BinSections), aSection)
-                    select s).FirstOrDefault();
-        }
+            (from s in Sections 
+                where s.Name == 
+                      Enum.GetName(typeof(BinSections), aSection)
+                select s).FirstOrDefault();
 
         /// <summary>
         /// Creates the RawBinaryFile object represented by a byte array.

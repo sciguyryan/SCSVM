@@ -17,7 +17,7 @@ namespace Runner
 
             var bin = BinFile.Load(File.ReadAllBytes(args[0]));
 
-            vm.Run(bin[BinSections.Code].Raw);
+            vm.Run(bin[BinSections.Text].Raw);
         }
     }
 }

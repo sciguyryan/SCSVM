@@ -251,10 +251,10 @@ namespace VMCore.VM.Core.Utilities
         {
             // We are only interested in the code section here.
             var writer =
-                BinFileBuilder(new[] { BinSections.Code });
+                BinFileBuilder(new[] { BinSections.Text });
 
             // Add the compiled opcode instructions to the file section.
-            writer.Sections[BinSections.Code].Raw =
+            writer.Sections[BinSections.Text].Raw =
                 QuickRawCompile(aIns);
 
             // Return the byte stream.

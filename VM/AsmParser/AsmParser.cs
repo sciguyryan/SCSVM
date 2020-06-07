@@ -144,7 +144,7 @@ namespace VMCore.AsmParser
         /// <returns>
         /// An array of instructions representing the input data.
         /// </returns>
-        public CompilerIns[] Parse(string aInput)
+        public CompilerSections Parse(string aInput)
         {
             var newLineSkip =
                 Environment.NewLine.Length - 1;
@@ -156,6 +156,8 @@ namespace VMCore.AsmParser
             var isLine = false;
             var inString = false;
             BinSections? section = null;
+
+            var compSec = new CompilerSections();
 
             var skipChars = 0;
             var startPos = 0;
@@ -222,8 +224,7 @@ namespace VMCore.AsmParser
                     // of section we are currently within.
                     ParseLineByType(section,
                                     span[startPos..endPos],
-                                    ref insList,
-                                    ref dirList);
+                                    ref compSec);
                 }
 
                 startPos = i + skipChars;
@@ -231,26 +232,27 @@ namespace VMCore.AsmParser
                 ++lineNo;
             }
 
-            return insList.ToArray();
+            return compSec;
         }
 
         private void ParseLineByType(BinSections? aSec,
                                      ReadOnlySpan<char> aLine,
-                                     ref List<CompilerIns> aInsList,
-                                     ref List<CompilerDir> aDirList)
+                                     ref CompilerSections aCompSec)
         {
             // If no section has been specified then
             // we assume that this is a code section.
-            var sec = aSec ?? BinSections.Code;
+            // TODO - figure out if this should remain
+            // the case.
+            var sec = aSec ?? BinSections.Text;
 
             switch (sec)
             {
-                case BinSections.Code:
+                case BinSections.Text:
                     {
                         var ins = ParseInsLine(aLine);
                         if (!(ins is null))
                         {
-                            aInsList.Add(ins);
+                            aCompSec.CodeSectionData.Add(ins);
                         }
 
                         break;
@@ -258,25 +260,22 @@ namespace VMCore.AsmParser
 
                 case BinSections.Data:
                     {
-                        var directive = ParseDirLine(aLine);
-                        if (!(directive is null))
+                        var dir = ParseDirLine(aLine);
+                        if (!(dir is null))
                         {
-                            aDirList.Add(directive);
+                            aCompSec.DataSectionData.Add(dir);
                         }
 
                         break;
                     }
 
-                case BinSections.Metadata:
+                case BinSections.Meta:
                     throw new NotImplementedException();
 
-                case BinSections.ReadOnly:
+                case BinSections.RData:
                     throw new NotImplementedException();
 
-                case BinSections.DebugInfo:
-                    throw new NotImplementedException();
-
-                case BinSections.TypeInfo:
+                case BinSections.BSS:
                     throw new NotImplementedException();
 
                 default:
@@ -332,9 +331,9 @@ namespace VMCore.AsmParser
 
             return sectionId.ToLower() switch
             {
-                ".section code" => BinSections.Code,
+                ".section code" => BinSections.Text,
                 ".section data" => BinSections.Data,
-                _ => null
+                _               => null
             };
         }
 

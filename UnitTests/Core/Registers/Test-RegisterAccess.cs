@@ -45,7 +45,7 @@ namespace UnitTests.Core.Registers
             };
 
             // This should fail with a RegisterAccessViolationException.
-            _vm.Run(Utils.QuickRawCompile(program));
+            _vm.Run(QuickCompile.RawCompile(program));
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace UnitTests.Core.Registers
             };
 
             // This should fail with a RegisterAccessViolationException.
-            _vm.Run(Utils.QuickRawCompile(program));
+            _vm.Run(QuickCompile.RawCompile(program));
         }
 
         /// <summary>
@@ -125,7 +125,7 @@ namespace UnitTests.Core.Registers
             };
 
             // This should fail with a RegisterAccessViolationException.
-            _vm.Run(Utils.QuickRawCompile(program));
+            _vm.Run(QuickCompile.RawCompile(program));
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace UnitTests.Core.Registers
 
             // This should throw an exception as the specified register
             // does not exist in the Registers enum.
-            _vm.Run(Utils.QuickRawCompile(program));
+            _vm.Run(QuickCompile.RawCompile(program));
         }
 
         /// <summary>
@@ -183,7 +183,7 @@ namespace UnitTests.Core.Registers
 
             // This should throw an exception as the specified register
             // does not exist in the Registers enum.
-            _vm.Run(Utils.QuickRawCompile(program));
+            _vm.Run(QuickCompile.RawCompile(program));
         }
     }
 }

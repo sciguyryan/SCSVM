@@ -7,7 +7,6 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using VMCore.Assembler;
 using VMCore.VM.Core.Register;
 
 namespace VMCore.VM.Core.Utilities
@@ -198,93 +197,6 @@ namespace VMCore.VM.Core.Utilities
             }
 
             return new string(newArr, 0, j);
-        }
-
-        /// <summary>
-        /// Builds a binary file with the specified parameters.
-        /// </summary>
-        /// <param name="aSecs">
-        /// An array of the sections to be added to the binary.
-        /// </param>
-        /// <param name="aVersion">The version of the binary.</param>
-        /// <returns>
-        /// A RawBinaryWriter containing the specified sections.
-        /// </returns>
-        public static BinWriter BinFileBuilder(BinSections[]? aSecs = null,
-                                               Version? aVersion = null)
-        {
-            var rbw = new BinWriter();
-            var rbi = new BinMeta
-            {
-                Version = aVersion ?? new Version("1.0.0.0"),
-                Id = Guid.NewGuid(),
-            };
-
-            rbw.AddMeta(rbi);
-
-            // Create all sections by default if none
-            // were provided.
-            if (aSecs is null || aSecs.Length == 0)
-            {
-                aSecs =
-                    (BinSections[])Enum.GetValues(typeof(BinSections));
-            }
-
-            foreach (var s in aSecs)
-            {
-                _ = rbw.CreateSection(s);
-            }
-
-            return rbw;
-        }
-
-        /// <summary>
-        /// Compile a list of instructions directly into a binary file.
-        /// </summary>
-        /// <param name="aIns">
-        /// The list of instruction to be compiled.
-        /// </param>
-        /// <returns>
-        /// A byte array containing the bytecode data for the binary file.
-        /// </returns>
-        public static byte[] QuickFileCompile(CompilerIns[] aIns)
-        {
-            // We are only interested in the code section here.
-            var writer =
-                BinFileBuilder(new[] { BinSections.Text });
-
-            // Add the compiled opcode instructions to the file section.
-            writer.Sections[BinSections.Text].Raw =
-                QuickRawCompile(aIns);
-
-            // Return the byte stream.
-            return writer.Save();
-        }
-
-        /// <summary>
-        /// Compile a list of instructions directly into a bytecode array.
-        /// </summary>
-        /// <param name="aIns">
-        /// The list of instruction to be compiled.
-        /// </param>
-        /// <param name="aOptimize">
-        /// A boolean indicating if we should attempt to optimize
-        /// the assembled code.
-        /// </param>
-        /// <returns>
-        /// A byte array containing the bytecode data for the program.
-        /// </returns>
-        public static byte[] QuickRawCompile(CompilerIns[] aIns,
-                                             bool aOptimize = false)
-        {
-            var aw = new AsmWriter(aOptimize);
-
-            foreach (var entry in aIns)
-            {
-                aw.AddWithLabel(entry.Op, entry.Args, entry.Label);
-            }
-
-            return aw.Save();
         }
 
         /// <summary>

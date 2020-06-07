@@ -41,7 +41,7 @@ namespace UnitTests.Instructions.Data
                              new object[] { 0x3, r2, r3 })      // mov [$3 + R2], R3
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Assert.IsTrue(Vm.Cpu.Registers[r3] == expected);
         }
@@ -71,7 +71,7 @@ namespace UnitTests.Instructions.Data
                         new object[] { 0x1A, r2, r3 })          // mov [$1A + R2], R3
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Assert.IsTrue(Vm.Cpu.Registers[r3] == expected);
         }
@@ -96,7 +96,7 @@ namespace UnitTests.Instructions.Data
                         new object[] { -0x1, r1, r2 })  // mov [-$1 + R1], R2
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
         }
     }
 }

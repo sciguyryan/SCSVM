@@ -1,7 +1,7 @@
-﻿using VMCore.VM;
+﻿using VMCore.Assembler;
+using VMCore.VM;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
-using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.Instructions.Helpers
@@ -51,7 +51,7 @@ namespace UnitTests.Instructions.Helpers
 
                 var program = TestUtilities.Generate(aOp, entry.Values);
 
-                aVm.Run(Utils.QuickRawCompile(program));
+                aVm.Run(QuickCompile.RawCompile(program));
 
                 var success = entry.Type switch
                 {

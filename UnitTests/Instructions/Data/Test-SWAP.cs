@@ -37,7 +37,7 @@ namespace UnitTests.Instructions.Data
                              new object[] { r1, r2 }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Assert.IsTrue(Vm.Cpu.Registers[r1] == expected2);
             Assert.IsTrue(Vm.Cpu.Registers[r2] == expected1);

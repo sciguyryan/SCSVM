@@ -41,7 +41,7 @@ namespace UnitTests.Instructions.Data
                             new object[] { (Registers)r });
             }
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Assert.IsTrue(Vm.Memory.StackTypes.Count == 0);
 

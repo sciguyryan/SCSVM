@@ -54,7 +54,7 @@ namespace UnitTests.Instructions.Branching
                              new object[] { expected, r2 }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Assert.IsTrue(Vm.Cpu.Registers[r2] == expected);
         }
@@ -98,7 +98,7 @@ namespace UnitTests.Instructions.Branching
                              new object[] { fail, r2 }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Assert.IsTrue(Vm.Cpu.Registers[r2] == expected);
         }
@@ -133,7 +133,7 @@ namespace UnitTests.Instructions.Branching
                              new object[] { expected, r2 }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Assert.IsTrue(Vm.Cpu.Registers[r2] == expected);
         }
@@ -158,7 +158,7 @@ namespace UnitTests.Instructions.Branching
                              new AsmLabel("A", 1)),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
         }
 
         /// <summary>
@@ -182,7 +182,7 @@ namespace UnitTests.Instructions.Branching
                 new CompilerIns(OpCode.LABEL, new object[] { "A" }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace UnitTests.Instructions.Branching
                              new object[] { 50, -2 }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Vm.Cpu.FetchExecuteNextInstruction();
         }

@@ -54,7 +54,7 @@ namespace UnitTests.Instructions.Helpers
                             new object[] { (byte)reg }),
                 };
 
-                aVm.Run(Utils.QuickRawCompile(program));
+                aVm.Run(QuickCompile.RawCompile(program));
 
                 var success = entry.Type switch
                 {

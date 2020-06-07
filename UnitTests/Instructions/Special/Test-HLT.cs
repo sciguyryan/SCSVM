@@ -28,7 +28,7 @@ namespace UnitTests.Instructions.Special
                 new CompilerIns(OpCode.HLT)
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             // Check if the halted state is set.
             Assert.IsTrue(Vm.Cpu.IsHalted);
@@ -52,7 +52,7 @@ namespace UnitTests.Instructions.Special
                         new object[] { 0xABC, (byte)Registers.R1 })
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             // If the CPU halted after executing the HLT instruction
             // then the register R1 should still be set to the value

@@ -38,7 +38,7 @@ namespace UnitTests.Instructions.Data
                         new object[] { r1, "R2 + $3" })     // mov R1, [R2 + $3]
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             // Extract the value type from memory.
             var intOut = 
@@ -70,7 +70,7 @@ namespace UnitTests.Instructions.Data
                         new object[] { r1, "R2 + $0x1A" })  // mov R3, [R2 + $1A]
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             // Extract the value type from memory.
             var intOut =
@@ -100,7 +100,7 @@ namespace UnitTests.Instructions.Data
                              new object[] { r2, "R1 + -$1" })   // mov R2, [R1 + -$1]
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
         }
     }
 }

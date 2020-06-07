@@ -32,7 +32,7 @@ namespace UnitTests.Instructions.Data
             };
 
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Assert.IsTrue(Vm.Cpu.Registers[register] == expected);
         }

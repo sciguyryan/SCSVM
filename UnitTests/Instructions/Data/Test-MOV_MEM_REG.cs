@@ -32,7 +32,7 @@ namespace UnitTests.Instructions.Data
                         new object[] { 0x0, Registers.R1 }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Assert.IsTrue(Vm.Cpu.Registers[Registers.R1] == expected);
         }
@@ -51,7 +51,7 @@ namespace UnitTests.Instructions.Data
                         new object[] { int.MaxValue, Registers.R1 }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
         }
     }
 }

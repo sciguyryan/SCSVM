@@ -61,7 +61,7 @@ namespace UnitTests.Instructions.Bit
                                 new object[] { (int)entry[0], Registers.R1 }),
                 };
 
-                Vm.Run(Utils.QuickRawCompile(program));
+                Vm.Run(QuickCompile.RawCompile(program));
 
                 var success =
                     Vm.Cpu.IsFlagSet(CpuFlags.Z) == (bool)entry[2];

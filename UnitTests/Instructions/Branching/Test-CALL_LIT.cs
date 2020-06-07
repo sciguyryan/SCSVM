@@ -402,7 +402,7 @@ namespace UnitTests.Instructions.Branching
                              new AsmLabel("GOOD", 0)),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
         }
     }
 }

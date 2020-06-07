@@ -42,7 +42,7 @@ namespace UnitTests.Assembler
                 new CompilerIns(OpCode.NOP),
             };
 
-            Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
+            Vm.LoadAndInitialize(QuickCompile.RawCompile(program));
 
             var ins = Vm.Cpu.Step();
             if (ins is null)
@@ -79,7 +79,7 @@ namespace UnitTests.Assembler
                              new AsmLabel("A", 1)),
             };
 
-            Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
+            Vm.LoadAndInitialize(QuickCompile.RawCompile(program));
 
             var ins = new InstructionData()
             {
@@ -116,7 +116,7 @@ namespace UnitTests.Assembler
                              new AsmLabel("A", 1)),
             };
 
-            Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
+            Vm.LoadAndInitialize(QuickCompile.RawCompile(program));
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace UnitTests.Assembler
                 new CompilerIns(OpCode.NOP),
             };
 
-            Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
+            Vm.LoadAndInitialize(QuickCompile.RawCompile(program));
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace UnitTests.Assembler
                              new AsmLabel("A", 0)),
             };
 
-            Vm.LoadAndInitialize(Utils.QuickRawCompile(program));
+            Vm.LoadAndInitialize(QuickCompile.RawCompile(program));
         }
     }
 }

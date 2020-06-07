@@ -127,7 +127,7 @@ namespace UnitTests.Instructions.Helpers
             var program = 
                 AsmParser.Parse(pStr).CodeSectionData.ToArray();
 
-            aVm.LoadAndInitialize(Utils.QuickRawCompile(program));
+            aVm.LoadAndInitialize(QuickCompile.RawCompile(program));
 
             var i = 0;
             var ins = aVm.Cpu.Step();

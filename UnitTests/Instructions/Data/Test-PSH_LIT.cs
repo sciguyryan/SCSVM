@@ -29,7 +29,7 @@ namespace UnitTests.Instructions.Data
                             new object[] { i });
             }
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Assert.IsTrue(Vm.Memory.StackTypes.Count == 10);
 

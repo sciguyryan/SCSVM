@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using VMCore.VM.Core;
@@ -372,6 +373,8 @@ namespace VMCore.VM
         {
             var pos = Registers[_ipUserTuple];
             var opCodeStartPos = pos;
+
+            Debug.WriteLine("CPU: " + pos);
 
             OpCode opCode;
             try

@@ -133,6 +133,63 @@ namespace VMCore.VM
             return seqId;
         }
 
+
+        public int LoadAndInitialize(BinFile aBinary,
+                                     int aStartAddr = 0,
+                                     bool aCanSwapMemoryRegions = true)
+        {
+            if (aBinary == null)
+            {
+                throw new Exception("Initialize: no byte code provided.");
+            }
+
+            // In case we have used this virtual machine
+            // instance before.
+            Memory.RemoveExecutableRegions();
+
+            // Clear any data within the CPU.
+            Cpu.Reset();
+
+#if DEBUG
+            // This should be done after reset
+            // as to avoid the possibility of the
+            // data being overwritten.
+            LoadRegisterTestData();
+#endif
+            var startAddr = 0;
+            if (aStartAddr > 0)
+            {
+                startAddr = aStartAddr;
+            }
+            else
+            {
+                foreach (var s in aBinary.Sections)
+                {
+                    if (s.Name == "Code")
+                    {
+                        startAddr = s.EntryPoint;
+                    }
+                }
+            }
+
+            // Load the executable data into memory.
+            var (start, end, seqId) =
+                Memory.AddExMemory(aBinary.RawBytes);
+
+            var trueStart = start + 50;
+
+            //Debug.WriteLine("here");
+            //Debug.WriteLine(Memory.GetOpCode(trueStart, SecurityContext.System, true));
+
+            Cpu.Initialize(seqId, startAddr);
+
+            // Load any break point observers that have been
+            // specified.
+            SetBreakpointObservers();
+
+            return seqId;
+        }
+
         /// <summary>
         /// Run a byte code program to completion.
         /// </summary>
@@ -175,6 +232,15 @@ namespace VMCore.VM
                         bool aCanSwapMemoryRegions = true)
         {
             LoadAndInitialize(aRaw, aStartAddr, aCanSwapMemoryRegions);
+
+            Cpu.Run();
+        }
+
+        public void Run(BinFile aBinary,
+                        int aStartAddr = 0,
+                        bool aCanSwapMemoryRegions = true)
+        {
+            LoadAndInitialize(aBinary, aStartAddr, aCanSwapMemoryRegions);
 
             Cpu.Run();
         }
@@ -287,7 +353,7 @@ namespace VMCore.VM
                 p.Parse(aInsStr).CodeSectionData.ToArray();
 
             var bytes = 
-                Utils.QuickRawCompile(ins, aOptimize);
+                QuickCompile.RawCompile(ins, aOptimize);
 
             var insCount = ins.Length;
 

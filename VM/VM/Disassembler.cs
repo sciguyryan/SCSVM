@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
@@ -207,6 +208,8 @@ namespace VMCore.VM
         private string DisassembleNextInstruction(ref int aPos,
                                                   out OpCode aOp)
         {
+            //Debug.WriteLine("Debugger: " + aPos);
+
             OpCode op;
             try
             {

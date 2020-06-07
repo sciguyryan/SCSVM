@@ -149,9 +149,6 @@ namespace VMCore.AsmParser
             var newLineSkip =
                 Environment.NewLine.Length - 1;
 
-            var insList = new List<CompilerIns>();
-            var dirList = new List<CompilerDir>();
-
             var lineNo = 0;
             var isLine = false;
             var inString = false;
@@ -241,12 +238,14 @@ namespace VMCore.AsmParser
         {
             // If no section has been specified then
             // we assume that this is a code section.
-            // TODO - figure out if this should remain
-            // the case.
+            // TODO - figure out if this should be the case.
             var sec = aSec ?? BinSections.Text;
 
             switch (sec)
             {
+                case BinSections.Meta:
+                    throw new NotImplementedException();
+
                 case BinSections.Text:
                     {
                         var ins = ParseInsLine(aLine);
@@ -268,9 +267,6 @@ namespace VMCore.AsmParser
 
                         break;
                     }
-
-                case BinSections.Meta:
-                    throw new NotImplementedException();
 
                 case BinSections.RData:
                     throw new NotImplementedException();
@@ -445,9 +441,9 @@ namespace VMCore.AsmParser
             var dirType = aSegments[1].ToUpper();
             var args = aSegments[2..];
 
-            Debug.WriteLine($"dirLabel = {dirLabel}");
-            Debug.WriteLine($"dirType = {dirType}");
-            Debug.WriteLine($"Args = {string.Join(", ", args)}");
+            //Debug.WriteLine($"dirLabel = {dirLabel}");
+            //Debug.WriteLine($"dirType = {dirType}");
+            //Debug.WriteLine($"Args = {string.Join(", ", args)}");
 
             // Do we have a valid directive type?
             if (!Enum.TryParse(typeof(DirectiveCodes),
@@ -476,17 +472,13 @@ namespace VMCore.AsmParser
 
                 default:
                     throw new Exception();
-                    break;
             }
 
-            var qd = 
-                new CompilerDir((DirectiveCodes) dirCode,
-                             dirLabel,
-                             directiveData,
-                             directiveStrData);
-            Debug.WriteLine(qd);
-
-            return qd;
+            return 
+                new CompilerDir((DirectiveCodes)dirCode,
+                                dirLabel,
+                                directiveData,
+                                directiveStrData);
         }
 
         private byte[] ConvertDbDirectiveArgs(IEnumerable<string> aArgs)

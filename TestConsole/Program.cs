@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using VMCore.Assembler;
 using VMCore.VM;
 using VMCore.AsmParser;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Breakpoints;
 using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
+using System.IO;
 
 namespace TestConsole
 {
@@ -38,8 +40,9 @@ namespace TestConsole
                 "str db 'Hello, world!',$0xA",
                 "strLen equ $-str",
                 ".section text",
-                "push $0xAAA",  // Should remain in place once the stack is restored
-                "push $0xC",    // TESTER Argument 3
+                "hlt",  // Should remain in place once the stack is restored
+                //"push $0xAAA",  // Should remain in place once the stack is restored
+                /*"push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2
                 "push $0xA",    // TESTER Argument 1
                 "push $3",      // The number of arguments for the subroutine
@@ -66,7 +69,7 @@ namespace TestConsole
                 "mov $0x2C, &FP, R1",
                 "add R1, R2",
                 "add R3, AC",
-                "ret"
+                "ret"*/
                 
                 /*"push $0xAAA",  // Should remain in place once the stack is restored
                 "push $0xC",    // TESTER Argument 3
@@ -149,16 +152,22 @@ namespace TestConsole
             // Enable CPU debug logging.
             vm.Cpu.SetLoggingEnabled(true);
 
-            var ins = 
-                p.Parse(progText).CodeSectionData.ToArray();
+            var sectionData = p.Parse(progText);
 
-            var programBytes =
-                Utils.QuickRawCompile(ins, true);
+            var aw = new AsmWriter(null, sectionData, true);
+            var bytes = aw.Compile();
 
-            //var programBytes = Utils.QuickRawCompile(program, true);
+            var bin = BinFile.Load(bytes);
+
+            File.WriteAllBytes(@"D:\Downloads\test.bin", bytes);
+
+            //var programBytes =
+            //    QuickCompile.RawCompile(sectionData, true);
+
+            //var programBytes = QuickCompile.RawCompile(program, true);
             //File.WriteAllBytes(@"D:\Downloads\test.bin", programBytes);
 
-            vm.Run(programBytes);
+            vm.Run(bin, 50);
 
             Console.WriteLine("-------------[Registers]------------");
             vm.Cpu.Registers.PrintRegisters();
@@ -184,7 +193,7 @@ namespace TestConsole
             Console.WriteLine();
 
             Console.WriteLine("------------[Disassembly]-----------");
-            foreach (var s in vm.Disassembler.Disassemble(true))
+            foreach (var s in vm.Disassembler.Disassemble(true, 50))
             {
                 Console.WriteLine(s);
             }

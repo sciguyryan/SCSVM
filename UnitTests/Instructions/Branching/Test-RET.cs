@@ -58,7 +58,7 @@ namespace UnitTests.Instructions.Branching
             var program = 
                 _p.Parse(pStr).CodeSectionData.ToArray();
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             // 0xAAA should be at the top of the stack.
             Assert.IsTrue(Vm.Memory.StackPopInt() == 0xAAA);
@@ -124,7 +124,7 @@ namespace UnitTests.Instructions.Branching
             var program = 
                 _p.Parse(pStr).CodeSectionData.ToArray();
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             // 0xAAA should be at the top of the stack.
             Assert.IsTrue(Vm.Memory.StackPopInt() == 0xAAA);
@@ -156,7 +156,7 @@ namespace UnitTests.Instructions.Branching
                 new CompilerIns(OpCode.RET)
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
         }
     }
 }

@@ -1297,8 +1297,8 @@ namespace VMCore.VM.Core.Memory
             {
                 throw new MemoryAccessViolationException
                 (
-                    $"ValidateAccess: attempted to access a memory" +
-                    $"without the correct security context or access " +
+                    "ValidateAccess: attempted to access a memory" +
+                    "without the correct security context or access " +
                     $"flags. Access Type = {aType}, Executable = " +
                     $"{aExec}, flags = {flags}."
                 );

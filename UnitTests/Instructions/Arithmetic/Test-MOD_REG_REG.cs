@@ -70,7 +70,7 @@ namespace UnitTests.Instructions.Arithmetic
 
                 Assert.ThrowsException<DivideByZeroException>
                 (
-                    () => Vm.Run(Utils.QuickRawCompile(program)),
+                    () => Vm.Run(QuickCompile.RawCompile(program)),
                     $"Expected exception of type DivideByZeroException for test {i}."
                 );
             }

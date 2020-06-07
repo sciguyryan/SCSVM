@@ -33,7 +33,7 @@ namespace UnitTests.Instructions.Data
                              new object[] { Registers.R1, 0x0 }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             // Extract the value type from memory.
             var intOut = 
@@ -62,7 +62,7 @@ namespace UnitTests.Instructions.Data
                              new object[] { Registers.R1, int.MaxValue }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
         }
     }
 }

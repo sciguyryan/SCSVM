@@ -29,7 +29,7 @@ namespace UnitTests.Instructions.Data
                              new object[] { expected, 0x0 }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             // Extract the value type from memory.
             var intOut = 
@@ -54,7 +54,7 @@ namespace UnitTests.Instructions.Data
                              new object[] { 0x00, int.MaxValue }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
         }
     }
 }

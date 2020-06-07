@@ -32,7 +32,7 @@ namespace UnitTests.Instructions.Data
                         new object[] { Registers.R1, Registers.R2 }),
             };
 
-            Vm.Run(Utils.QuickRawCompile(program));
+            Vm.Run(QuickCompile.RawCompile(program));
 
             Assert.IsTrue(Vm.Cpu.Registers[Registers.R2] == expected);
         }

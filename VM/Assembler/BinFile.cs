@@ -69,6 +69,12 @@ namespace VMCore.Assembler
                 };
 
                 var sectionSize = br.ReadInt32();
+                if (sectionSize == 0)
+                {
+                    // We are not interested in zero-length
+                    // sections.
+                    continue;
+                }
 
                 sect.EntryPoint = 
                     (int)br.BaseStream.Position;

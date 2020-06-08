@@ -1,7 +1,8 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Diagnostics;
 using VMCore.Assembler;
-using VMCore.VM.Core;
 using VMCore.VM.Core.Breakpoints;
 using VMCore.VM.Core.Memory;
 using VMCore.VM.Core.Register;
@@ -55,7 +56,7 @@ namespace VMCore.VM
 
         #endregion // Private Properties
 
-        public VirtualMachine(int aMainMemoryCapacity = 2048,
+        public VirtualMachine(int aMainMemoryCapacity = 4096,
                               int aStackCapacity = 100,
                               bool aCanCpuSwapMemoryRegions = false)
         {
@@ -156,37 +157,71 @@ namespace VMCore.VM
             // data being overwritten.
             LoadRegisterTestData();
 #endif
-            var startAddr = 0;
-            if (aStartAddr > 0)
+            BinSection? codeSection = null;
+            BinSection? dataSection = null;
+
+            var startAddr = aStartAddr;
+
+            foreach (var s in aBinary.Sections)
             {
-                startAddr = aStartAddr;
-            }
-            else
-            {
-                foreach (var s in aBinary.Sections)
+                switch (s.SectionId)
                 {
-                    if (s.SectionId == BinSections.Text)
-                    {
-                        startAddr = s.EntryPoint;
+                    case BinSections.Text:
+                        codeSection = s;
                         break;
-                    }
+
+                    case BinSections.Data:
+                        dataSection = s;
+                        break;
+
+                    case BinSections.Meta:
+                        break;
+
+                    case BinSections.RData:
+                        break;
+
+                    case BinSections.BSS:
+                        break;
+
+                    case BinSections.SectionData:
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
 
-            // Load the executable data into memory.
-            var (start, end, seqId) =
-                Memory.AddExMemory(aBinary.RawBytes);
+            if (codeSection is null)
+            {
+                throw new Exception("Bad binary file.");
+            }
 
-            //Debug.WriteLine("here");
-            //Debug.WriteLine(Memory.GetOpCode(trueStart, SecurityContext.System, true));
+            // Load the instruction data into memory.
+            var (insStart, insEnd, insSeqId) =
+                Memory.AddExMemory(codeSection.Raw);
 
-            Cpu.Initialize(seqId, startAddr);
+            //Debug.WriteLine("In VM: " + string.Join(", ", codeSection.Raw));
+            //Debug.WriteLine($"Added instruction section at {insStart}, {insEnd}. SeqID = {insSeqId}");
+
+            // If we have a data section then load that into
+            // it's own memory section.
+            // Load the instruction data into memory.
+            if (!(dataSection is null))
+            {
+                var (dataStart, dataEnd, dataSeqId) =
+                    Memory.AddExMemory(dataSection.Raw);
+                //Debug.WriteLine($"Added data section at {dataStart}, {dataEnd}. SeqID = {dataSeqId}");
+            }
+
+            //Debug.WriteLine(string.Join(", ", Memory.DirectGetMemoryRaw(insStart, insEnd)));
+
+            Cpu.Initialize(insSeqId, startAddr);
 
             // Load any break point observers that have been
             // specified.
             SetBreakpointObservers();
 
-            return seqId;
+            return insSeqId;
         }
 
         /// <summary>

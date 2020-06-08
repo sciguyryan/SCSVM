@@ -26,11 +26,6 @@ namespace VMCore.Assembler
         private readonly bool _optimize;
 
         /// <summary>
-        /// The binary writer for the data stream.
-        /// </summary>
-        //private readonly BinaryWriter _bw;
-
-        /// <summary>
         /// The memory stream for the data stream.
         /// </summary>
         //private readonly MemoryStream _ms;
@@ -121,7 +116,8 @@ namespace VMCore.Assembler
                                 metaStart,
                                 metaEnd - metaStart);
             sectionData.Add(metaSec);
-            Debug.WriteLine($"{BinSections.Meta} = {metaSec.StartPosition}, {metaSec.Length}");
+            //Debug.WriteLine($"{BinSections.Meta} = {metaSec.StartPosition}, {metaSec.Length}");
+            //Debug.WriteLine("Meta bytes = " + string.Join(", ", meta));
 
             // We will always have at least three sections:
             // * meta data section
@@ -131,13 +127,6 @@ namespace VMCore.Assembler
 
 
             /*------------------ CODE DATA SECTION ------------------*/
-            //---------------------------------------------------------------
-            // Subtract this from all of the label positions.
-            // Once the code is loaded into memory the first instruction byte
-            // will be index zero within the EX memory region and so all addresses
-            // need to be offset relative to it.
-            //---------------------------------------------------------------
-
             var codeStart = (int)_bw2.BaseStream.Position;
             foreach (var ins in instructions)
             {
@@ -146,6 +135,19 @@ namespace VMCore.Assembler
                     continue;
                 }
 
+                // We need to deduct metaEnd from the position to
+                // correctly offset the data.
+                // Once we load the binary file into the virtual
+                // machine byte 0 will be the first byte in
+                // memory. If we leave the offsets as they are
+                // they will point to the wrong place.
+                // For example if we have a label pointing to 100
+                // in the file. Once we disregard the meta and header
+                // sections then the instruction will actually be
+                // at position 100 - 56 = 44. (the size of the header
+                // plus meta section).
+                // If the pointer was left in it's original state
+                // then it would point to the wrong place.
                 AddWithLabel2(ins.Op, ins.Args, ins.Label);
             }
             var codeEnd = (int)_bw2.BaseStream.Position;
@@ -160,7 +162,7 @@ namespace VMCore.Assembler
                                 codeStart,
                                 insLen);
             sectionData.Add(codeSec);
-            Debug.WriteLine($"{BinSections.Text} = {codeSec.StartPosition}, {codeSec.Length}");
+            //Debug.WriteLine($"{BinSections.Text} = {codeSec.StartPosition}, {codeSec.Length}");
 
 
             /*------------------ DIRECTIVE DATA SECTION ------------------*/
@@ -205,10 +207,10 @@ namespace VMCore.Assembler
                                 dirStart,
                                 dirEnd - dirStart);
             sectionData.Add(dataSec);
-            Debug.WriteLine($"{BinSections.Data} = {dataSec.StartPosition}, {dataSec.Length}");
+            //Debug.WriteLine($"{BinSections.Data} = {dataSec.StartPosition}, {dataSec.Length}");
 
             // Next we need to apply label substitutions.
-            ReplaceLabels2();
+            ReplaceLabels2(metaEnd);
 
 
             /*------------------ SECTION INFO DATA ------------------*/
@@ -236,7 +238,7 @@ namespace VMCore.Assembler
             _bw2.Write((int)BinSections.SectionData);
             _bw2.Write(secInfoStart);
             _bw2.Write(secInfoEnd - secInfoStart);
-            Debug.WriteLine($"{BinSections.SectionData} = {secInfoStart}, {secInfoEnd - secInfoStart}");
+            //Debug.WriteLine($"{BinSections.SectionData} = {secInfoStart}, {secInfoEnd - secInfoStart}");
 
             // Finally we can go back and update the section
             // info pointer to the starting point of this block.
@@ -642,28 +644,14 @@ namespace VMCore.Assembler
         /// <summary>
         /// Apply any label substitutions that have been applied.
         /// </summary>
-        public void ReplaceLabels()
+        public void ReplaceLabels2(int aOffset)
         {
             while (_labelsToBeReplaced.Count > 0)
             {
                 var (name, addr)
                     = _labelsToBeReplaced.First();
 
-                ReplaceLabel(name, addr);
-            }
-        }
-
-        /// <summary>
-        /// Apply any label substitutions that have been applied.
-        /// </summary>
-        public void ReplaceLabels2()
-        {
-            while (_labelsToBeReplaced.Count > 0)
-            {
-                var (name, addr)
-                    = _labelsToBeReplaced.First();
-
-                ReplaceLabel2(name, addr);
+                ReplaceLabel2(name, addr, aOffset);
             }
         }
 
@@ -675,68 +663,13 @@ namespace VMCore.Assembler
         /// </returns>
         public byte[] Save()
         {
-            ReplaceLabels();
+            //ReplaceLabels();
 
             //return _ms.ToArray();
             return new byte[0];
         }
 
-        /// <summary>
-        /// Replace the address specified by a label with the
-        /// corresponding destination address.
-        /// </summary>
-        /// <param name="aLabelName">
-        /// The name of the label.
-        /// </param>
-        /// <param name="aOrigAddress">
-        /// The origin address as specified by the label.
-        /// </param>
-        /// <exception cref="InvalidDataException">
-        /// Thrown when a matching label cannot be found.
-        /// </exception>
-        private void ReplaceLabel(string aLabelName, long aOrigAddress)
-        {
-            /*
-            // Check if the label has a matching destination.
-            // If not then throw a compilation error as the resulting
-            // binary is not valid.
-            if (!_labelDestinations.ContainsKey(aLabelName))
-            {
-                throw new InvalidDataException
-                (
-                    "ReplaceLabel: attempted to bind a label that does " +
-                    $"not exist. Label = '{aLabelName}'."
-                );
-            }
-
-            // TODO - check if this is Endian variable compatible.
-            var union = new IntegerByteUnion()
-            {
-                integer = (int)_labelDestinations[aLabelName]
-            };
-
-            var bytes = new []
-            {
-                    union.byte0,
-                    union.byte1,
-                    union.byte2,
-                    union.byte3
-            };
-
-            // The label has a matching destination.
-            // Set the location of the stream to be the position
-            // of the bytes corresponding to the location of
-            // the label.
-            _ms.Position = aOrigAddress;
-
-            // Write out the new jump location to the stream.
-            _bw.Write(bytes);
-
-            // Remove the entry so we do not attempt to replace it again.
-            _labelsToBeReplaced.Remove(aLabelName);*/
-        }
-
-        private void ReplaceLabel2(string aLabelName, long aOrigAddress)
+        private void ReplaceLabel2(string aLabelName, long aOrigAddress, int aOffset)
         {
             // Check if the label has a matching destination.
             // If not then throw a compilation error as the resulting
@@ -753,7 +686,8 @@ namespace VMCore.Assembler
             // TODO - check if this is Endian variable compatible.
             var union = new IntegerByteUnion()
             {
-                integer = (int)_labelDestinations[aLabelName]
+                integer = 
+                    (int)_labelDestinations[aLabelName] - aOffset
             };
 
             var bytes = new[]
@@ -768,10 +702,14 @@ namespace VMCore.Assembler
             // Set the location of the stream to be the position
             // of the bytes corresponding to the location of
             // the label.
-            _ms2.Position = aOrigAddress;
+            var startPos = _bw2.BaseStream.Position;
+            _bw2.BaseStream.Position = aOrigAddress;
 
             // Write out the new jump location to the stream.
             _bw2.Write(bytes);
+
+            // Restore the stream position.
+            _bw2.BaseStream.Position = startPos;
 
             // Remove the entry so we do not attempt to replace it again.
             _labelsToBeReplaced.Remove(aLabelName);

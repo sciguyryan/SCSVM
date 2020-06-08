@@ -507,8 +507,6 @@ namespace VMCore.AsmParser
                 }
             }
 
-            Debug.WriteLine(bytes.Count);
-
             return bytes.ToArray();
         }
 

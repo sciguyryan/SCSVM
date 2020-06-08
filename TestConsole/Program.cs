@@ -40,9 +40,9 @@ namespace TestConsole
                 "str db 'Hello, world!',$0xA",
                 "strLen equ $-str",
                 ".section text",
-                "push $0xAAA",
-                "hlt",
-                /*"push $0xAAA",  // Should remain in place once the stack is restored
+                /*"push $0xAAA",
+                "hlt",*/
+                "push $0xAAA",  // Should remain in place once the stack is restored
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2
                 "push $0xA",    // TESTER Argument 1
@@ -70,7 +70,7 @@ namespace TestConsole
                 "mov $0x2C, &FP, R1",
                 "add R1, R2",
                 "add R3, AC",
-                "ret"*/
+                "ret"
                 
                 /*"push $0xAAA",  // Should remain in place once the stack is restored
                 "push $0xC",    // TESTER Argument 3
@@ -160,7 +160,7 @@ namespace TestConsole
 
             var bin = BinFile.Load(bytes);
 
-            File.WriteAllBytes(@"D:\Downloads\test.bin", bytes);
+            //File.WriteAllBytes(@"D:\Downloads\test.bin", bytes);
 
             //var programBytes =
             //    QuickCompile.RawCompile(sectionData, true);
@@ -194,7 +194,7 @@ namespace TestConsole
             Console.WriteLine();
 
             Console.WriteLine("------------[Disassembly]-----------");
-            foreach (var s in vm.Disassembler.Disassemble(true, 50))
+            foreach (var s in vm.Disassembler.Disassemble(true))
             {
                 Console.WriteLine(s);
             }

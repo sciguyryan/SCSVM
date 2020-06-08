@@ -318,7 +318,6 @@ namespace VMCore.VM
             // size of the memory. This is the area of memory
             // containing the system memory and stack.
             var offsetAddress = aStartAddr + Vm.Memory.BaseMemorySize;
-
             if (offsetAddress < 0 || offsetAddress >= Vm.Memory.Length)
             {
                 throw new IndexOutOfRangeException
@@ -373,8 +372,6 @@ namespace VMCore.VM
         {
             var pos = Registers[_ipUserTuple];
             var opCodeStartPos = pos;
-
-            Debug.WriteLine("CPU: " + pos);
 
             OpCode opCode;
             try

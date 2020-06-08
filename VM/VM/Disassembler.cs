@@ -48,11 +48,13 @@ namespace VMCore.VM
         /// A string array containing one instruction per entry.
         /// </returns>
         public string[] Disassemble(bool aShowLocation = false,
+                                    bool aOffsetLocations = false,
                                     int aStartAddr = 0)
         {
             return 
                 Disassemble(Vm.Cpu.MemExecutableSeqId,
                             aShowLocation,
+                            aOffsetLocations,
                             aStartAddr);
         }
 
@@ -75,12 +77,13 @@ namespace VMCore.VM
         /// </returns>
         public string[] Disassemble(int aMemSeqId,
                                     bool aShowLocation = false,
+                                    bool aOffsetLocations = false,
                                     int aStartAddr = 0)
         {
             // Reset the position of the stream back to
             // the start.
             var basePos = Vm.Memory.BaseMemorySize;
-            var pos = aStartAddr + basePos;
+            var baseInsPos = aStartAddr + basePos;
 
             var region =
                 Vm.Memory.GetMemoryRegion(aMemSeqId);
@@ -101,6 +104,7 @@ namespace VMCore.VM
             var instructions = new List<string>();
             var addresses = new List<int>();
 
+            var pos = baseInsPos;
             while (pos >= minPos && pos < maxPos)
             {
                 addresses.Add(pos);
@@ -140,8 +144,14 @@ namespace VMCore.VM
                 var addr = "";
                 if (aShowLocation)
                 {
+                    var offsetPos = addresses[i];
+                    if (aOffsetLocations)
+                    {
+                        offsetPos -= baseInsPos;
+                    }
+
                     addr =
-                        $"{addresses[i]:X8} : ";
+                        $"{offsetPos:X8} : ";
                 }
 
                 output[i] = addr + instructions[i];
@@ -208,8 +218,6 @@ namespace VMCore.VM
         private string DisassembleNextInstruction(ref int aPos,
                                                   out OpCode aOp)
         {
-            //Debug.WriteLine("Debugger: " + aPos);
-
             OpCode op;
             try
             {
@@ -230,7 +238,7 @@ namespace VMCore.VM
                 // we would have no meaningful output
                 // here at all. Return the byte code instead.
                 aOp = OpCode.NOP;
-                return $"???? {op:X2}";
+                return $"???? {(int)op:X2}";
             }
 
             // No instruction matching the OpCode was found.
@@ -241,7 +249,7 @@ namespace VMCore.VM
                 // Return the byte code as that's all we can
                 // safely provide.
                 aOp = OpCode.NOP;
-                return $"???? {op:X2}";
+                return $"???? {(int)op:X2}";
             }
 
             aPos += sizeof(OpCode);

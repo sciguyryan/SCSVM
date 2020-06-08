@@ -220,8 +220,11 @@ namespace VMCore.VM.Core.Memory
             var exLen = aData.Length;
             var newMemLen = memLen + exLen;
 
+            //Debug.WriteLine($"---------------------------------------------------------");
+            //Debug.WriteLine($"memLen = {memLen}, exLen = {exLen}, newMemLen = {newMemLen}");
+
             // Resize the memory to the new size required.
-            Data = new byte[newMemLen];
+            ResizeMemory(newMemLen, true);
 
             // Add an executable memory region for the
             // region that will contain the executable
@@ -237,11 +240,16 @@ namespace VMCore.VM.Core.Memory
                                 flags,
                                 "Executable");
 
+            //Debug.WriteLine($"Copying data to.... {memLen},{aData.Length}");
+
             Array.Copy(aData,
                        0,
                        Data,
                        memLen,
                        aData.Length);
+
+            //Debug.WriteLine($"Written Data = " + string.Join(", ", Data[memLen..newMemLen]));
+            //Debug.WriteLine($"---------------------------------------------------------");
 
             ResizeRootMemoryRegion();
 

@@ -69,7 +69,7 @@ namespace VMCore.Assembler
             br.BaseStream.Position = infoSectionPrt;
 
             var sectionCount = br.ReadInt32();
-            Debug.WriteLine($"sectionCount = {sectionCount}");
+            //Debug.WriteLine($"sectionCount = {sectionCount}");
 
             var sectionData = new List<SectionInfo>();
 
@@ -90,24 +90,24 @@ namespace VMCore.Assembler
                 sectionData.Add(sec);
             }
 
-            Debug.WriteLine("----------------------");
+            //Debug.WriteLine("----------------------");
             foreach (var sec in sectionData)
             {
-                Debug.WriteLine($"{sec.SectionId} = {sec.StartPosition}, {sec.Length}");
+                //Debug.WriteLine($"{sec.SectionId} = {sec.StartPosition}, {sec.Length}");
 
                 var sect = new BinSection
                 {
-                    SectionId = sec.SectionId,
-                    EntryPoint = sec.StartPosition
+                    SectionId = sec.SectionId
                 };
 
                 // Set the location of the stream to the pointer
                 // specified.
-                var pos = (int)br.BaseStream.Position;
                 br.BaseStream.Position = sec.StartPosition;
 
                 // Read the specified block of data.
                 sect.Raw = br.ReadBytes(sec.Length);
+
+                //Debug.WriteLine(string.Join(", ", sect.Raw));
 
                 // Add section to our collection.
                 rbf.Sections.Add(sect);
@@ -157,9 +157,6 @@ namespace VMCore.Assembler
                     // sections.
                     continue;
                 }
-
-                sect.EntryPoint =
-                    (int)br.BaseStream.Position;
 
                 sect.Raw = br.ReadBytes(sectionSize);
 

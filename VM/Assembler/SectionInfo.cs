@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace VMCore.Assembler
+﻿namespace VMCore.Assembler
 {
     public class SectionInfo
     {

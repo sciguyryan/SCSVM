@@ -1150,11 +1150,11 @@ namespace VMCore.VM.Core.Memory
             {
                 if (!aToDebug)
                 {
-                    Debug.WriteLine(l);
+                    Console.WriteLine(l);
                 }
                 else
                 {
-                    Console.WriteLine(l);
+                    Debug.WriteLine(l);
                 }
             }
         }

@@ -314,10 +314,17 @@ namespace VMCore.VM
         /// </param>
         public void SetStartAddress(int aStartAddr)
         {
+            var baseMemRegion =
+                Vm.Memory.GetMemoryRegion(MemExecutableSeqId);
+            if (baseMemRegion is null)
+            {
+                throw new Exception();
+            }
+
             // Offset the starting address by the base
             // size of the memory. This is the area of memory
             // containing the system memory and stack.
-            var offsetAddress = aStartAddr + Vm.Memory.BaseMemorySize;
+            var offsetAddress = baseMemRegion.Start + aStartAddr;
             if (offsetAddress < 0 || offsetAddress >= Vm.Memory.Length)
             {
                 throw new IndexOutOfRangeException
@@ -688,6 +695,12 @@ namespace VMCore.VM
                 case { } when aT == typeof(Registers):
                     arg = 
                         Vm.Memory.GetRegisterIdent(aPos, UserCtx, true);
+                    aPos += sizeof(byte);
+                    break;
+
+                case { } when aT == typeof(InstructionSizeHint):
+                    arg =
+                        Vm.Memory.GetSizeHintIdent(aPos, UserCtx, true);
                     aPos += sizeof(byte);
                     break;
 

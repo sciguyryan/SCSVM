@@ -20,12 +20,12 @@
         /// <summary>
         /// The unique memory sequence identifier for this memory region.
         /// </summary>
-        public int SeqID { get; private set; }
+        public int SeqID { get; }
 
         /// <summary>
         /// The name of this memory region.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
         public MemoryRegion(int aStart,
                             int aEnd,

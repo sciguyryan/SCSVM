@@ -18,7 +18,8 @@ namespace UnitTests.Core.Memory
             var dummy = 
                 new byte[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-            (_executableStart, _, _) = Vm.Memory.AddExMemory(dummy);
+            (_executableStart, _, _) = 
+                Vm.Memory.AddExMemory(dummy, 2248-dummy.Length);
         }
 
         #region Read/Write Public Region Tests

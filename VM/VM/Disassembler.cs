@@ -3,9 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection.Emit;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
+using OpCode = VMCore.VM.Core.OpCode;
 
 namespace VMCore.VM
 {
@@ -25,11 +27,47 @@ namespace VMCore.VM
         private readonly Dictionary<OpCode, Instruction> _instructionCache =
             ReflectionUtils.InstructionCache;
 
+        /*private readonly Dictionary<OpCode, ConsoleColor> _highlights =
+            new Dictionary<OpCode, ConsoleColor>()
+            {
+                { OpCode.MOV_HREG_PTR_REG, ConsoleColor.DarkGreen }
+            };*/
+
         #endregion // Private Properties
 
         public Disassembler(VirtualMachine aVm)
         {
             Vm = aVm;
+        }
+
+        public void DisplayDisassembly(bool aShowLocation = false,
+                                       bool aOffsetLocations = false,
+                                       bool aHighlightLines = true,
+                                       int aStartAddr = 0)
+        {
+            var (lines, opcodes) =
+                Disassemble(aShowLocation, aOffsetLocations, aStartAddr);
+            var len = lines.Length;
+
+            for (var i = 0; i < len; i++)
+            {
+                /*if (aHighlightLines)
+                {
+                    if (_highlights.TryGetValue(opcodes[i],
+                                                out var colour))
+                    {
+                        Console.Write(lines[i][..11]);
+                        Console.ForegroundColor = colour;
+                        Console.WriteLine(lines[i][11..]);
+                    }
+                    else
+                    {
+                        Console.ResetColor();
+                        Console.WriteLine(lines[i]);
+                    }
+                }*/
+                Console.WriteLine(lines[i]);
+            }
         }
 
         /// <summary>
@@ -47,9 +85,9 @@ namespace VMCore.VM
         /// <returns>
         /// A string array containing one instruction per entry.
         /// </returns>
-        public string[] Disassemble(bool aShowLocation = false,
-                                    bool aOffsetLocations = false,
-                                    int aStartAddr = 0)
+        public (string[], OpCode[]) Disassemble(bool aShowLocation = false,
+                                                bool aOffsetLocations = false,
+                                                int aStartAddr = 0)
         {
             return 
                 Disassemble(Vm.Cpu.MemExecutableSeqId,
@@ -73,18 +111,15 @@ namespace VMCore.VM
         /// The address from which the execution should commence.
         /// </param>
         /// <returns>
-        /// A string array containing one instruction per entry.
+        /// A tuple containing a list of the formatted strings
+        /// giving one instruction per line and a list of the
+        /// identified opcodes for each line.
         /// </returns>
-        public string[] Disassemble(int aMemSeqId,
-                                    bool aShowLocation = false,
-                                    bool aOffsetLocations = false,
-                                    int aStartAddr = 0)
+        public (string[], OpCode[]) Disassemble(int aMemSeqId,
+                                                bool aShowLocation = false,
+                                                bool aOffsetLocations = false,
+                                                int aStartAddr = 0)
         {
-            // Reset the position of the stream back to
-            // the start.
-            var basePos = Vm.Memory.BaseMemorySize;
-            var baseInsPos = aStartAddr + basePos;
-
             var region =
                 Vm.Memory.GetMemoryRegion(aMemSeqId);
             if (region is null)
@@ -96,7 +131,10 @@ namespace VMCore.VM
                 );
             }
 
+            // Reset the position of the stream back to
+            // the start.
             var minPos = region.Start;
+            var baseInsPos = aStartAddr + minPos;
             var maxPos = region.End;
 
             var subAddresses = new Dictionary<int, string>();
@@ -157,7 +195,7 @@ namespace VMCore.VM
                 output[i] = addr + instructions[i];
             }
 
-            return output;
+            return (output, opCodes.ToArray());
         }
 
         #region Clean Up Instruction Methods
@@ -184,11 +222,9 @@ namespace VMCore.VM
                 Utils.TryParseInt(insStr[offset..], out memPtr);
             }
 
-            // The address is offset against the base position
-            // of the executable memory region plus 8 for the
+            // 8 must be added to the position here to account for the
             // size of subroutine instruction plus the argument.
-            if (aSubs.TryGetValue(memPtr + basePos + 8,
-                                  out var subName))
+            if (aSubs.TryGetValue(memPtr + 8, out var subName))
             {
                 return insStr[..5] + '!' + subName;
             }

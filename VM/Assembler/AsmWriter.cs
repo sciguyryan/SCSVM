@@ -30,8 +30,8 @@ namespace VMCore.Assembler
         /// </summary>
         //private readonly MemoryStream _ms;
 
-        private readonly BinaryWriter _bw2;
-        private readonly MemoryStream _ms2;
+        private readonly BinaryWriter _bw;
+        private readonly MemoryStream _ms;
 
         /// <summary>
         /// A cached of the opcodes to their instruction instances.
@@ -56,6 +56,9 @@ namespace VMCore.Assembler
         private readonly BinMeta _fileMetaData;
         private readonly CompilerSections _sectionData;
 
+        public const int _initialAddress = 64_400;
+        public int _metaSectionEnd;
+
         public AsmWriter(BinMeta? aMeta, CompilerSections aSecs, bool aOptimize)
         {
             _optimize = aOptimize;
@@ -68,15 +71,12 @@ namespace VMCore.Assembler
 
             _sectionData = aSecs;
 
-            _ms2 = new MemoryStream();
-            _bw2 = new BinaryWriter(_ms2);
+            _ms = new MemoryStream();
+            _bw = new BinaryWriter(_ms);
         }
 
         public AsmWriter(bool aOptimize)
         {
-            /*_optimize = aOptimize;
-            _ms = new MemoryStream();
-            _bw = new BinaryWriter(_ms);*/
         }
 
         public byte[] Compile()
@@ -86,38 +86,42 @@ namespace VMCore.Assembler
                 _sectionData.CodeSectionData.ToArray();
             if (instructions.Length == 0)
             {
-                throw new Exception("ProcessSections: no data to compile");
+                throw new Exception("Compile: no data to compile");
             }
 
             var sectionData = new List<SectionInfo>();
 
             // First we need to write the magic number
             // for our file format to the stream.
-            _bw2.Write(BinFile.MagicNumber);
+            _bw.Write(BinFile.MagicNumber);
 
             /*------------------ SECTION INFO POINTER ------------------*/
             // We can now calculate the position of the section
             // info pointer. For now we write a dummy value that
             // will be updated later.
-            var secInfoPointerPos = (int)_bw2.BaseStream.Position;
-            _bw2.Write(0);
+            var secInfoPointerPos = (int)_bw.BaseStream.Position;
+            _bw.Write(0);
+
+            /*------------------ INITIAL OFFSET ------------------*/
+            // This will indicate where the program should be loaded in memory.
+            // without this we cannot correctly calculate label offsets.
+            //const int initialAddress = 64_400;
+            _bw.Write(_initialAddress);
 
             /*------------------ META DATA SECTION ------------------*/
             // Now we need to write the meta data section.
             var meta = _fileMetaData.Serialize();
 
-            var metaStart = (int)_bw2.BaseStream.Position;
-            _bw2.Write(meta);
-            var metaEnd = (int)_bw2.BaseStream.Position;
+            var metaStart = (int)_bw.BaseStream.Position;
+            _bw.Write(meta);
+            _metaSectionEnd = (int)_bw.BaseStream.Position;
 
             // Create the meta block.
             var metaSec = 
                 new SectionInfo(BinSections.Meta,
                                 metaStart,
-                                metaEnd - metaStart);
+                                _metaSectionEnd - metaStart);
             sectionData.Add(metaSec);
-            //Debug.WriteLine($"{BinSections.Meta} = {metaSec.StartPosition}, {metaSec.Length}");
-            //Debug.WriteLine("Meta bytes = " + string.Join(", ", meta));
 
             // We will always have at least three sections:
             // * meta data section
@@ -127,7 +131,7 @@ namespace VMCore.Assembler
 
 
             /*------------------ CODE DATA SECTION ------------------*/
-            var codeStart = (int)_bw2.BaseStream.Position;
+            var codeStart = (int)_bw.BaseStream.Position;
             foreach (var ins in instructions)
             {
                 if (ins is null)
@@ -148,9 +152,9 @@ namespace VMCore.Assembler
                 // plus meta section).
                 // If the pointer was left in it's original state
                 // then it would point to the wrong place.
-                AddWithLabel2(ins.Op, ins.Args, ins.Label);
+                AddWithLabel(ins.Op, ins.Args, ins.Label);
             }
-            var codeEnd = (int)_bw2.BaseStream.Position;
+            var codeEnd = (int)_bw.BaseStream.Position;
 
             // We can calculate the length of the instruction
             // binary data.
@@ -162,7 +166,6 @@ namespace VMCore.Assembler
                                 codeStart,
                                 insLen);
             sectionData.Add(codeSec);
-            //Debug.WriteLine($"{BinSections.Text} = {codeSec.StartPosition}, {codeSec.Length}");
 
 
             /*------------------ DIRECTIVE DATA SECTION ------------------*/
@@ -179,7 +182,7 @@ namespace VMCore.Assembler
                 ++sectionCount;
             }
 
-            var dirStart = (int)_bw2.BaseStream.Position;
+            var dirStart = (int)_bw.BaseStream.Position;
             foreach (var dir in directives)
             {
                 switch (dir.DirCode)
@@ -187,7 +190,7 @@ namespace VMCore.Assembler
                     // Defined byte code sequences.
                     case DirectiveCodes.DB:
                         AddDestinationLabel2(dir.DirLabel);
-                        _bw2.Write(dir.ByteData);
+                        _bw.Write(dir.ByteData);
                         break;
 
                     // Constants.
@@ -199,7 +202,7 @@ namespace VMCore.Assembler
                         throw new ArgumentOutOfRangeException();
                 }
             }
-            var dirEnd = (int)_bw2.BaseStream.Position;
+            var dirEnd = (int)_bw.BaseStream.Position;
 
             // Create the section information block.
             var dataSec =
@@ -207,225 +210,67 @@ namespace VMCore.Assembler
                                 dirStart,
                                 dirEnd - dirStart);
             sectionData.Add(dataSec);
-            //Debug.WriteLine($"{BinSections.Data} = {dataSec.StartPosition}, {dataSec.Length}");
 
             // Next we need to apply label substitutions.
-            ReplaceLabels2(metaEnd);
+            ReplaceLabels();
 
 
             /*------------------ SECTION INFO DATA ------------------*/
             ++sectionCount;
 
-            var secInfoStart = (int)_bw2.BaseStream.Position;
-            _bw2.Write(sectionCount);
+            var secInfoStart = (int)_bw.BaseStream.Position;
+            _bw.Write(sectionCount);
 
             foreach (var sec in sectionData)
             {
                 // Section ID is written first.
-                _bw2.Write((int)sec.SectionId);
+                _bw.Write((int)sec.SectionId);
 
                 // Next we write the start position of the block.
-                _bw2.Write(sec.StartPosition);
+                _bw.Write(sec.StartPosition);
 
                 // Next we write the length of the block.
-                _bw2.Write(sec.Length);
+                _bw.Write(sec.Length);
             }
 
             var secInfoEnd = 
-                (int) _bw2.BaseStream.Position + sizeof(int) * 3;
+                (int)_bw.BaseStream.Position + sizeof(int) * 3;
 
             // Now we write the section information entry... for this section!
-            _bw2.Write((int)BinSections.SectionData);
-            _bw2.Write(secInfoStart);
-            _bw2.Write(secInfoEnd - secInfoStart);
-            //Debug.WriteLine($"{BinSections.SectionData} = {secInfoStart}, {secInfoEnd - secInfoStart}");
+            _bw.Write((int)BinSections.SectionData);
+            _bw.Write(secInfoStart);
+            _bw.Write(secInfoEnd - secInfoStart);
 
             // Finally we can go back and update the section
             // info pointer to the starting point of this block.
-            _bw2.BaseStream.Position = secInfoPointerPos;
-            _bw2.Write(secInfoStart);
+            _bw.BaseStream.Position = secInfoPointerPos;
+            _bw.Write(secInfoStart);
 
             // Restore the stream to the original location.
-            _bw2.BaseStream.Position = secInfoEnd;
+            _bw.BaseStream.Position = secInfoEnd;
 
-            return _ms2.ToArray();
+            return _ms.ToArray();
         }
 
         private void AddDestinationLabel2(string aLabel)
         {
-            if (!_labelDestinations.TryAdd(aLabel, _ms2.Position))
+            if (!_labelDestinations.TryAdd(aLabel, _bw.BaseStream.Position))
             {
                 throw new InvalidDataException
                 (
                     "AddWithLabel: attempted to add label " +
                     $"'{aLabel}' at position " +
-                    $"{_bw2.BaseStream.Position} but a label " +
+                    $"{_bw.BaseStream.Position} but a label " +
                     "with that name already exists."
                 );
             }
         }
 
-        public void AddWithLabel2(OpCode aOpCode,
-                                  object[]? aArgs,
-                                  AsmLabel? aBoundLabel)
-        {
-            var args = aArgs ?? new object[0];
-
-            if (!_instructionCache.TryGetValue(aOpCode,
-                                               out var ins))
-            {
-                throw new InvalidDataException
-                (
-                    "AddWithLabel: attempted write an invalid " +
-                    $"opcode with ID = {(int)aOpCode} to the " +
-                    $"data stream at position {_bw2.BaseStream.Position}."
-                );
-            }
-
-            var op = aOpCode;
-            if (op == OpCode.LABEL ||
-                op == OpCode.SUBROUTINE)
-            {
-                var argIdx = op == OpCode.LABEL ? 0 : 1;
-                AddDestinationLabel2((string)args[argIdx]);
-
-                // We do not want to actually do anything
-                // with label opcodes as they are placeholders only.
-                // So we should just return here.
-                if (op == OpCode.LABEL)
-                {
-                    return;
-                }
-            }
-
-            // Quick exit, no argument data to write.
-            if (ins.ArgumentTypes.Length == 0)
-            {
-                _bw2.Write((int)op);
-                return;
-            }
-
-            // We should have at least one argument here...
-            if (args.Length < ins.ArgumentTypes.Length)
-            {
-                // TODO - handle this better.
-                return;
-            }
-
-            // We have argument data to write.
-            // For now just write a dummy no-op instruction
-            // to the data stream.
-            // This will be overwritten below.
-            var opCodePos = _bw2.BaseStream.Position;
-            _bw2.Write((int)op);
-
-            //Debug.WriteLine("Op Bytes = " + string.Join(", ", BitConverter.GetBytes((int)op)));
-            //Debug.WriteLine($"pos = {_bw2.BaseStream.Position}");
-
-            var newOp = aOpCode;
-            var hasOpCodeChanged = false;
-            for (var i = 0; i < args.Length; i++)
-            {
-                // Subroutines are quirky.
-                // We only care about their ID, however a second
-                // argument will be passed via the parser. We do
-                // not need to write this value to the binary file
-                // as it is only needed for processing. Sigh...
-                if (op == OpCode.SUBROUTINE && i > 0)
-                {
-                    break;
-                }
-
-                var argType = ins.ArgumentTypes[i];
-                var arg = args[i];
-
-                if (_optimize)
-                {
-                    (newOp, argType, arg)
-                        = Optimize(newOp, i, ins, args[i]);
-
-                    // We cannot change the opcode more than
-                    // once during optimization otherwise it
-                    // would likely cause things to break.
-                    // In theory this should never happen.
-                    if (newOp != aOpCode)
-                    {
-                        if (hasOpCodeChanged)
-                        {
-                            throw new NotSupportedException
-                            (
-                                "AddWithLabel: attempted to change " +
-                                $"the opcode from {aOpCode} to " +
-                                $"{newOp}, however the opcode has " +
-                                "already been changed. This operation " +
-                                "is not supported."
-                            );
-                        }
-                    }
-
-                    op = newOp;
-                }
-
-                // Check if we have a label bound to this
-                // argument.
-                if (!(aBoundLabel is null) &&
-                    aBoundLabel.BoundArgumentIndex == i)
-                {
-                    // Do we know about this label already?
-                    if (!_labelDestinations.TryGetValue(aBoundLabel.Name,
-                                                        out var addr))
-                    {
-                        // No, we will have to replace it later.
-                        _labelsToBeReplaced.Add(aBoundLabel.Name,
-                                                _ms2.Position);
-                    }
-                    else
-                    {
-                        // Yes, we can replace it immediately.
-                        arg = (int)addr;
-                    }
-                }
-
-                Utils.WriteDataByType(argType, arg, _bw2);
-            }
-
-            if (!hasOpCodeChanged)
-            {
-                return;
-            }
-
-            // This is a little bit ugly.
-            // Now that the instruction data has been
-            // written we need to go back and write the opcode.
-            // This is done last as it could have
-            // changed during optimization.
-            // After we are done restore the stream
-            // to the correct position.
-            var currPos = _bw2.BaseStream.Position;
-            _bw2.BaseStream.Position = opCodePos;
-            //Debug.WriteLine($"Writing {op} and arguments at {_bw2.BaseStream.Position}");
-            _bw2.Write((int) op);
-            _bw2.BaseStream.Position = currPos;
-            //Debug.WriteLine($"Restored stream position to {_bw2.BaseStream.Position}");
-        }
-
-        /// <summary>
-        /// Add an opcode instruction to the byte stream.
-        /// </summary>
-        /// <param name="aOpCode">
-        /// The opcode of the instruction.
-        /// </param>
-        /// <param name="aArgs">
-        /// Any argument data that is required by the opcode instruction.
-        /// </param>
-        /// <param name="aBoundLabel">
-        /// A label that is bound to this opcode, can be null.
-        /// </param>
         public void AddWithLabel(OpCode aOpCode,
                                  object[]? aArgs,
                                  AsmLabel? aBoundLabel)
         {
-            /*var args = aArgs ?? new object[0];
+            var args = aArgs ?? new object[0];
 
             if (!_instructionCache.TryGetValue(aOpCode,
                                                out var ins))
@@ -443,17 +288,7 @@ namespace VMCore.Assembler
                 op == OpCode.SUBROUTINE)
             {
                 var argIdx = op == OpCode.LABEL ? 0 : 1;
-                var label = (string)args[argIdx];
-                if (!_labelDestinations.TryAdd(label, _ms.Position))
-                {
-                    throw new InvalidDataException
-                    (
-                        "AddWithLabel: attempted to add label " +
-                        $"'{args[0]}' at position " +
-                        $"{_bw.BaseStream.Position} but a label " +
-                        "with that name already exists."
-                    );
-                }
+                AddDestinationLabel2((string)args[argIdx]);
 
                 // We do not want to actually do anything
                 // with label opcodes as they are placeholders only.
@@ -483,7 +318,7 @@ namespace VMCore.Assembler
             // to the data stream.
             // This will be overwritten below.
             var opCodePos = _bw.BaseStream.Position;
-            _bw.Write(0);
+            _bw.Write((int)op);
 
             var newOp = aOpCode;
             var hasOpCodeChanged = false;
@@ -534,20 +369,6 @@ namespace VMCore.Assembler
                 if (!(aBoundLabel is null) &&
                     aBoundLabel.BoundArgumentIndex == i)
                 {
-                    // Check if the instruction is permitted to
-                    // bind a label to this argument.
-                    if (!ins.CanBindToLabel(i))
-                    {
-                        throw new ArgumentException
-                        (
-                            "AddWithLabel: attempted to bind a label " +
-                            "to an argument that cannot accept it. " +
-                            $"Op = {aOpCode}, boundLabel = '" +
-                            $"{aBoundLabel.Name}', " +
-                            $"argument ID = {i}"
-                        );
-                    }
-
                     // Do we know about this label already?
                     if (!_labelDestinations.TryGetValue(aBoundLabel.Name,
                                                         out var addr))
@@ -566,6 +387,11 @@ namespace VMCore.Assembler
                 Utils.WriteDataByType(argType, arg, _bw);
             }
 
+            if (!hasOpCodeChanged)
+            {
+                return;
+            }
+
             // This is a little bit ugly.
             // Now that the instruction data has been
             // written we need to go back and write the opcode.
@@ -575,8 +401,8 @@ namespace VMCore.Assembler
             // to the correct position.
             var currPos = _bw.BaseStream.Position;
             _bw.BaseStream.Position = opCodePos;
-            _bw.Write((int)op);
-            _bw.BaseStream.Position = currPos;*/
+            _bw.Write((int) op);
+            _bw.BaseStream.Position = currPos;
         }
 
         /// <summary>
@@ -630,14 +456,14 @@ namespace VMCore.Assembler
         /// <summary>
         /// Apply any label substitutions that have been applied.
         /// </summary>
-        public void ReplaceLabels2(int aOffset)
+        public void ReplaceLabels()
         {
             while (_labelsToBeReplaced.Count > 0)
             {
                 var (name, addr)
                     = _labelsToBeReplaced.First();
 
-                ReplaceLabel2(name, addr, aOffset);
+                ReplaceLabel(name, addr);
             }
         }
 
@@ -649,13 +475,12 @@ namespace VMCore.Assembler
         /// </returns>
         public byte[] Save()
         {
-            //ReplaceLabels();
+            ReplaceLabels();
 
-            //return _ms.ToArray();
-            return new byte[0];
+            return _ms.ToArray();
         }
 
-        private void ReplaceLabel2(string aLabelName, long aOrigAddress, int aOffset)
+        private void ReplaceLabel(string aLabelName, long aOrigAddress)
         {
             // Check if the label has a matching destination.
             // If not then throw a compilation error as the resulting
@@ -669,11 +494,22 @@ namespace VMCore.Assembler
                 );
             }
 
+            // First we subtract the address donating the end of the
+            // meta section from the position.
+            // If a label would point to the first byte of the
+            // code section then it would now point to position zero
+            // giving us a relative address.
+            // Then we add the initial address that the binary will
+            // have when loaded into memory. This will give us an
+            // absolute address.
+            var newAddress = 
+                ((int)_labelDestinations[aLabelName] - _metaSectionEnd) +
+                _initialAddress;
+
             // TODO - check if this is Endian variable compatible.
             var union = new IntegerByteUnion()
             {
-                integer = 
-                    (int)_labelDestinations[aLabelName] - aOffset
+                integer = newAddress
             };
 
             var bytes = new[]
@@ -688,14 +524,14 @@ namespace VMCore.Assembler
             // Set the location of the stream to be the position
             // of the bytes corresponding to the location of
             // the label.
-            var startPos = _bw2.BaseStream.Position;
-            _bw2.BaseStream.Position = aOrigAddress;
+            var startPos = _bw.BaseStream.Position;
+            _bw.BaseStream.Position = aOrigAddress;
 
             // Write out the new jump location to the stream.
-            _bw2.Write(bytes);
+            _bw.Write(bytes);
 
             // Restore the stream position.
-            _bw2.BaseStream.Position = startPos;
+            _bw.BaseStream.Position = startPos;
 
             // Remove the entry so we do not attempt to replace it again.
             _labelsToBeReplaced.Remove(aLabelName);

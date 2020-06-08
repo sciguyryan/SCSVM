@@ -28,6 +28,9 @@ namespace VMCore.AsmParser
         private readonly Dictionary<string, Registers> _registerLookUp 
             = new Dictionary<string, Registers>();
 
+        private readonly Dictionary<string, InstructionSizeHint> _sizeHintLookUp
+            = new Dictionary<string, InstructionSizeHint>();
+
         #region EXCEPTIONS
 
         /// <summary>
@@ -134,6 +137,13 @@ namespace VMCore.AsmParser
             foreach (var register in registers)
             {
                 _registerLookUp.Add(register.ToString().ToLower(), register);
+            }
+
+            var sizeHints = 
+                (InstructionSizeHint[])Enum.GetValues(typeof(InstructionSizeHint));
+            foreach (var sizeHint in sizeHints)
+            {
+                _sizeHintLookUp.Add(sizeHint.ToString().ToLower(), sizeHint);
             }
         }
 
@@ -602,7 +612,7 @@ namespace VMCore.AsmParser
                         break;
 
                     case { } when char.IsWhiteSpace(c):
-                        pushString = !inString && segments.Count == 0;
+                        pushString = !inString/* && segments.Count == 0*/;
                         skipNext = !inString;
                         break;
                 }
@@ -839,8 +849,7 @@ namespace VMCore.AsmParser
 
                 // We have not found one of the easy to identify
                 // indicators of the type.
-                // Currently the only thing that we have left to
-                // check if a register identifier.
+                // Check if this is a register identifier.
                 if (TryParseRegister(arg, out var reg))
                 {
                     // This is a register identifier.
@@ -849,9 +858,20 @@ namespace VMCore.AsmParser
                     continue;
                 }
 
-                Assert(true,
-                       ExIDs.InvalidArgumentType,
-                       arg);
+                // Is this an instruction size hint identifier?
+                if (TryParseSizeHint(arg, out var sizeHint))
+                {
+                    // This is a size hint identifier.
+                    values[i] = sizeHint;
+                    refTypes[i] = InsArgTypes.InstructionSizeHint;
+                    continue;
+                }
+
+                // If none of the conditions have matched then this
+                // is likely to be a compiler directive label.
+                values[i] = 0;
+                refTypes[i] = InsArgTypes.LiteralInteger;
+                labels[i] = TryParseLabel(arg);
             }
 
             return new ParInstructionData(values, refTypes, labels);
@@ -1207,6 +1227,26 @@ namespace VMCore.AsmParser
             return 
                 _registerLookUp.TryGetValue(aStr.ToLower(),
                                             out aReg);
+        }
+
+        /// <summary>
+        /// Attempt to parse a string as a size hint identifier.
+        /// </summary>
+        /// <param name="aStr">The string to be parsed.</param>
+        /// <param name="aSizeHint">
+        /// An identifier within the InstructionSizeHint enum
+        /// representing the string.
+        /// </param>
+        /// <returns>
+        /// A boolean, true parsing the string yielded a valid
+        /// Register identifier, false otherwise.
+        /// </returns>
+        private bool TryParseSizeHint(string aStr,
+                                      out InstructionSizeHint aSizeHint)
+        {
+            return
+                _sizeHintLookUp.TryGetValue(aStr.ToLower(),
+                                            out aSizeHint);
         }
 
         #endregion // Argument Type Parsing

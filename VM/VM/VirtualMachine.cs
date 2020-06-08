@@ -56,7 +56,7 @@ namespace VMCore.VM
 
         #endregion // Private Properties
 
-        public VirtualMachine(int aMainMemoryCapacity = 4096,
+        public VirtualMachine(int aMainMemoryCapacity = 32_000,
                               int aStackCapacity = 100,
                               bool aCanCpuSwapMemoryRegions = false)
         {
@@ -123,7 +123,7 @@ namespace VMCore.VM
 
             // Load the executable data into memory.
             var (_, _, seqId) =
-                Memory.AddExMemory(aRaw);
+                Memory.AddExMemory(aRaw, 0);
 
             Cpu.Initialize(seqId, aStartAddr);
 
@@ -196,24 +196,20 @@ namespace VMCore.VM
                 throw new Exception("Bad binary file.");
             }
 
-            // Load the instruction data into memory.
-            var (insStart, insEnd, insSeqId) =
-                Memory.AddExMemory(codeSection.Raw);
+            var initAddress = aBinary.InitialAddress;
 
-            //Debug.WriteLine("In VM: " + string.Join(", ", codeSection.Raw));
-            //Debug.WriteLine($"Added instruction section at {insStart}, {insEnd}. SeqID = {insSeqId}");
+            // Load the instruction data into memory.
+            var (_, _, insSeqId) =
+                Memory.AddExMemory(codeSection.Raw, initAddress);
 
             // If we have a data section then load that into
             // it's own memory section.
             // Load the instruction data into memory.
             if (!(dataSection is null))
             {
-                var (dataStart, dataEnd, dataSeqId) =
-                    Memory.AddExMemory(dataSection.Raw);
-                //Debug.WriteLine($"Added data section at {dataStart}, {dataEnd}. SeqID = {dataSeqId}");
+                Memory.AddExMemory(dataSection.Raw,
+                                   initAddress + codeSection.Raw.Length);
             }
-
-            //Debug.WriteLine(string.Join(", ", Memory.DirectGetMemoryRaw(insStart, insEnd)));
 
             Cpu.Initialize(insSeqId, startAddr);
 

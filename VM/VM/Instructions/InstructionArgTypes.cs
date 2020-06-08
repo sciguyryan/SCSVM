@@ -29,6 +29,10 @@
         /// <summary>
         /// The argument is a string.
         /// </summary>
-        String
+        String,
+        /// <summary>
+        /// An argument indicating the size of the instruction.
+        /// </summary>
+        InstructionSizeHint
     }
 }

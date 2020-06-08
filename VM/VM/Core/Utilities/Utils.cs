@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.VM.Core.Register;
+using VMCore.VM.Instructions;
 
 namespace VMCore.VM.Core.Utilities
 {
@@ -145,6 +146,7 @@ namespace VMCore.VM.Core.Utilities
             {
                 case { } when aType == typeof(byte):
                 case { } when aType == typeof(Registers):
+                case { } when aType == typeof(InstructionSizeHint):
                     aBw.Write((byte)aData);
                     break;
 

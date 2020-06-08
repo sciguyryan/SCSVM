@@ -8,6 +8,7 @@ using System.Text;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
+using VMCore.VM.Instructions;
 
 namespace VMCore.VM.Core.Memory
 {
@@ -208,20 +209,22 @@ namespace VMCore.VM.Core.Memory
         /// the provided binary data into it.
         /// </summary>
         /// <param name="aData">
-        /// The bytecode data to be loaded into the memory region.
+        /// The byte code data to be loaded into the memory region.
         /// </param>
         /// <returns>
         /// A tuple of the start and end addresses of the executable
         /// region and the unique sequence ID for the memory region.
         /// </returns>
-        public (int start, int end, int seqID) AddExMemory(byte[] aData)
+        public (int start, int end, int seqID) AddExMemory(byte[] aData,
+                                                           int aInitAddress)
         {
-            var memLen = Data.Length;
             var exLen = aData.Length;
-            var newMemLen = memLen + exLen;
+            var newMemLen = aInitAddress + exLen;
 
-            //Debug.WriteLine($"---------------------------------------------------------");
-            //Debug.WriteLine($"memLen = {memLen}, exLen = {exLen}, newMemLen = {newMemLen}");
+            if (newMemLen < Data.Length)
+            {
+                throw new ArgumentException();
+            }
 
             // Resize the memory to the new size required.
             ResizeMemory(newMemLen, true);
@@ -235,25 +238,20 @@ namespace VMCore.VM.Core.Memory
                 MemoryAccess.EX;
 
             var seqId =
-                AddMemoryRegion(memLen,
+                AddMemoryRegion(aInitAddress,
                                 newMemLen,
                                 flags,
                                 "Executable");
 
-            //Debug.WriteLine($"Copying data to.... {memLen},{aData.Length}");
-
             Array.Copy(aData,
                        0,
                        Data,
-                       memLen,
+                       aInitAddress,
                        aData.Length);
-
-            //Debug.WriteLine($"Written Data = " + string.Join(", ", Data[memLen..newMemLen]));
-            //Debug.WriteLine($"---------------------------------------------------------");
 
             ResizeRootMemoryRegion();
 
-            return (memLen, newMemLen, seqId);
+            return (aInitAddress, newMemLen, seqId);
         }
 
         /// <summary>
@@ -846,6 +844,71 @@ namespace VMCore.VM.Core.Memory
 
         #endregion
 
+        #region Size Hint Identifier IO
+
+        /// <summary>
+        /// Read an instruction size hint identifier from memory.
+        /// </summary>
+        /// <param name="aStartPos">
+        /// The location of the first byte to retrieve.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <returns>A single byte from memory.</returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if access to the memory address was not permitted.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
+        public InstructionSizeHint GetSizeHintIdent(int aStartPos,
+                                                    SecurityContext aContext,
+                                                    bool aExec)
+        {
+            return
+                (InstructionSizeHint)GetValue(aStartPos, aContext, aExec);
+        }
+
+        /// <summary>
+        /// Writes an instruction size hint identifier to memory.
+        /// </summary>
+        /// <param name="aStartPos">
+        /// The location of the first byte to retrieve.
+        /// </param>
+        /// <param name="aValue">
+        /// The value to be written to memory.
+        /// </param>
+        /// <param name="aContext">
+        /// The security context for this request.
+        /// </param>
+        /// <param name="aExec">
+        /// A boolean indicating if this value must be within
+        /// an executable memory region.
+        /// </param>
+        /// <returns>A single byte from memory.</returns>
+        /// <exception cref="MemoryAccessViolationException">
+        /// Thrown if access to the memory address was not permitted.
+        /// </exception>
+        /// <exception cref="MemoryOutOfRangeException">
+        /// Thrown if the specified position falls outside
+        /// of valid memory bounds.
+        /// </exception>
+        public void SetSizeHintIdent(int aStartPos,
+                                     InstructionSizeHint aValue,
+                                     SecurityContext aContext,
+                                     bool aExec)
+        {
+            SetValue(aStartPos, (byte)aValue, aContext, aExec);
+        }
+
+        #endregion // Size Hint
+
         #region String IO
 
         /// <summary>
@@ -1305,7 +1368,7 @@ namespace VMCore.VM.Core.Memory
             {
                 throw new MemoryAccessViolationException
                 (
-                    "ValidateAccess: attempted to access a memory" +
+                    "ValidateAccess: attempted to access memory " +
                     "without the correct security context or access " +
                     $"flags. Access Type = {aType}, Executable = " +
                     $"{aExec}, flags = {flags}."

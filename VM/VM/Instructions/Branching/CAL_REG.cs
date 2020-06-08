@@ -34,11 +34,7 @@ namespace VMCore.VM.Instructions.Branching
         {
             aCpu.PushState();
 
-            // Offset the address by current base size of the memory.
-            // This is the bound of the memory outside of the 
-            // executable memory region (e.g. main memory and stack).
             aCpu.Registers[Registers.IP] =
-                aCpu.Vm.Memory.BaseMemorySize +
                 aCpu.Registers[(Registers)aData[0]];
 
             return false;

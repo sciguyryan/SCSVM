@@ -55,10 +55,16 @@
         MOV_LIT_MEM,
         /// <summary>
         /// Move Register* to Register - 
+        /// copy an integer value from memory into Register B
+        /// starting from the index given by the value of register A.
+        /// </summary>
+        MOV_REG_PTR_REG,
+        /// <summary>
+        /// Move Register* to Register (Type Hint) - 
         /// copy a value from memory into Register B starting
         /// from the index given by the value of register A.
         /// </summary>
-        MOV_REG_PTR_REG,
+        MOV_HREG_PTR_REG,
         /// <summary>
         /// Move from Memory via Literal Offset to Register - 
         /// copy a value from memory starting from the index

@@ -43,6 +43,7 @@ namespace TestConsole
                 /*"push $0xAAA",
                 "hlt",*/
                 "mov str, R8",
+                "mov BYTE &R8, R7",
                 "push $0xAAA",  // Should remain in place once the stack is restored
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2
@@ -195,10 +196,7 @@ namespace TestConsole
             Console.WriteLine();
 
             Console.WriteLine("------------[Disassembly]-----------");
-            foreach (var s in vm.Disassembler.Disassemble(true))
-            {
-                Console.WriteLine(s);
-            }
+            vm.Disassembler.DisplayDisassembly(true, false, true);
 
             Console.ReadLine();
         }

@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace VMCore.Assembler
 {
@@ -14,11 +14,7 @@ namespace VMCore.Assembler
         /// </summary>
         public static readonly int MagicNumber = 0x03C8;
 
-        /// <summary>
-        /// The meta data section for this binary file.
-        /// </summary>
-        public BinMeta Meta => 
-            BinMeta.Deserialize(this[BinSections.Meta].Raw);
+        public int InitialAddress { get; set; }
 
         /// <summary>
         /// A list of sections within this binary file.
@@ -34,7 +30,7 @@ namespace VMCore.Assembler
                       Enum.GetName(typeof(BinSections), aSection)
                 select s).FirstOrDefault();
 
-        public byte[] RawBytes { get; set; }
+        public byte[] Raw { get; set; }
 
         /// <summary>
         /// Creates the RawBinaryFile object represented by a byte array.
@@ -51,7 +47,7 @@ namespace VMCore.Assembler
             using var br = new BinaryReader(new MemoryStream(aData));
             var rbf = new BinFile
             {
-                RawBytes = aData
+                Raw = aData
             };
 
             var magic = br.ReadInt32();
@@ -63,13 +59,14 @@ namespace VMCore.Assembler
             // Next we need to read the section information pointer.
             // This will let us correctly decode the sections.
             var infoSectionPrt = br.ReadInt32();
-            
+
+            rbf.InitialAddress = br.ReadInt32();
+
             // Set the stream position to the location as specified
             // by the information section pointer.
             br.BaseStream.Position = infoSectionPrt;
 
             var sectionCount = br.ReadInt32();
-            //Debug.WriteLine($"sectionCount = {sectionCount}");
 
             var sectionData = new List<SectionInfo>();
 
@@ -90,11 +87,8 @@ namespace VMCore.Assembler
                 sectionData.Add(sec);
             }
 
-            //Debug.WriteLine("----------------------");
             foreach (var sec in sectionData)
             {
-                //Debug.WriteLine($"{sec.SectionId} = {sec.StartPosition}, {sec.Length}");
-
                 var sect = new BinSection
                 {
                     SectionId = sec.SectionId
@@ -107,59 +101,7 @@ namespace VMCore.Assembler
                 // Read the specified block of data.
                 sect.Raw = br.ReadBytes(sec.Length);
 
-                //Debug.WriteLine(string.Join(", ", sect.Raw));
-
                 // Add section to our collection.
-                rbf.Sections.Add(sect);
-            }
-
-            br.Close();
-
-            return rbf;
-        }
-
-        /// <summary>
-        /// Creates the RawBinaryFile object represented by a byte array.
-        /// </summary>
-        /// <param name="aData">
-        /// A byte array representing a RawBinaryFile object.
-        /// </param>
-        /// <returns>
-        /// A RawBinaryFile containing the deserialized binary data.
-        /// </returns>
-        public static BinFile Load1(byte[] aData)
-        {
-            using var br = new BinaryReader(new MemoryStream(aData));
-            var rbf = new BinFile
-            {
-                RawBytes = aData
-            };
-
-            var magic = br.ReadInt32();
-            if (magic != MagicNumber)
-            {
-                throw new Exception("Load: Unrecognized binary format.");
-            }
-
-            var sectionCount = br.ReadInt32();
-
-            for (var i = 0; i < sectionCount; i++)
-            {
-                var sect = new BinSection
-                {
-                    //Name = br.ReadString()
-                };
-
-                var sectionSize = br.ReadInt32();
-                if (sectionSize == 0)
-                {
-                    // We are not interested in zero-length
-                    // sections.
-                    continue;
-                }
-
-                sect.Raw = br.ReadBytes(sectionSize);
-
                 rbf.Sections.Add(sect);
             }
 

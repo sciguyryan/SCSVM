@@ -33,11 +33,6 @@ namespace VMCore.VM.Instructions.Branching
 
         public override string AsmName => "jne";
 
-        public override bool CanBindToLabel(int aArgumentId)
-        {
-            return aArgumentId == 1;
-        }
-
         public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             if (aCpu.Registers[Registers.AC] !=

@@ -33,11 +33,6 @@ namespace VMCore.VM.Instructions.Branching
 
         public override string AsmName => "jgt";
 
-        public override bool CanBindToLabel(int aArgumentId)
-        {
-            return aArgumentId == 1;
-        }
-
         public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             if ((int)aData[0] > aCpu.Registers[Registers.AC])

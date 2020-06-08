@@ -917,17 +917,6 @@ namespace VMCore.AsmParser
                        string.Join(", ", args.ArgRefTypes));
             }
 
-            // We have a potential match.
-            // Now we need to check if we can bind labels to the
-            // arguments, if specified.
-            foreach (var labelIndex in labelIndices)
-            {
-                if (!_insCache[op].CanBindToLabel(labelIndex))
-                {
-                    return null;
-                }
-            }
-
             return new CompilerIns(op, args.Arguments, asmLabel);
         }
 

@@ -88,21 +88,6 @@ namespace VMCore.VM.Instructions
         public abstract string AsmName { get; }
 
         /// <summary>
-        /// Determines if a given argument can be bound to a label.
-        /// </summary>
-        /// <param name="aArgumentId">
-        /// The argument ID to be checked.
-        /// </param>
-        /// <returns>
-        /// True if the argument supports binding to a label,
-        /// false otherwise.
-        /// </returns>
-        /// <remarks>
-        /// This defaults to false for most instructions.
-        /// </remarks>
-        public virtual bool CanBindToLabel(int aArgumentId) => false;
-
-        /// <summary>
         /// Executes a given instruction within a given CPU instance.
         /// </summary>
         /// <param name="aData">

@@ -30,11 +30,6 @@ namespace VMCore.VM.Instructions.Branching
 
         public override string AsmName => "call";
 
-        public override bool CanBindToLabel(int aArgumentId)
-        {
-            return aArgumentId == 0;
-        }
-
         public override bool Execute(InstructionData aData, Cpu aCpu)
         {
             aCpu.PushState();

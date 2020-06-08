@@ -42,6 +42,7 @@ namespace TestConsole
                 ".section text",
                 /*"push $0xAAA",
                 "hlt",*/
+                "mov str, R8",
                 "push $0xAAA",  // Should remain in place once the stack is restored
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2

@@ -371,20 +371,6 @@ namespace VMCore.Assembler
                 if (!(aBoundLabel is null) &&
                     aBoundLabel.BoundArgumentIndex == i)
                 {
-                    // Check if the instruction is permitted to
-                    // bind a label to this argument.
-                    if (!ins.CanBindToLabel(i))
-                    {
-                        throw new ArgumentException
-                        (
-                            "AddWithLabel: attempted to bind a label " +
-                            "to an argument that cannot accept it. " +
-                            $"Op = {aOpCode}, boundLabel = '" +
-                            $"{aBoundLabel.Name}', " +
-                            $"argument ID = {i}"
-                        );
-                    }
-
                     // Do we know about this label already?
                     if (!_labelDestinations.TryGetValue(aBoundLabel.Name,
                                                         out var addr))

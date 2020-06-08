@@ -55,7 +55,7 @@ namespace VMCore.Assembler
             var rbw = new BinWriter();
             var rbi = new BinMeta
             {
-                Version = aVersion ?? new Version("1.0.0.0"),
+                FileVersion = aVersion ?? new Version("1.0.0.0"),
                 Id = Guid.NewGuid(),
             };
 

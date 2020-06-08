@@ -2,7 +2,9 @@
 {
     public class BinSection
     {
-        public string Name { get; set; }
+        public BinSections SectionId { get; set; }
+
+        public string Name => SectionId.ToString();
 
         public byte[] Raw { get; set; } = new byte[0];
 

@@ -22,5 +22,9 @@
         /// Variable definition data for the binary file.
         /// </summary>
         BSS,
+        /// <summary>
+        /// Section pointer and length information.
+        /// </summary>
+        SectionData,
     }
 }

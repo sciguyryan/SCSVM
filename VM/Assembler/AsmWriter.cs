@@ -16,6 +16,9 @@ namespace VMCore.Assembler
 {
     public class AsmWriter
     {
+        private readonly Version _compilerVersion 
+            = new Version(0, 0, 1, 0);
+
         /// <summary>
         /// If we should attempt to Optimize certain
         /// instructions.
@@ -63,7 +66,8 @@ namespace VMCore.Assembler
             _optimize = aOptimize;
             _fileMetaData = aMeta ?? new BinMeta
             {
-                Version = new Version("1.0.0.0"),
+                FileVersion = new Version("1.0.0.0"),
+                CompilerVersion = _compilerVersion,
                 Id = Guid.NewGuid(),
             };
 
@@ -90,34 +94,51 @@ namespace VMCore.Assembler
                 throw new Exception("ProcessSections: no data to compile");
             }
 
+            var sectionData = new List<SectionInfo>();
+
             // First we need to write the magic number
             // for our file format to the stream.
             _bw2.Write(BinFile.MagicNumber);
 
-            // We will always have at least two sections:
-            // the byte code and the meta data.
-            var secCountPos = _bw2.BaseStream.Position;
-            var secCount = 2;
+            /*------------------ SECTION INFO POINTER ------------------*/
+            // We can now calculate the position of the section
+            // info pointer. For now we write a dummy value that
+            // will be updated later.
+            var secInfoPointerPos = (int)_bw2.BaseStream.Position;
             _bw2.Write(0);
 
-            /*------------------ META DATA ------------------*/
+            /*------------------ META DATA SECTION ------------------*/
             // Now we need to write the meta data section.
             var meta = _fileMetaData.Serialize();
-            _bw2.Write("Meta");
-            _bw2.Write(meta.Length);
+
+            var metaStart = (int)_bw2.BaseStream.Position;
             _bw2.Write(meta);
+            var metaEnd = (int)_bw2.BaseStream.Position;
 
-            /*------------------ CODE DATA ------------------*/
+            // Create the meta block.
+            var metaSec = 
+                new SectionInfo(BinSections.Meta,
+                                metaStart,
+                                metaEnd - metaStart);
+            sectionData.Add(metaSec);
+            Debug.WriteLine($"{BinSections.Meta} = {metaSec.StartPosition}, {metaSec.Length}");
 
-            // Next we need to write the instruction data.
-            // Add each instruction to the data stream.
-            _bw2.Write("Code");
+            // We will always have at least three sections:
+            // * meta data section
+            // * the byte code section
+            // * the section data section
+            var sectionCount = 2;
 
-            // We need to keep track of this to replace
-            // it later.
-            var insDataLenPos = _bw2.BaseStream.Position;
-            _bw2.Write(0);
 
+            /*------------------ CODE DATA SECTION ------------------*/
+            //---------------------------------------------------------------
+            // Subtract this from all of the label positions.
+            // Once the code is loaded into memory the first instruction byte
+            // will be index zero within the EX memory region and so all addresses
+            // need to be offset relative to it.
+            //---------------------------------------------------------------
+
+            var codeStart = (int)_bw2.BaseStream.Position;
             foreach (var ins in instructions)
             {
                 if (ins is null)
@@ -127,22 +148,22 @@ namespace VMCore.Assembler
 
                 AddWithLabel2(ins.Op, ins.Args, ins.Label);
             }
+            var codeEnd = (int)_bw2.BaseStream.Position;
 
-            // We can calculate how long the instruction
-            // data was by taking the current position
-            // less the instruction section data length
-            // position less 4 (for the size of the length
-            // variable).
-            var insLen =
-                _bw2.BaseStream.Position - insDataLenPos - 4;
+            // We can calculate the length of the instruction
+            // binary data.
+            var insLen = codeEnd - codeStart;
 
-            // Write the code data length to the stream.
-            var curPos = _bw2.BaseStream.Position;
-            _bw2.BaseStream.Position = insDataLenPos;
-            _bw2.Write((int)insLen);
-            _bw2.BaseStream.Position = curPos;
+            // Create the section information block.
+            var codeSec =
+                new SectionInfo(BinSections.Text,
+                                codeStart,
+                                insLen);
+            sectionData.Add(codeSec);
+            Debug.WriteLine($"{BinSections.Text} = {codeSec.StartPosition}, {codeSec.Length}");
 
-            /*------------------ DIRECTIVE DATA ------------------*/
+
+            /*------------------ DIRECTIVE DATA SECTION ------------------*/
 
             // Next we need to write the entries in the
             // data section. These are hard-coded data entries.
@@ -153,12 +174,10 @@ namespace VMCore.Assembler
                 _sectionData.DataSectionData.ToArray();
             if (directives.Length > 0)
             {
-                _bw2.Write("Data");
-                _bw2.Write(_sectionData.GetDataSectionLength());
-
-                ++secCount;
+                ++sectionCount;
             }
 
+            var dirStart = (int)_bw2.BaseStream.Position;
             foreach (var dir in directives)
             {
                 switch (dir.DirCode)
@@ -178,16 +197,54 @@ namespace VMCore.Assembler
                         throw new ArgumentOutOfRangeException();
                 }
             }
+            var dirEnd = (int)_bw2.BaseStream.Position;
+
+            // Create the section information block.
+            var dataSec =
+                new SectionInfo(BinSections.Data,
+                                dirStart,
+                                dirEnd - dirStart);
+            sectionData.Add(dataSec);
+            Debug.WriteLine($"{BinSections.Data} = {dataSec.StartPosition}, {dataSec.Length}");
 
             // Next we need to apply label substitutions.
             ReplaceLabels2();
 
-            // Finally we can go back and update the number
-            // of sections we had within the binary file.
-            curPos = _bw2.BaseStream.Position;
-            _bw2.BaseStream.Position = secCountPos;
-            _bw2.Write(secCount);
-            _bw2.BaseStream.Position = curPos;
+
+            /*------------------ SECTION INFO DATA ------------------*/
+            ++sectionCount;
+
+            var secInfoStart = (int)_bw2.BaseStream.Position;
+            _bw2.Write(sectionCount);
+
+            foreach (var sec in sectionData)
+            {
+                // Section ID is written first.
+                _bw2.Write((int)sec.SectionId);
+
+                // Next we write the start position of the block.
+                _bw2.Write(sec.StartPosition);
+
+                // Next we write the length of the block.
+                _bw2.Write(sec.Length);
+            }
+
+            var secInfoEnd = 
+                (int) _bw2.BaseStream.Position + sizeof(int) * 3;
+
+            // Now we write the section information entry... for this section!
+            _bw2.Write((int)BinSections.SectionData);
+            _bw2.Write(secInfoStart);
+            _bw2.Write(secInfoEnd - secInfoStart);
+            Debug.WriteLine($"{BinSections.SectionData} = {secInfoStart}, {secInfoEnd - secInfoStart}");
+
+            // Finally we can go back and update the section
+            // info pointer to the starting point of this block.
+            _bw2.BaseStream.Position = secInfoPointerPos;
+            _bw2.Write(secInfoStart);
+
+            // Restore the stream to the original location.
+            _bw2.BaseStream.Position = secInfoEnd;
 
             return _ms2.ToArray();
         }
@@ -260,8 +317,8 @@ namespace VMCore.Assembler
             var opCodePos = _bw2.BaseStream.Position;
             _bw2.Write((int)op);
 
-            Debug.WriteLine("Op Bytes = " + string.Join(", ", BitConverter.GetBytes((int)op)));
-            Debug.WriteLine($"pos = {_bw2.BaseStream.Position}");
+            //Debug.WriteLine("Op Bytes = " + string.Join(", ", BitConverter.GetBytes((int)op)));
+            //Debug.WriteLine($"pos = {_bw2.BaseStream.Position}");
 
             var newOp = aOpCode;
             var hasOpCodeChanged = false;
@@ -360,7 +417,7 @@ namespace VMCore.Assembler
             _bw2.BaseStream.Position = opCodePos;
             //Debug.WriteLine($"Writing {op} and arguments at {_bw2.BaseStream.Position}");
             _bw2.Write((int) op);
-            //_bw2.BaseStream.Position = currPos;
+            _bw2.BaseStream.Position = currPos;
             //Debug.WriteLine($"Restored stream position to {_bw2.BaseStream.Position}");
         }
 

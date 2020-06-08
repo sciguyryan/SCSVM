@@ -165,9 +165,10 @@ namespace VMCore.VM
             {
                 foreach (var s in aBinary.Sections)
                 {
-                    if (s.Name == "Code")
+                    if (s.SectionId == BinSections.Text)
                     {
                         startAddr = s.EntryPoint;
+                        break;
                     }
                 }
             }
@@ -175,8 +176,6 @@ namespace VMCore.VM
             // Load the executable data into memory.
             var (start, end, seqId) =
                 Memory.AddExMemory(aBinary.RawBytes);
-
-            var trueStart = start + 50;
 
             //Debug.WriteLine("here");
             //Debug.WriteLine(Memory.GetOpCode(trueStart, SecurityContext.System, true));

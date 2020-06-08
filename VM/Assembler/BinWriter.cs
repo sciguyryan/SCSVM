@@ -43,7 +43,7 @@ namespace VMCore.Assembler
 
             var s = new BinSection
             {
-                Name = Enum.GetName(typeof(BinSections), aSection)
+                //Name = Enum.GetName(typeof(BinSections), aSection)
             };
 
             Sections.Add(aSection, s);

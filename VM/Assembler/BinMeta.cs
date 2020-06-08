@@ -6,14 +6,19 @@ namespace VMCore.Assembler
     public class BinMeta
     {
         /// <summary>
-        /// The binary version of this meta data section.
-        /// </summary>
-        public Version Version { get; set; }
-
-        /// <summary>
         /// The unique identifier for this meta data section.
         /// </summary>
         public Guid Id { get; set; }
+
+        /// <summary>
+        /// The binary version of this file.
+        /// </summary>
+        public Version FileVersion { get; set; }
+
+        /// <summary>
+        /// The version of the compiler used to compile this file.
+        /// </summary>
+        public Version CompilerVersion { get; set; }
 
         /// <summary>
         /// Deserialize a RawBinaryMeta object from a byte array.
@@ -30,7 +35,18 @@ namespace VMCore.Assembler
             var res = new BinMeta
             {
                 Id = new Guid(br.ReadBytes(16)),
-                Version = new Version(br.ReadString())
+
+                FileVersion = 
+                    new Version(br.ReadInt32(),
+                                br.ReadInt32(),
+                                br.ReadInt32(),
+                                br.ReadInt32()),
+
+                CompilerVersion =
+                    new Version(br.ReadInt32(),
+                                br.ReadInt32(),
+                                br.ReadInt32(),
+                                br.ReadInt32()),
             };
 
             br.Close();
@@ -50,7 +66,19 @@ namespace VMCore.Assembler
             using var bw = new BinaryWriter(ms);
 
             bw.Write(Id.ToByteArray());
-            bw.Write(Version.ToString());
+
+            // Write the file version to the stream.
+            bw.Write(FileVersion.Major);
+            bw.Write(FileVersion.Minor);
+            bw.Write(FileVersion.Build);
+            bw.Write(FileVersion.Revision);
+
+            // Write the compiler version to the stream.
+            bw.Write(CompilerVersion.Major);
+            bw.Write(CompilerVersion.Minor);
+            bw.Write(CompilerVersion.Build);
+            bw.Write(CompilerVersion.Revision);
+
             bw.Close();
 
             return ms.ToArray();

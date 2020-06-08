@@ -47,6 +47,88 @@ namespace VMCore.Assembler
         /// </returns>
         public static BinFile Load(byte[] aData)
         {
+            // TODO - this method needs lots of error checking.
+            using var br = new BinaryReader(new MemoryStream(aData));
+            var rbf = new BinFile
+            {
+                RawBytes = aData
+            };
+
+            var magic = br.ReadInt32();
+            if (magic != MagicNumber)
+            {
+                throw new Exception("Load: Unrecognized binary format.");
+            }
+
+            // Next we need to read the section information pointer.
+            // This will let us correctly decode the sections.
+            var infoSectionPrt = br.ReadInt32();
+            
+            // Set the stream position to the location as specified
+            // by the information section pointer.
+            br.BaseStream.Position = infoSectionPrt;
+
+            var sectionCount = br.ReadInt32();
+            Debug.WriteLine($"sectionCount = {sectionCount}");
+
+            var sectionData = new List<SectionInfo>();
+
+            for (var i = 0; i < sectionCount; i++)
+            {
+                var id = (BinSections) br.ReadInt32();
+                var startPtr = br.ReadInt32();
+                var length = br.ReadInt32();
+
+                if (length == 0)
+                {
+                    // We are not interested in zero-length
+                    // sections.
+                    continue;
+                }
+
+                var sec = new SectionInfo(id, startPtr, length);
+                sectionData.Add(sec);
+            }
+
+            Debug.WriteLine("----------------------");
+            foreach (var sec in sectionData)
+            {
+                Debug.WriteLine($"{sec.SectionId} = {sec.StartPosition}, {sec.Length}");
+
+                var sect = new BinSection
+                {
+                    SectionId = sec.SectionId,
+                    EntryPoint = sec.StartPosition
+                };
+
+                // Set the location of the stream to the pointer
+                // specified.
+                var pos = (int)br.BaseStream.Position;
+                br.BaseStream.Position = sec.StartPosition;
+
+                // Read the specified block of data.
+                sect.Raw = br.ReadBytes(sec.Length);
+
+                // Add section to our collection.
+                rbf.Sections.Add(sect);
+            }
+
+            br.Close();
+
+            return rbf;
+        }
+
+        /// <summary>
+        /// Creates the RawBinaryFile object represented by a byte array.
+        /// </summary>
+        /// <param name="aData">
+        /// A byte array representing a RawBinaryFile object.
+        /// </param>
+        /// <returns>
+        /// A RawBinaryFile containing the deserialized binary data.
+        /// </returns>
+        public static BinFile Load1(byte[] aData)
+        {
             using var br = new BinaryReader(new MemoryStream(aData));
             var rbf = new BinFile
             {
@@ -65,7 +147,7 @@ namespace VMCore.Assembler
             {
                 var sect = new BinSection
                 {
-                    Name = br.ReadString()
+                    //Name = br.ReadString()
                 };
 
                 var sectionSize = br.ReadInt32();
@@ -76,7 +158,7 @@ namespace VMCore.Assembler
                     continue;
                 }
 
-                sect.EntryPoint = 
+                sect.EntryPoint =
                     (int)br.BaseStream.Position;
 
                 sect.Raw = br.ReadBytes(sectionSize);

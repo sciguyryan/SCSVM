@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace VMCore.Assembler
 {
     public class BinFile
     {
+        #region Public Properties
+
         // ψ - Psi, Psi-Core, (p)sci-Core. Someone out there will understand!
         /// <summary>
         /// The magic number for the PsiCore binary files.
@@ -30,11 +29,16 @@ namespace VMCore.Assembler
         /// </summary>
         public byte[] Raw { get; set; }
 
+        #endregion // Public Properties
+
         public BinFile(byte[] aData)
         {
             if (aData.Length == 0)
             {
-                throw new InvalidDataException();
+                throw new InvalidDataException
+                (
+                    "BinFile: no binary data provided."
+                );
             }
 
             Raw = aData;
@@ -45,7 +49,10 @@ namespace VMCore.Assembler
             var magic = br.ReadInt32();
             if (magic != MagicNumber)
             {
-                throw new Exception("BinFile: unrecognized binary format.");
+                throw new InvalidDataException
+                (
+                    "BinFile: unrecognized binary format."
+                );
             }
 
             // Next we need to read the section information pointer.
@@ -62,6 +69,8 @@ namespace VMCore.Assembler
 
             var sectionData = new List<SectionInfo>();
 
+            // Iterate over each of the sections that
+            // we expect to find.
             for (var i = 0; i < sectionCount; i++)
             {
                 var id = (BinSections)br.ReadInt32();
@@ -95,6 +104,15 @@ namespace VMCore.Assembler
 
                 // Add section to our collection.
                 Sections.Add(sec.SectionId, sect);
+            }
+
+            // We cannot have a valid binary with no sections.
+            if (Sections.Count == 0)
+            {
+                throw new InvalidDataException
+                (
+                    "BinFile: no valid binary data provided."
+                );
             }
 
             br.Close();

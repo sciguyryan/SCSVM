@@ -16,18 +16,30 @@ namespace VMCore.AsmParser
 {
     public class AsmParser
     {
+        #region Private Properties
+
         /// <summary>
         /// A cached of the opcodes to their instruction instances.
         /// </summary>
         private readonly Dictionary<OpCode, Instruction> _insCache =
             ReflectionUtils.InstructionCache;
 
+        /// <summary>
+        /// A cached list of instruction data used for quickly
+        /// identifying an instruction.
+        /// </summary>
         private readonly Dictionary<InsCacheEntry, OpCode> _insCacheEntries =
             new Dictionary<InsCacheEntry, OpCode>();
 
+        /// <summary>
+        /// A cached lookup of register string to Registers.
+        /// </summary>
         private readonly Dictionary<string, Registers> _registerLookUp 
             = new Dictionary<string, Registers>();
 
+        /// <summary>
+        /// A cached lookup of instruction size hint string to InstructionSizeHint.
+        /// </summary>
         private readonly Dictionary<string, InstructionSizeHint> _sizeHintLookUp
             = new Dictionary<string, InstructionSizeHint>();
 
@@ -47,8 +59,8 @@ namespace VMCore.AsmParser
             InvalidByteLiteral,
             InvalidRegisterIdentifier,
             InvalidArgumentType,
-            MultipleArgumentLabels,
             InvalidInstruction,
+            InvalidSectionIdentifier
         };
 
         /// <summary>
@@ -102,22 +114,26 @@ namespace VMCore.AsmParser
                 "determined. String = '{0}'."
             },
             {
-                ExIDs.MultipleArgumentLabels,
-                "More than one label was provided as arguments to the " +
-                "instruction. This is not currently supported.\n" +
-                "Instruction = '{0}', Arguments = {1}."
+                ExIDs.InvalidInstruction,
+                "No matching instruction was found for the input " +
+                "string.\nInstruction = '{0}'\nArguments = {1}\n" +
+                "Argument Types = {2}\nArgument Ref Types = {3}."
             },
             {
-                ExIDs.InvalidInstruction,
-                "No matching instruction was found for the input string.\n" +
-                "Instruction = '{0}'\nArguments = {1}\nArgument Types = {2}\n" +
-                "Argument Ref Types = {3}."
+                ExIDs.InvalidSectionIdentifier,
+                "Attempted to parse a line without a valid section " +
+                "identifier.\nLine = '{0}'."
             },
         };
 
         #endregion // EXCEPTIONS
 
+        /// <summary>
+        /// A unique subroutine counter.
+        /// </summary>
         private int _subRoutineSeqId;
+
+        #endregion // Private Properties
 
         public AsmParser()
         {
@@ -242,19 +258,40 @@ namespace VMCore.AsmParser
             return compSec;
         }
 
+        /// <summary>
+        /// Parse a line of assembly depending on the section
+        /// in which it originated.
+        /// </summary>
+        /// <param name="aSec">
+        /// The section in which this instruction belongs.
+        /// For example instructions will always be found
+        /// within the Text section.
+        /// </param>
+        /// <param name="aLine"></param>
+        /// <param name="aCompSec"></param>
         private void ParseLineByType(BinSections? aSec,
                                      ReadOnlySpan<char> aLine,
                                      ref CompilerSections aCompSec)
         {
+            // Without a valid section indicator we
+            // cannot be sure how to parse the line.
+            if (aSec is null)
+            {
+                Assert(true,
+                       ExIDs.InvalidSectionIdentifier,
+                       aLine.ToString());
+                return;
+            }
+
             // If no section has been specified then
             // we assume that this is a code section.
             // TODO - figure out if this should be the case.
-            var sec = aSec ?? BinSections.Text;
+            var sec = (BinSections)aSec;
 
             switch (sec)
             {
                 case BinSections.Meta:
-                    throw new NotImplementedException();
+                    return;
 
                 case BinSections.Text:
                     {
@@ -284,6 +321,9 @@ namespace VMCore.AsmParser
                 case BinSections.BSS:
                     throw new NotImplementedException();
 
+                case BinSections.SectionInfoData:
+                    return;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -291,6 +331,14 @@ namespace VMCore.AsmParser
 
         #region Section Line Parsing
 
+        /// <summary>
+        /// Parse a section identifier line.
+        /// </summary>
+        /// <param name="aLine">The string to be parsed.</param>
+        /// <returns>
+        /// A nullable BinSections object representing the parsed data.
+        /// This can be null if there was no data to output.
+        /// </returns>
         private BinSections? ParseSectionLine(ReadOnlySpan<char> aLine)
         {
             var len = aLine.Length;
@@ -320,13 +368,13 @@ namespace VMCore.AsmParser
                         break;
 
                     case { } when char.IsWhiteSpace(c):
-                        skipNext = hasSeparator;
                         hasSeparator = true;
+                        skipNext = true;
                         break;
                 }
 
                 // Do we need to skip this character?
-                if (skipNext || skipUntilEnd)
+                if (skipNext || skipUntilEnd || !hasSeparator)
                 {
                     skipNext = false;
                     continue;
@@ -337,9 +385,9 @@ namespace VMCore.AsmParser
 
             return sectionId.ToLower() switch
             {
-                ".section code" => BinSections.Text,
-                ".section data" => BinSections.Data,
-                _               => null
+                "text" => BinSections.Text,
+                "data" => BinSections.Data,
+                _      => null
             };
         }
 
@@ -347,6 +395,14 @@ namespace VMCore.AsmParser
 
         #region Directive Line Parsing
 
+        /// <summary>
+        /// Parse a string and convert it into a compiler directive.
+        /// </summary>
+        /// <param name="aLine">The string to be parsed.</param>
+        /// <returns>
+        /// A nullable CompilerDir object representing the parsed data.
+        /// This can be null if there was no data to output.
+        /// </returns>
         private CompilerDir? ParseDirLine(ReadOnlySpan<char> aLine)
         {
             // Fast path return for lines that are comments.
@@ -436,6 +492,19 @@ namespace VMCore.AsmParser
             return BuildDirective(segments.ToArray());
         }
 
+        /// <summary>
+        /// Build a CompilerIns object based on the parsed data. 
+        /// </summary>
+        /// <param name="aSegments">
+        /// An array of strings representing the segments of the
+        /// directive. The first segment will always be the
+        /// directive label, any additional segments will
+        /// represent the arguments provided to the directive.
+        /// </param>
+        /// <returns>
+        /// A nullable CompilerDir object representing the parsed data.
+        /// This can be null if there was no data to output.
+        /// </returns>
         private CompilerDir? BuildDirective(string[] aSegments)
         {
             // The line could not be a valid directive with
@@ -451,9 +520,6 @@ namespace VMCore.AsmParser
             var dirType = aSegments[1].ToUpper();
             var args = aSegments[2..];
 
-            //Debug.WriteLine($"dirLabel = {dirLabel}");
-            //Debug.WriteLine($"dirType = {dirType}");
-            //Debug.WriteLine($"Args = {string.Join(", ", args)}");
 
             // Do we have a valid directive type?
             if (!Enum.TryParse(typeof(DirectiveCodes),
@@ -491,6 +557,15 @@ namespace VMCore.AsmParser
                                 directiveStrData);
         }
 
+        /// <summary>
+        /// Parse DB (define bytes) compiler directive arguments.
+        /// </summary>
+        /// <param name="aArgs">
+        /// A string containing the name of the label.
+        /// </param>
+        /// <returns>
+        /// An array of bytes representing the parsed data.
+        /// </returns>
         private byte[] ConvertDbDirectiveArgs(IEnumerable<string> aArgs)
         {
             var bytes = new List<byte>(10000);
@@ -891,16 +966,15 @@ namespace VMCore.AsmParser
         /// A nullable CompilerIns object containing the parsed data.
         /// </returns>
         private CompilerIns? ParseComplex(string aInsName,
-                                       IReadOnlyList<string> aRawArgs)
+                                          IReadOnlyList<string> aRawArgs)
         {
             var args = ParseArgs(aRawArgs);
             var insName = aInsName.ToLower();
 
             var len = args.Arguments.Length;
             var argTypes = new Type[len];
-            var labelIndices = new List<int>();
 
-            AsmLabel? asmLabel = null;
+            var asmLabels = new AsmLabel[len];
             for (var i = 0; i < len; i++)
             {
                 argTypes[i] = args.Arguments[i].GetType();
@@ -910,16 +984,8 @@ namespace VMCore.AsmParser
                     continue;
                 }
 
-                labelIndices.Add(i);
-
-                // We cannot have more than one bound label
-                // to an instruction currently.
-                Assert(!(asmLabel is null),
-                       ExIDs.MultipleArgumentLabels,
-                       aInsName,
-                       string.Join(", ", aRawArgs));
-
-                asmLabel = new AsmLabel(args.BoundLabels[i], i);
+                asmLabels[i] = 
+                    new AsmLabel(args.BoundLabels[i], i);
             }
 
             var pEntry =
@@ -937,7 +1003,7 @@ namespace VMCore.AsmParser
                        string.Join(", ", args.ArgRefTypes));
             }
 
-            return new CompilerIns(op, args.Arguments, asmLabel);
+            return new CompilerIns(op, args.Arguments, asmLabels);
         }
 
         #endregion // Instruction Line Parsing

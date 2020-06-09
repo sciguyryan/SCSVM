@@ -4,7 +4,6 @@ using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Register;
-using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UnitTests.Instructions.Helpers;
 
@@ -45,16 +44,16 @@ namespace UnitTests.Instructions.Branching
             var program = new []
             {
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r1 }),
+                                new object[] { 100, r1 }),
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),
+                                new object[] { 50, r1 }),
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 50, r2 }),
+                                new object[] { 50, r2 }),
                 new CompilerIns(OpCode.JEQ_REG,
-                             new object[] { r2, destOffset }),
+                                new object[] { r2, destOffset }),
                 new CompilerIns(OpCode.HLT),
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { expected, r3 }),
+                                new object[] { expected, r3 }),
             };
 
             Vm.Run(QuickCompile.RawCompile(program));
@@ -90,18 +89,18 @@ namespace UnitTests.Instructions.Branching
             var program = new []
             {
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r1 }),
+                                new object[] { 100, r1 }),
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),  // AC = 50
+                                new object[] { 50, r1 }),  // AC = 50
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r2 }),
+                                new object[] { 100, r2 }),
                 new CompilerIns(OpCode.JEQ_REG,
-                             new object[] { r2, destOffset }),
+                                new object[] { r2, destOffset }),
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { expected, r3 }),
+                                new object[] { expected, r3 }),
                 new CompilerIns(OpCode.HLT),
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { fail, r3 }),
+                                new object[] { fail, r3 }),
             };
 
             Vm.Run(QuickCompile.RawCompile(program));
@@ -126,20 +125,20 @@ namespace UnitTests.Instructions.Branching
             var program = new []
             {
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r1 }),
+                                new object[] { 100, r1 }),
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),  // AC = 50
+                                new object[] { 50, r1 }),  // AC = 50
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 50, r2 }),
+                                new object[] { 50, r2 }),
                 new CompilerIns(OpCode.JEQ_REG,
-                             new object[] { r2, 0 },
-                             new AsmLabel("GOOD", 1)),
+                                new object[] { r2, 0 },
+                                new AsmLabel("GOOD", 1)),
                 new CompilerIns(OpCode.MOV_LIT_REG,
                              new object[] { fail, r3 }),
                 new CompilerIns(OpCode.HLT),
                 new CompilerIns(OpCode.LABEL, new object[] { "GOOD" }),
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { expected, r3 }),
+                                new object[] { expected, r3 }),
             };
 
             Vm.Run(QuickCompile.RawCompile(program));
@@ -162,10 +161,10 @@ namespace UnitTests.Instructions.Branching
             var program = new []
             {
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),  // AC = -50
+                                new object[] { 50, r1 }),  // AC = -50
                 new CompilerIns(OpCode.JEQ_REG,
-                             new object[] { r2, 0 },
-                             new AsmLabel("A", 1)),
+                                new object[] { r2, 0 },
+                                new AsmLabel("A", 1)),
             };
 
             Vm.Run(QuickCompile.RawCompile(program));
@@ -186,10 +185,10 @@ namespace UnitTests.Instructions.Branching
             var program = new CompilerIns[]
             {
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),  // AC = -50
+                                new object[] { 50, r1 }),  // AC = -50
                 new CompilerIns(OpCode.JEQ_REG,
-                             new object[] { r2, 0 },
-                             new AsmLabel("A", 0)),
+                                new object[] { r2, 0 },
+                                new AsmLabel("A", 0)),
                 new CompilerIns(OpCode.LABEL, new object[] { "A" }),
             };
 
@@ -212,13 +211,13 @@ namespace UnitTests.Instructions.Branching
             var program = new []
             {
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r1 }),
+                                new object[] { 100, r1 }),
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),  // AC = 50
+                                new object[] { 50, r1 }),  // AC = 50
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 50, r2 }),
+                                new object[] { 50, r2 }),
                 new CompilerIns(OpCode.JEQ_REG,
-                             new object[] { r2, -2 }),
+                                new object[] { r2, -2 }),
             };
 
             Vm.Run(QuickCompile.RawCompile(program));

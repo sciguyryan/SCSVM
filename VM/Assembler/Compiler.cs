@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -184,7 +185,7 @@ namespace VMCore.Assembler
                 // plus meta section).
                 // If the pointer was left in it's original state
                 // then it would point to the wrong place.
-                AddWithLabel(ins.Op, ins.Args, ins.Label);
+                AddWithLabels(ins.Op, ins.Args, ins.Labels);
             }
             var codeEnd = (int)_ms.Position;
 
@@ -293,11 +294,12 @@ namespace VMCore.Assembler
             return bytes;
         }
 
-        public void AddWithLabel(OpCode aOpCode,
-                                 object[]? aArgs,
-                                 AsmLabel? aBoundLabel)
+        public void AddWithLabels(OpCode aOpCode,
+                                  object[]? aArgs,
+                                  AsmLabel[]? aBoundLabels)
         {
             var args = aArgs ?? new object[0];
+            var labels = aBoundLabels ?? new AsmLabel[0];
 
             if (!_instructionCache.TryGetValue(aOpCode,
                                                out var ins))
@@ -326,7 +328,7 @@ namespace VMCore.Assembler
                 }
             }
 
-            // Quick exit, no argument data to write.
+            // No argument data to write. We can exit early here.
             if (ins.ArgumentTypes.Length == 0)
             {
                 _bw.Write((int)op);
@@ -393,16 +395,27 @@ namespace VMCore.Assembler
 
                 // Check if we have a label bound to this
                 // argument.
-                if (!(aBoundLabel is null) &&
-                    aBoundLabel.BoundArgumentIndex == i)
+                AsmLabel? label = null;
+                foreach (var l in labels)
+                {
+                    if (l is null ||
+                        l.BoundArgumentIndex != i)
+                    {
+                        continue;
+                    }
+
+                    label = l;
+                    break;
+                }
+
+                if (!(label is null))
                 {
                     // Do we know about this label already?
-                    if (!_labelDestinations.TryGetValue(aBoundLabel.Name,
+                    if (!_labelDestinations.TryGetValue(label.Name,
                                                         out var addr))
                     {
                         // No, we will have to replace it later.
-                        _labelsToBeReplaced.Add(aBoundLabel.Name,
-                                                _ms.Position);
+                        _labelsToBeReplaced.Add(label.Name, _ms.Position);
                     }
                     else
                     {
@@ -410,7 +423,7 @@ namespace VMCore.Assembler
                         arg = (int)addr;
                     }
                 }
-                
+
                 // Write the argument data.
                 Utils.WriteDataByType(argType, arg, _bw);
             }
@@ -427,10 +440,10 @@ namespace VMCore.Assembler
             // changed during optimization.
             // After we are done restore the stream
             // to the correct position.
-            var currPos = _ms.Position;
+            var pos = _ms.Position;
             _ms.Position = opCodePos;
             _bw.Write((int) op);
-            _ms.Position = currPos;
+            _ms.Position = pos;
         }
 
         /// <summary>
@@ -490,7 +503,11 @@ namespace VMCore.Assembler
                 // length of the destination labels data.
                 AddConstantLabel(aDir.DirLabel,
                                  refDir.ByteData.Length);
+                return;
             }
+
+            // TODO - hook up the expression parser for
+            // use here?
 
             // If all else fails, is this a valid integer?
             if (!int.TryParse(aDir.StringData, out var result))

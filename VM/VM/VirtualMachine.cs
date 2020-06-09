@@ -57,7 +57,7 @@ namespace VMCore.VM
 
         #endregion // Private Properties
 
-        public VirtualMachine(int aMainMemoryCapacity = 32_000,
+        public VirtualMachine(int aMainMemoryCapacity = 64_000,
                               int aStackCapacity = 100,
                               bool aCanCpuSwapMemoryRegions = false,
                               BinFile? aBinary = null)
@@ -176,11 +176,11 @@ namespace VMCore.VM
 
             // This is the address from which the binary file
             // should begin to be loaded.
-            var initAddress = aBinary.InitialAddress;
+            var entryAddress = aBinary.InitialAddress;
 
             // Load the instruction data section into memory.
             var (_, _, insSeqId) =
-                Memory.AddExMemory(codeSection.Raw, initAddress);
+                Memory.AddExMemory(codeSection.Raw, entryAddress);
 
             if (!(dataSection is null))
             {
@@ -189,7 +189,7 @@ namespace VMCore.VM
                 // is contiguous with the main instruction
                 // memory region.
                 Memory.AddExMemory(dataSection.Raw,
-                                   initAddress + codeSection.Raw.Length);
+                                   entryAddress + codeSection.Raw.Length);
             }
 
             // Initialize the CPU.

@@ -211,23 +211,26 @@ namespace VMCore.VM.Core.Memory
         /// <param name="aData">
         /// The byte code data to be loaded into the memory region.
         /// </param>
+        /// <param name="aEntryAddress">
+        /// The address from which the program data should begin
+        /// to be loaded.
+        /// </param>
         /// <returns>
         /// A tuple of the start and end addresses of the executable
         /// region and the unique sequence ID for the memory region.
         /// </returns>
         public (int start, int end, int seqID) AddExMemory(byte[] aData,
-                                                           int aInitAddress)
+                                                           int aEntryAddress)
         {
             var exLen = aData.Length;
-            var newMemLen = aInitAddress + exLen;
+            var endAddress = aEntryAddress + exLen;
 
-            if (newMemLen < Data.Length)
+            // Do we need to resize the system memory to allow the
+            // binary to be loaded?
+            if (Data.Length < endAddress)
             {
-                throw new ArgumentException();
+                ResizeMemory(endAddress, true);
             }
-
-            // Resize the memory to the new size required.
-            ResizeMemory(newMemLen, true);
 
             // Add an executable memory region for the
             // region that will contain the executable
@@ -238,20 +241,20 @@ namespace VMCore.VM.Core.Memory
                 MemoryAccess.EX;
 
             var seqId =
-                AddMemoryRegion(aInitAddress,
-                                newMemLen,
+                AddMemoryRegion(aEntryAddress,
+                                endAddress,
                                 flags,
                                 "Executable");
 
             Array.Copy(aData,
                        0,
                        Data,
-                       aInitAddress,
+                       aEntryAddress,
                        aData.Length);
 
             ResizeRootMemoryRegion();
 
-            return (aInitAddress, newMemLen, seqId);
+            return (aEntryAddress, endAddress, seqId);
         }
 
         /// <summary>
@@ -1256,11 +1259,11 @@ namespace VMCore.VM.Core.Memory
             else
             {
                 var temp = new byte[aNewSize];
-                Buffer.BlockCopy(Data,
-                                 0,
-                                 temp,
-                                 0,
-                                 Data.Length);
+                Array.Copy(Data,
+                           0,
+                           temp,
+                           0,
+                           Data.Length);
 
                 Data = temp;
             }

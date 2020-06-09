@@ -7,8 +7,11 @@ namespace UnitTests.Instructions.Helpers
     {
         protected VirtualMachine Vm;
 
-        protected SecurityContext UserCtx = SecurityContext.User;
-        protected SecurityContext SystemCtx = SecurityContext.System;
+        protected SecurityContext UserCtx = 
+            SecurityContext.User;
+
+        protected SecurityContext SystemCtx = 
+            SecurityContext.System;
 
         public TestInstructionBase()
         {

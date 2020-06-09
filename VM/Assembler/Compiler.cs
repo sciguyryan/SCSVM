@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -81,7 +80,7 @@ namespace VMCore.Assembler
         /// The address in which the program should be loaded into
         /// memory. Used to calculate label destinations.
         /// </summary>
-        private const int InitialAddress = 64_400;
+        private const int InitialAddress = 32_000;
 
         /// <summary>
         /// The position within the file that gives the end

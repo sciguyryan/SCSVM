@@ -2,7 +2,6 @@
 using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
-using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UnitTests.Instructions.Helpers;
 
@@ -12,9 +11,6 @@ namespace UnitTests.Instructions.Branching
     public class TestCallLit
         : TestInstructionBase
     {
-        private readonly VMCore.AsmParser.AsmParser _p = 
-            new VMCore.AsmParser.AsmParser();
-
         public TestCallLit()
         {
         }
@@ -46,6 +42,7 @@ namespace UnitTests.Instructions.Branching
 
             var lines = new[]
             {
+                ".section text",
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2
                 "push $0xA",    // TESTER Argument 1
@@ -113,6 +110,7 @@ namespace UnitTests.Instructions.Branching
 
             var lines = new[]
             {
+                ".section text",
                 "push $0xAAA",  // Should remain in place once the stack is restored
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2
@@ -182,6 +180,7 @@ namespace UnitTests.Instructions.Branching
 
             var lines = new[]
             {
+                ".section text",
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2
                 "push $0xA",    // TESTER Argument 1
@@ -305,6 +304,7 @@ namespace UnitTests.Instructions.Branching
 
             var lines = new[]
             {
+                ".section text",
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2
                 "push $0xA",    // TESTER Argument 1

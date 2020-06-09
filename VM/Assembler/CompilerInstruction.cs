@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using VMCore.VM.Core;
+﻿using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using OpCode = VMCore.VM.Core.OpCode;
 

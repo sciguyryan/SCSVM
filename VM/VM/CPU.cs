@@ -173,16 +173,16 @@ namespace VMCore.VM
         /// <param name="aMemSeqId">
         /// The sequence ID for the memory region containing the code.
         /// </param>
-        /// <param name="aStartAddr">
+        /// <param name="aStartAddress">
         /// The address from which the execution should commence.
         /// </param>
-        public void Initialize(int aMemSeqId, int aStartAddr)
+        public void Initialize(int aMemSeqId, int aStartAddress)
         {
             MemExecutableSeqId = aMemSeqId;
 
             if (_minExecutableBound != -1)
             {
-                SetStartAddress(aStartAddr);
+                SetStartAddress(aStartAddress);
                 return;
             }
 
@@ -208,7 +208,7 @@ namespace VMCore.VM
                 _maxExecutableBound = region.End;
             }
 
-            SetStartAddress(aStartAddr);
+            SetStartAddress(aStartAddress);
         }
 
         /// <summary>
@@ -309,10 +309,10 @@ namespace VMCore.VM
         /// Set the address from which the execution of
         /// the binary should commence.
         /// </summary>
-        /// <param name="aStartAddr"
+        /// <param name="aStartAddress"
         /// >The address from which the execution should commence.
         /// </param>
-        public void SetStartAddress(int aStartAddr)
+        public void SetStartAddress(int aStartAddress)
         {
             var baseMemRegion =
                 Vm.Memory.GetMemoryRegion(MemExecutableSeqId);
@@ -324,13 +324,13 @@ namespace VMCore.VM
             // Offset the starting address by the base
             // size of the memory. This is the area of memory
             // containing the system memory and stack.
-            var offsetAddress = baseMemRegion.Start + aStartAddr;
+            var offsetAddress = baseMemRegion.Start + aStartAddress;
             if (offsetAddress < 0 || offsetAddress >= Vm.Memory.Length)
             {
                 throw new IndexOutOfRangeException
                 (
-                    "SetStartAddress: starting position is outside of " +
-                    "the data bounds."
+                    "SetStartAddress: starting position is " +
+                    "outside of the data bounds."
                 );
             }
 

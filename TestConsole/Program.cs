@@ -44,6 +44,7 @@ namespace TestConsole
                 "hlt",*/
                 "mov str, R8",
                 "mov BYTE &R8, R7",
+                "mov strLen, R6",
                 "push $0xAAA",  // Should remain in place once the stack is restored
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2
@@ -157,10 +158,9 @@ namespace TestConsole
 
             var sectionData = p.Parse(progText);
 
-            var aw = new AsmWriter(null, sectionData, true);
-            var bytes = aw.Compile();
+            var compiler = new Compiler(sectionData, null, true);
 
-            var bin = BinFile.Load(bytes);
+            var bin = new BinFile(compiler.Compile());
 
             //File.WriteAllBytes(@"D:\Downloads\test.bin", bytes);
 

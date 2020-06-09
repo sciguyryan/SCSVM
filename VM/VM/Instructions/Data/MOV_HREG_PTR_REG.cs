@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
 
@@ -51,12 +50,16 @@ namespace VMCore.VM.Instructions.Data
                                   GetSecurityContext(),
                                   false),
 
-                InstructionSizeHint.INT
+                InstructionSizeHint.WORD
                     =>
                     aCpu.Vm.Memory
                         .GetInt(address,
                             GetSecurityContext(),
                             false),
+
+                InstructionSizeHint.DWORD
+                    =>
+                    throw new NotImplementedException(),
 
                 _ => throw new ArgumentOutOfRangeException()
             };

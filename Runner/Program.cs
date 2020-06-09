@@ -15,9 +15,9 @@ namespace Runner
 
             var vm = new VirtualMachine();
 
-            var bin = BinFile.Load(File.ReadAllBytes(args[0]));
+            var bin = new BinFile(File.ReadAllBytes(args[0]));
 
-            vm.Run(bin[BinSections.Text].Raw);
+            vm.Run(bin);
         }
     }
 }

@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using VMCore.Assembler;
 using VMCore.VM.Core.Breakpoints;
 using VMCore.VM.Core.Memory;
@@ -15,10 +16,10 @@ namespace VMCore.VM
         #region Public Properties
 
         /// <summary>
-        /// The assembly binary file that has been loaded into this
+        /// The binary file that has been loaded into this
         /// virtual machine instance.
         /// </summary>
-        public BinFile Assembly { get; set; }
+        public BinFile? Binary { get; set; }
 
         /// <summary>
         /// The memory block that has been assigned to this
@@ -58,7 +59,8 @@ namespace VMCore.VM
 
         public VirtualMachine(int aMainMemoryCapacity = 32_000,
                               int aStackCapacity = 100,
-                              bool aCanCpuSwapMemoryRegions = false)
+                              bool aCanCpuSwapMemoryRegions = false,
+                              BinFile? aBinary = null)
         {
             Debugger = new Debugger(this);
 
@@ -68,6 +70,8 @@ namespace VMCore.VM
             Cpu = new Cpu(this, aCanCpuSwapMemoryRegions);
 
             Disassembler = new Disassembler(this);
+
+            Binary = aBinary;
 
 #if DEBUG
             _dbgMainMemoryCapacity = aMainMemoryCapacity;
@@ -82,70 +86,36 @@ namespace VMCore.VM
         }
 
         /// <summary>
-        /// Load a binary into memory and initialize the CPU.
+        /// Initialize the virtual machine.
         /// </summary>
-        /// <param name="aRaw">
-        /// The raw byte code data representing the program.
+        /// <param name="aBinary">
+        /// The binary file to be executed.
         /// </param>
         /// <param name="aStartAddr">
-        /// The starting address from which to begin 
-        /// the execution of the program.
+        /// The starting address from which execution should begin.
+        /// This address is relative to the entry point of the
+        /// binary file within memory.
         /// </param>
         /// <param name="aCanSwapMemoryRegions">
-        /// A boolean, true if the CPU will be permitted to swap between
-        /// executable memory regions, false otherwise.
+        /// A boolean. True if the CPU should be permitted to swap
+        /// memory regions, false otherwise.
         /// </param>
         /// <returns>
-        /// The sequence ID of the executable memory region.
+        /// The memory sequence ID for the region in which the
+        /// executable code is allocated.
         /// </returns>
-        public int LoadAndInitialize(byte[] aRaw,
-                                     int aStartAddr = 0,
-                                     bool aCanSwapMemoryRegions = true)
-        {
-            if (aRaw.Length == 0)
-            {
-                throw new Exception("Initialize: no byte code provided.");
-            }
-
-            // In case we have used this virtual machine
-            // instance before.
-            Memory.RemoveExecutableRegions();
-
-            // Clear any data within the CPU.
-            Cpu.Reset();
-
-#if DEBUG
-            // This should be done after reset
-            // as to avoid the possibility of the
-            // data being overwritten.
-            LoadRegisterTestData();
-#endif
-
-            // Load the executable data into memory.
-            var (_, _, seqId) =
-                Memory.AddExMemory(aRaw, 0);
-
-            Cpu.Initialize(seqId, aStartAddr);
-
-            // Load any break point observers that have been
-            // specified.
-            SetBreakpointObservers();
-
-            return seqId;
-        }
-
-
         public int LoadAndInitialize(BinFile aBinary,
                                      int aStartAddr = 0,
                                      bool aCanSwapMemoryRegions = true)
         {
-            if (aBinary == null)
-            {
-                throw new Exception("Initialize: no byte code provided.");
-            }
+            // Hold a reference to the binary as we might need
+            // to use it again later.
+            Binary = aBinary;
 
-            // In case we have used this virtual machine
-            // instance before.
+            // Clear any executable memory region that may
+            // have been created. This needs to be done in
+            // case we have used this virtual machine
+            // instance prior.
             Memory.RemoveExecutableRegions();
 
             // Clear any data within the CPU.
@@ -157,21 +127,24 @@ namespace VMCore.VM
             // data being overwritten.
             LoadRegisterTestData();
 #endif
+
             BinSection? codeSection = null;
             BinSection? dataSection = null;
 
             var startAddr = aStartAddr;
 
-            foreach (var s in aBinary.Sections)
+            // Iterate through the section list obtained
+            // from the binary.
+            foreach (var (id, sec) in aBinary.Sections)
             {
-                switch (s.SectionId)
+                switch (id)
                 {
                     case BinSections.Text:
-                        codeSection = s;
+                        codeSection = sec;
                         break;
 
                     case BinSections.Data:
-                        dataSection = s;
+                        dataSection = sec;
                         break;
 
                     case BinSections.Meta:
@@ -183,7 +156,7 @@ namespace VMCore.VM
                     case BinSections.BSS:
                         break;
 
-                    case BinSections.SectionData:
+                    case BinSections.SectionInfoData:
                         break;
 
                     default:
@@ -191,86 +164,122 @@ namespace VMCore.VM
                 }
             }
 
+            // We must have an instruction code section.
             if (codeSection is null)
             {
-                throw new Exception("Bad binary file.");
+                throw new InvalidDataException
+                (
+                    "LoadAndInitialize: binary file is invalid " +
+                    " as it contains no instruction data section."
+                );
             }
 
+            // This is the address from which the binary file
+            // should begin to be loaded.
             var initAddress = aBinary.InitialAddress;
 
-            // Load the instruction data into memory.
+            // Load the instruction data section into memory.
             var (_, _, insSeqId) =
                 Memory.AddExMemory(codeSection.Raw, initAddress);
 
-            // If we have a data section then load that into
-            // it's own memory section.
-            // Load the instruction data into memory.
             if (!(dataSection is null))
             {
+                // If we have a data section.
+                // Load it into it's own memory region that
+                // is contiguous with the main instruction
+                // memory region.
                 Memory.AddExMemory(dataSection.Raw,
                                    initAddress + codeSection.Raw.Length);
             }
 
+            // Initialize the CPU.
             Cpu.Initialize(insSeqId, startAddr);
 
             // Load any break point observers that have been
             // specified.
             SetBreakpointObservers();
 
+            // Return the sequence ID for the region that contains
+            // the instruction data.
             return insSeqId;
         }
 
         /// <summary>
-        /// Run a byte code program to completion.
+        /// Initialize the virtual machine.
         /// </summary>
-        /// <param name="aRaw">
-        /// The raw byte code data representing the program.
+        /// <param name="aRawBytes">
+        /// An array of bytes representing the binary file to be
+        /// executed.
         /// </param>
         /// <param name="aStartAddr">
-        /// The starting address from which to begin 
-        /// the execution of the program.
+        /// The starting address from which execution should begin.
+        /// This address is relative to the entry point of the
+        /// binary file within memory.
         /// </param>
         /// <param name="aCanSwapMemoryRegions">
-        /// A boolean, true if the CPU will be permitted to swap between
-        /// executable memory regions, false otherwise.
+        /// A boolean. True if the CPU should be permitted to swap
+        /// memory regions, false otherwise.
         /// </param>
-        public void Step(byte[] aRaw,
-                         int aStartAddr = 0,
-                         bool aCanSwapMemoryRegions = true)
+        /// <returns>
+        /// The memory sequence ID for the region in which the
+        /// executable code is allocated.
+        /// </returns>
+        public int LoadAndInitialize(byte[] aRawBytes,
+                                     int aStartAddr = 0,
+                                     bool aCanSwapMemoryRegions = true)
         {
-            LoadAndInitialize(aRaw, aStartAddr, aCanSwapMemoryRegions);
-
-            Cpu.Step();
+            return
+                LoadAndInitialize(new BinFile(aRawBytes),
+                    aStartAddr,
+                    aCanSwapMemoryRegions);
         }
 
         /// <summary>
-        /// Run a byte code program to completion.
+        /// Run a binary file to completion.
         /// </summary>
-        /// <param name="aRaw">
-        /// The raw byte code data representing the program.
+        /// <param name="aBinary">
+        /// The binary file to be executed.
         /// </param>
         /// <param name="aStartAddr">
-        /// The starting address from which to begin 
-        /// the execution of the program.
+        /// The starting address from which execution should begin.
+        /// This address is relative to the entry point of the
+        /// binary file within memory.
         /// </param>
         /// <param name="aCanSwapMemoryRegions">
-        /// A boolean, true if the CPU will be permitted to swap between
-        /// executable memory regions, false otherwise.
+        /// A boolean. True if the CPU should be permitted to swap
+        /// memory regions, false otherwise.
         /// </param>
-        public void Run(byte[] aRaw,
-                        int aStartAddr = 0,
-                        bool aCanSwapMemoryRegions = true)
-        {
-            LoadAndInitialize(aRaw, aStartAddr, aCanSwapMemoryRegions);
-
-            Cpu.Run();
-        }
-
         public void Run(BinFile aBinary,
                         int aStartAddr = 0,
                         bool aCanSwapMemoryRegions = true)
         {
             LoadAndInitialize(aBinary, aStartAddr, aCanSwapMemoryRegions);
+
+            Cpu.Run();
+        }
+
+        /// <summary>
+        /// Run a binary file to completion.
+        /// </summary>
+        /// <param name="aRawBytes">
+        /// An array of bytes representing the binary file to be
+        /// executed.
+        /// </param>
+        /// <param name="aStartAddr">
+        /// The starting address from which execution should begin.
+        /// This address is relative to the entry point of the
+        /// binary file within memory.
+        /// </param>
+        /// <param name="aCanSwapMemoryRegions">
+        /// A boolean. True if the CPU should be permitted to swap
+        /// memory regions, false otherwise.
+        /// </param>
+        public void Run(byte[] aRawBytes,
+                        int aStartAddr = 0,
+                        bool aCanSwapMemoryRegions = true)
+        {
+            var bf = new BinFile(aRawBytes);
+            LoadAndInitialize(bf, aStartAddr, aCanSwapMemoryRegions);
 
             Cpu.Run();
         }
@@ -374,20 +383,29 @@ namespace VMCore.VM
         }
 
 #if DEBUG
+        /// <summary>
+        /// Run a performance test on a given code sample.
+        /// </summary>
+        /// <param name="aInsStr">
+        /// The assembly string to be used for the test.
+        /// </param>
+        /// <param name="aOptimize">
+        /// If the compiler should attempt to optimize the
+        /// code.
+        /// </param>
         public void PerformanceTest(string aInsStr,
                                     bool aOptimize = false)
         {
             var p = new AsmParser.AsmParser();
 
-            var ins = 
-                p.Parse(aInsStr).CodeSectionData.ToArray();
+            var compSecs = p.Parse(aInsStr);
 
-            var bytes = 
-                QuickCompile.RawCompile(ins, aOptimize);
+            var bf = 
+                QuickCompile.CompileToBinFile(compSecs, aOptimize);
 
-            var insCount = ins.Length;
+            var insCount = compSecs.CodeSectionData.Count;
 
-            LoadAndInitialize(bytes, 0, false);
+            LoadAndInitialize(bf, 0, false);
 
             const int iterations = 1_000_000;
 

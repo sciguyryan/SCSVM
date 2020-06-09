@@ -1,7 +1,5 @@
 ﻿#nullable enable
 
-using System;
-
 namespace VMCore.Assembler
 {
     public static class QuickCompile
@@ -22,59 +20,32 @@ namespace VMCore.Assembler
         public static byte[] RawCompile(CompilerIns[] aIns,
                                         bool aOptimize = false)
         {
-            var aw = new AsmWriter(aOptimize);
+            var compSecs = new CompilerSections();
+            compSecs.CodeSectionData.AddRange(aIns);
 
-            foreach (var entry in aIns)
-            {
-                aw.AddWithLabel(entry.Op, entry.Args, entry.Label);
-            }
+            return
+                new Compiler(compSecs, null, aOptimize).Compile();
+        }
 
-            return aw.Save();
+        public static BinFile CompileToBinFile(CompilerIns[] aIns,
+                                               bool aOptimize = false)
+        {
+            var bytes = RawCompile(aIns, aOptimize);
+            return new BinFile(bytes);
         }
 
 
         public static byte[] RawCompile(CompilerSections aSecs,
                                         bool aOptimize = false)
         {
-            return new AsmWriter(null, aSecs, aOptimize).Save();
+            return new Compiler(aSecs, null, aOptimize).Compile();
         }
 
-        /// <summary>
-        /// Builds a binary file with the specified parameters.
-        /// </summary>
-        /// <param name="aSecs">
-        /// An array of the sections to be added to the binary.
-        /// </param>
-        /// <param name="aVersion">The version of the binary.</param>
-        /// <returns>
-        /// A RawBinaryWriter containing the specified sections.
-        /// </returns>
-        public static BinWriter BinFileBuilder(BinSections[]? aSecs = null,
-                                               Version? aVersion = null)
+        public static BinFile CompileToBinFile(CompilerSections aSecs,
+                                               bool aOptimize = false)
         {
-            var rbw = new BinWriter();
-            var rbi = new BinMeta
-            {
-                FileVersion = aVersion ?? new Version("1.0.0.0"),
-                Id = Guid.NewGuid(),
-            };
-
-            rbw.AddMeta(rbi);
-
-            // Create all sections by default if none
-            // were provided.
-            if (aSecs is null || aSecs.Length == 0)
-            {
-                aSecs =
-                    (BinSections[])Enum.GetValues(typeof(BinSections));
-            }
-
-            foreach (var s in aSecs)
-            {
-                _ = rbw.CreateSection(s);
-            }
-
-            return rbw;
+            var bytes = RawCompile(aSecs, aOptimize);
+            return new BinFile(bytes);
         }
     }
 }

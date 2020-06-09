@@ -25,6 +25,6 @@
         /// <summary>
         /// Section pointer and length information.
         /// </summary>
-        SectionData,
+        SectionInfoData,
     }
 }

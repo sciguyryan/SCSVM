@@ -43,7 +43,6 @@ namespace VMCore.Assembler
 
             Raw = aData;
 
-            // TODO - this method needs lots of error checking.
             using var br = new BinaryReader(new MemoryStream(aData));
 
             var magic = br.ReadInt32();
@@ -51,7 +50,7 @@ namespace VMCore.Assembler
             {
                 throw new InvalidDataException
                 (
-                    "BinFile: unrecognized binary format."
+                    "BinFile: unrecognized file format."
                 );
             }
 
@@ -65,12 +64,13 @@ namespace VMCore.Assembler
             // by the information section pointer.
             br.BaseStream.Position = infoSectionPrt;
 
+            // The number of sections that this binary file
+            // is listed as containing.
             var sectionCount = br.ReadInt32();
-
-            var sectionData = new List<SectionInfo>();
 
             // Iterate over each of the sections that
             // we expect to find.
+            var sectionData = new List<SectionInfo>(sectionCount);
             for (var i = 0; i < sectionCount; i++)
             {
                 var id = (BinSections)br.ReadInt32();

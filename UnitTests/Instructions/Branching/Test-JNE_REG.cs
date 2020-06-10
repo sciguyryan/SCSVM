@@ -4,7 +4,6 @@ using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Exceptions;
 using VMCore.VM.Core.Register;
-using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UnitTests.Instructions.Helpers;
 
@@ -30,31 +29,35 @@ namespace UnitTests.Instructions.Branching
             const Registers r3 = Registers.R3;
             const int expected = 0x123;
 
-            // This is calculated as follows.
+            // This is calculated as follows:
             // sizeof(OpCode) * 5 for the number of
             // instructions to skip.
             // sizeof(int) * 4 for the number of integer
             // arguments to be skipped.
             // sizeof(Registers) * 4 for the number of
             // register arguments to be skipped.
+            // Finally we add the address into which
+            // this program will be loaded into memory.
+            // This will give an absolute address.
             const int destOffset =
                 sizeof(OpCode) * 5 +
                 sizeof(int) * 4 +
-                sizeof(Registers) * 4;
+                sizeof(Registers) * 4 +
+                Compiler.InitialAddress;
 
             var program = new []
             {
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r1 }),
+                                new object[] { 100, r1 }),
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),
+                                new object[] { 50, r1 }),
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r2 }),
+                                new object[] { 100, r2 }),
                 new CompilerIns(OpCode.JNE_REG,
-                             new object[] { r2, destOffset }),
+                                new object[] { r2, destOffset }),
                 new CompilerIns(OpCode.HLT),
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { expected, r3 }),
+                                new object[] { expected, r3 }),
             };
 
             Vm.Run(QuickCompile.RawCompile(program));
@@ -82,26 +85,30 @@ namespace UnitTests.Instructions.Branching
             // arguments to be skipped.
             // sizeof(Registers) * 5 for the number of
             // register arguments to be skipped.
+            // Finally we add the address into which
+            // this program will be loaded into memory.
+            // This will give an absolute address.
             const int destOffset =
                 sizeof(OpCode) * 6 +
                 sizeof(int) * 5 +
-                sizeof(Registers) * 5;
+                sizeof(Registers) * 5 +
+                Compiler.InitialAddress;
 
             var program = new []
             {
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r1 }),
+                                new object[] { 100, r1 }),
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),  // AC = 50
+                                new object[] { 50, r1 }),  // AC = 50
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 50, r2 }),
+                                new object[] { 50, r2 }),
                 new CompilerIns(OpCode.JNE_REG,
-                             new object[] { r2, destOffset }),
+                                new object[] { r2, destOffset }),
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { expected, r3 }),
+                                new object[] { expected, r3 }),
                 new CompilerIns(OpCode.HLT),
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { fail, r3 }),
+                                new object[] { fail, r3 }),
             };
 
             Vm.Run(QuickCompile.RawCompile(program));
@@ -126,20 +133,20 @@ namespace UnitTests.Instructions.Branching
             var program = new []
             {
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r1 }),
+                                new object[] { 100, r1 }),
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),  // AC = 50
+                                new object[] { 50, r1 }),  // AC = 50
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r2 }),
+                                new object[] { 100, r2 }),
                 new CompilerIns(OpCode.JNE_REG,
-                             new object[] { r2, 0 },
+                                new object[] { r2, 0 },
                              new AsmLabel("GOOD", 1)),
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { fail, r3 }),
+                                new object[] { fail, r3 }),
                 new CompilerIns(OpCode.HLT),
                 new CompilerIns(OpCode.LABEL, new object[] { "GOOD" }),
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { expected, r3 }),
+                                new object[] { expected, r3 }),
             };
 
             Vm.Run(QuickCompile.RawCompile(program));
@@ -162,10 +169,10 @@ namespace UnitTests.Instructions.Branching
             var program = new []
             {
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),  // AC = -50
+                                new object[] { 50, r1 }),  // AC = -50
                 new CompilerIns(OpCode.JNE_REG,
                              new object[] { r2, 0 },
-                             new AsmLabel("A", 1)),
+                                new AsmLabel("A", 1)),
             };
 
             Vm.Run(QuickCompile.RawCompile(program));
@@ -186,10 +193,10 @@ namespace UnitTests.Instructions.Branching
             var program = new []
             {
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),  // AC = -50
+                                new object[] { 50, r1 }),  // AC = -50
                 new CompilerIns(OpCode.JNE_REG,
-                             new object[] { r2, 0 },
-                             new AsmLabel("A", 0)),
+                                new object[] { r2, 0 },
+                                new AsmLabel("A", 0)),
                 new CompilerIns(OpCode.LABEL, new object[] { "A" }),
             };
 
@@ -203,7 +210,7 @@ namespace UnitTests.Instructions.Branching
         /// from non-executable memory.
         /// </summary>
         [TestMethod]
-        [ExpectedException(typeof(MemoryAccessViolationException))]
+        [ExpectedException(typeof(MemoryOutOfRangeException))]
         public void TestUserAssemblyJumpInvalid()
         {
             const Registers r1 = Registers.R1;
@@ -212,13 +219,13 @@ namespace UnitTests.Instructions.Branching
             var program = new []
             {
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r1 }),
+                                new object[] { 100, r1 }),
                 new CompilerIns(OpCode.SUB_LIT_REG,
-                             new object[] { 50, r1 }),  // AC = 50
+                                new object[] { 50, r1 }),  // AC = 50
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 100, r2 }),
+                                new object[] { 100, r2 }),
                 new CompilerIns(OpCode.JNE_REG,
-                             new object[] { r2, -2 }),
+                                new object[] { r2, -2 }),
             };
 
             Vm.Run(QuickCompile.RawCompile(program));

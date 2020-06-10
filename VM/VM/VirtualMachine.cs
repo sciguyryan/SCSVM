@@ -91,7 +91,7 @@ namespace VMCore.VM
         /// <param name="aBinary">
         /// The binary file to be executed.
         /// </param>
-        /// <param name="aStartAddr">
+        /// <param name="aStartAddress">
         /// The starting address from which execution should begin.
         /// This address is relative to the entry point of the
         /// binary file within memory.
@@ -105,7 +105,7 @@ namespace VMCore.VM
         /// executable code is allocated.
         /// </returns>
         public int LoadAndInitialize(BinFile aBinary,
-                                     int aStartAddr = 0,
+                                     int aStartAddress = 0,
                                      bool aCanSwapMemoryRegions = true)
         {
             // Hold a reference to the binary as we might need
@@ -130,8 +130,6 @@ namespace VMCore.VM
 
             BinSection? codeSection = null;
             BinSection? dataSection = null;
-
-            var startAddr = aStartAddr;
 
             // Iterate through the section list obtained
             // from the binary.
@@ -193,7 +191,7 @@ namespace VMCore.VM
             }
 
             // Initialize the CPU.
-            Cpu.Initialize(insSeqId, startAddr);
+            Cpu.Initialize(insSeqId, aStartAddress);
 
             // Load any break point observers that have been
             // specified.
@@ -211,7 +209,7 @@ namespace VMCore.VM
         /// An array of bytes representing the binary file to be
         /// executed.
         /// </param>
-        /// <param name="aStartAddr">
+        /// <param name="aStartAddress">
         /// The starting address from which execution should begin.
         /// This address is relative to the entry point of the
         /// binary file within memory.
@@ -225,12 +223,12 @@ namespace VMCore.VM
         /// executable code is allocated.
         /// </returns>
         public int LoadAndInitialize(byte[] aRawBytes,
-                                     int aStartAddr = 0,
+                                     int aStartAddress = 0,
                                      bool aCanSwapMemoryRegions = true)
         {
             return
                 LoadAndInitialize(new BinFile(aRawBytes),
-                    aStartAddr,
+                    aStartAddress,
                     aCanSwapMemoryRegions);
         }
 
@@ -240,7 +238,7 @@ namespace VMCore.VM
         /// <param name="aBinary">
         /// The binary file to be executed.
         /// </param>
-        /// <param name="aStartAddr">
+        /// <param name="aStartAddress">
         /// The starting address from which execution should begin.
         /// This address is relative to the entry point of the
         /// binary file within memory.
@@ -250,10 +248,12 @@ namespace VMCore.VM
         /// memory regions, false otherwise.
         /// </param>
         public void Run(BinFile aBinary,
-                        int aStartAddr = 0,
+                        int aStartAddress = 0,
                         bool aCanSwapMemoryRegions = true)
         {
-            LoadAndInitialize(aBinary, aStartAddr, aCanSwapMemoryRegions);
+            LoadAndInitialize(aBinary,
+                              aStartAddress,
+                              aCanSwapMemoryRegions);
 
             Cpu.Run();
         }
@@ -265,7 +265,7 @@ namespace VMCore.VM
         /// An array of bytes representing the binary file to be
         /// executed.
         /// </param>
-        /// <param name="aStartAddr">
+        /// <param name="aStartAddress">
         /// The starting address from which execution should begin.
         /// This address is relative to the entry point of the
         /// binary file within memory.
@@ -275,11 +275,11 @@ namespace VMCore.VM
         /// memory regions, false otherwise.
         /// </param>
         public void Run(byte[] aRawBytes,
-                        int aStartAddr = 0,
+                        int aStartAddress = 0,
                         bool aCanSwapMemoryRegions = true)
         {
             var bf = new BinFile(aRawBytes);
-            LoadAndInitialize(bf, aStartAddr, aCanSwapMemoryRegions);
+            LoadAndInitialize(bf, aStartAddress, aCanSwapMemoryRegions);
 
             Cpu.Run();
         }

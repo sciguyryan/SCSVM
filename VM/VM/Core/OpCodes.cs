@@ -33,22 +33,10 @@
         /// </summary>
         MOV_REG_MEM,
         /// <summary>
-        /// Move Register to Memory via Literal Expression - 
-        /// copy the value of the register into memory starting from
-        /// the index given by an expression into the register.
-        /// </summary>
-        MOV_REG_LIT_EXP_MEM,
-        /// <summary>
         /// Move Memory to Register - copy a value from memory
         /// into the register.
         /// </summary>
         MOV_MEM_REG,
-        /// <summary>
-        /// Move from Memory via Literal Expression to Register - 
-        /// copy a value from memory starting from the index given
-        /// by an expression into the register.
-        /// </summary>
-        MOV_LIT_EXP_MEM_REG,
         /// <summary>
         /// Move Literal to Memory - copy a literal into memory.
         /// </summary>

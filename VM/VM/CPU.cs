@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using VMCore.VM.Core;
@@ -145,6 +144,33 @@ namespace VMCore.VM
             Core.Register.Registers.R2,
             Core.Register.Registers.R1,
         };
+
+        #region EXCEPTIONS
+
+        /// <summary>
+        /// A list of exception IDs used by this class.
+        /// </summary>
+        private enum ExIDs
+        {
+            MemoryOutOfRange,
+        };
+
+        /// <summary>
+        /// A list of the exception messages used by this class.
+        /// </summary>
+        private readonly Dictionary<ExIDs, string> _exMessages =
+            new Dictionary<ExIDs, string>()
+        {
+            {
+                ExIDs.MemoryOutOfRange,
+                "FetchExecuteNextInstruction: instruction " +
+                "at position {0} failed to access the specified " +
+                "memory address as it falls outside of the range " +
+                "of system memory."
+            },
+        };
+
+        #endregion // Exceptions
 
         #endregion // Private Properties
 
@@ -309,8 +335,8 @@ namespace VMCore.VM
         /// Set the address from which the execution of
         /// the binary should commence.
         /// </summary>
-        /// <param name="aStartAddress"
-        /// >The address from which the execution should commence.
+        /// <param name="aStartAddress">
+        /// The address from which the execution should commence.
         /// </param>
         public void SetStartAddress(int aStartAddress)
         {
@@ -400,7 +426,17 @@ namespace VMCore.VM
                             $"permissions. {ex.Message}"
                         ),
 
-                    // I do not know how this can happen, but just to be safe.
+
+                    MemoryOutOfRangeException _
+                        => new MemoryOutOfRangeException
+                        (
+                            "FetchExecuteNextInstruction: instruction " +
+                            $"at position {opCodeStartPos} failed to " +
+                            "access the specified memory address " +
+                            "as it falls outside of the range of system " +
+                            "memory."
+                        ),
+
                     _
                         => new Exception
                         (
@@ -470,7 +506,6 @@ namespace VMCore.VM
                             $"permissions. {ex.Message}"
                         ),
 
-                    // I do not know how this can happen, but just to be safe.
                     _
                         => new Exception
                         (
@@ -548,11 +583,11 @@ namespace VMCore.VM
                     MemoryOutOfRangeException _
                         => new MemoryOutOfRangeException
                         (
-                            $"ExecuteInstruction: instruction at " +
-                            $"position {opCodeStartPos} failed to " +
-                            "access the specified memory location " +
-                            "as it falls outside of the bounds of " +
-                            "the memory region."
+                            "ExecuteInstruction: instruction " +
+                            $"at position {opCodeStartPos} failed to " +
+                            "access the specified memory address " +
+                            "as it falls outside of the range of system " +
+                            "memory."
                         ),
 
                     RegisterAccessViolationException _
@@ -659,8 +694,8 @@ namespace VMCore.VM
         /// The position in memory from which to begin 
         /// reading the argument.
         /// </param>
-        /// <param name="aT"
-        /// >The type of the argument to be read.
+        /// <param name="aT">
+        /// The type of the argument to be read.
         /// </param>
         /// <returns>
         /// An object containing the opcode instruction data.

@@ -469,26 +469,6 @@ namespace UnitTests.AsmParser
 
                 #endregion // ARGUMENT TESTS
 
-                #region EXPRESSION TESTS
-
-                new []
-                {
-                    new CompilerIns(OpCode.MOV_LIT_EXP_MEM_REG,
-                            new object[] { "$10+R1", Registers.R2 })
-                },
-                new []
-                {
-                    new CompilerIns(OpCode.MOV_LIT_EXP_MEM_REG,
-                                 new object[] { Registers.R2, "$10+R1" })
-                },
-                new []
-                {
-                    new CompilerIns(OpCode.MOV_LIT_EXP_MEM_REG,
-                                 new object[] { Registers.R2, "($10+R1)+1" })
-                },
-
-                #endregion // EXPRESSION TESTS
-
                 #region TEXT CASE
 
                 new []

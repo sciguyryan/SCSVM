@@ -6,7 +6,7 @@ namespace VMCore.Assembler
     public class BinMeta
     {
         /// <summary>
-        /// The unique identifier for this meta data section.
+        /// The unique identifier for the file.
         /// </summary>
         public Guid Id { get; set; }
 

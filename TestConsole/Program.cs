@@ -162,7 +162,7 @@ namespace TestConsole
 
             var bin = new BinFile(compiler.Compile());
 
-            //File.WriteAllBytes(@"D:\Downloads\test.bin", bytes);
+            //File.WriteAllBytes(@"D:\Downloads\test.bin", bin.Raw);
 
             //var programBytes =
             //    QuickCompile.RawCompile(sectionData, true);

@@ -80,7 +80,7 @@ namespace VMCore.Assembler
         /// The address in which the program should be loaded into
         /// memory. Used to calculate label destinations.
         /// </summary>
-        private const int InitialAddress = 32_000;
+        public const int InitialAddress = 32_000;
 
         /// <summary>
         /// The position within the file that gives the end
@@ -134,10 +134,9 @@ namespace VMCore.Assembler
             var secInfoPointerPos = (int)_ms.Position;
             _bw.Write(0);
 
-            /*------------------ INITIAL OFFSET ------------------*/
+            /*------------------ INITIAL ADDRESS ------------------*/
             // This will indicate where the program should be loaded in memory.
-            // without this we cannot correctly calculate label offsets.
-            //const int initialAddress = 64_400;
+            // Without this we cannot correctly calculate label offsets.
             _bw.Write(InitialAddress);
 
             /*------------------ META DATA SECTION ------------------*/
@@ -374,19 +373,17 @@ namespace VMCore.Assembler
                     // once during optimization otherwise it
                     // would likely cause things to break.
                     // In theory this should never happen.
-                    if (newOp != aOpCode)
+                    if (newOp != aOpCode &&
+                        hasOpCodeChanged)
                     {
-                        if (hasOpCodeChanged)
-                        {
-                            throw new NotSupportedException
-                            (
-                                "AddWithLabel: attempted to change " +
-                                $"the opcode from {aOpCode} to " +
-                                $"{newOp}, however the opcode has " +
-                                "already been changed. This operation " +
-                                "is not supported."
-                            );
-                        }
+                        throw new NotSupportedException
+                        (
+                            "AddWithLabels: attempted to change " +
+                            $"the opcode from {aOpCode} to " +
+                            $"{newOp}, however the opcode has " +
+                            "already been changed. This operation " +
+                            "is not supported."
+                        );
                     }
 
                     op = newOp;
@@ -397,8 +394,7 @@ namespace VMCore.Assembler
                 AsmLabel? label = null;
                 foreach (var l in labels)
                 {
-                    if (l is null ||
-                        l.BoundArgumentIndex != i)
+                    if (l is null || l.BoundArgumentIndex != i)
                     {
                         continue;
                     }
@@ -409,9 +405,21 @@ namespace VMCore.Assembler
 
                 if (!(label is null))
                 {
+                    // Can this type of argument support binding a label?
+                    if (!CanArgumentBindLabel(op, i))
+                    {
+                        throw new ArgumentException
+                        (
+                            "AddAddressRefLabel: attempted to " +
+                            $"bind a label to op code {op}, argument "+
+                            $"{i} but this argument type cannot " +
+                            "support label binding it."
+                        );
+                    }
+
                     // Do we know about this label already?
                     if (!_labelDestinations.TryGetValue(label.Name,
-                                                        out var addr))
+                                                        out var address))
                     {
                         // No, we will have to replace it later.
                         _labelsToBeReplaced.Add(label.Name, _ms.Position);
@@ -419,7 +427,7 @@ namespace VMCore.Assembler
                     else
                     {
                         // Yes, we can replace it immediately.
-                        arg = (int)addr;
+                        arg = (int)address;
                     }
                 }
 
@@ -452,11 +460,43 @@ namespace VMCore.Assembler
         {
             while (_labelsToBeReplaced.Count > 0)
             {
-                var (name, addr)
+                var (name, address)
                     = _labelsToBeReplaced.First();
 
-                ReplaceLabel(name, addr);
+                ReplaceLabel(name, address);
             }
+        }
+
+        /// <summary>
+        /// Check if it is possible to bind a label to the
+        /// argument index of a given opcode.
+        /// </summary>
+        /// <param name="aOp">
+        /// The opcode of which the argument should be checked.
+        /// </param>
+        /// <param name="aArgId">
+        /// The ID of the argument to be checked.
+        /// </param>
+        /// <returns>
+        /// A boolean, true if it is possible for the argument
+        /// to be bound to a label, false otherwise.
+        /// </returns>
+        /// <remarks>
+        /// This is not as fool proof as the old system
+        /// but it is better than nothing at all.
+        /// </remarks>
+        private bool CanArgumentBindLabel(OpCode aOp, int aArgId)
+        {
+            var argRefType =
+                _instructionCache[aOp].ArgumentRefTypes[aArgId];
+
+            return argRefType switch
+            {
+                InsArgTypes.LiteralInteger => true,
+                InsArgTypes.LiteralFloat   => true,
+                InsArgTypes.LiteralPointer => true,
+                _                          => false
+            }; ;
         }
 
         /// <summary>

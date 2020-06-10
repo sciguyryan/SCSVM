@@ -21,13 +21,6 @@ namespace VMCore.VM.Instructions.Data
                 InsArgTypes.LiteralPointer,
             };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[]
-            {
-                null,
-                null
-            };
-
         public override OpCode OpCode => 
             OpCode.MOV_REG_MEM;
 

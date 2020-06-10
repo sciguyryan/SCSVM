@@ -58,26 +58,6 @@ namespace VMCore.VM.Instructions
         }
 
         /// <summary>
-        /// If a given argument should be treated as an expression.
-        /// </summary>
-        /// <param name="aArgumentId">
-        /// The argument ID to be checked.
-        /// </param>
-        /// <returns>
-        /// A type indicating the expression return type for the argument
-        /// or null if none has been specified.
-        /// </returns>
-        public virtual Type ExpressionArgType(int aArgumentId) => 
-            ExpressionArgumentTypes[aArgumentId];
-
-        /// <summary>
-        /// The list of the types for the expression arguments
-        /// expected for this instruction. Null if the specified
-        /// argument is not an expression type.
-        /// </summary>
-        public abstract Type[] ExpressionArgumentTypes { get; }
-
-        /// <summary>
         /// The opcode for this specific function.
         /// </summary>
         public abstract OpCode OpCode { get; }

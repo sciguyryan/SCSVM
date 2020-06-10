@@ -12,12 +12,6 @@ namespace VMCore.VM.Instructions.Special
                 typeof(int)
             };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[]
-            {
-                null
-            };
-
         public override InsArgTypes[] ArgumentRefTypes =>
             new InsArgTypes[]
             {

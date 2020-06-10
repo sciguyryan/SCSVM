@@ -1,5 +1,4 @@
 ﻿using System;
-using VMCore.VM;
 
 namespace VMCore.Expressions
 {
@@ -17,10 +16,10 @@ namespace VMCore.Expressions
             _op = aOp;
         }
 
-        public override int Evaluate(Cpu aCpu)
+        public override int Evaluate()
         {
-            var lhsVal = _lhs.Evaluate(aCpu);
-            var rhsVal = _rhs.Evaluate(aCpu);
+            var lhsVal = _lhs.Evaluate();
+            var rhsVal = _rhs.Evaluate();
 
             return _op switch
             {

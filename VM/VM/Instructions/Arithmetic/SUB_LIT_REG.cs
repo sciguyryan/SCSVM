@@ -21,13 +21,6 @@ namespace VMCore.VM.Instructions.Arithmetic
                 InsArgTypes.Register,
             };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[]
-            {
-                null,
-                null
-            };
-
         public override OpCode OpCode => 
             OpCode.SUB_LIT_REG;
 

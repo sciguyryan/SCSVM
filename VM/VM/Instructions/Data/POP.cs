@@ -19,12 +19,6 @@ namespace VMCore.VM.Instructions.Data
                 InsArgTypes.Register,
             };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[]
-            {
-                null,
-            };
-
         public override OpCode OpCode => 
             OpCode.POP;
 

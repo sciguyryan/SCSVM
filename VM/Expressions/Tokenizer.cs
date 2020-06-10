@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using System.Text;
 using VMCore.VM.Core.Utilities;
 
 namespace VMCore.Expressions
@@ -15,12 +14,6 @@ namespace VMCore.Expressions
         /// A number, if a numeric token type.
         /// </summary>
         public int Number { get; private set; }
-
-        /// <summary>
-        /// A register identifier, if a register
-        /// token type.
-        /// </summary>
-        public string Register { get; private set; }
 
         /// <summary>
         /// The current char within the 
@@ -137,40 +130,11 @@ namespace VMCore.Expressions
                 return;
             }
 
-            // As we are not a hexadecimal number
-            // then we must be a register identifier.
-            if (char.IsLetter(_char))
-            {
-                HandleRegisterToken();
-                return;
-            }
-
             throw new ExprParserException
             (
                 "NextToken: failed to parse the string - invalid " +
                 $"character {_char} was present in the input string."
             );
-        }
-
-        /// <summary>
-        /// Handle the construction of a register-type
-        /// token.
-        /// </summary>
-        private void HandleRegisterToken()
-        {
-            // A register - must only start with a
-            // letter.
-            var sb = new StringBuilder(64);
-
-            // Accept letters and digits only.
-            while (char.IsLetterOrDigit(_char))
-            {
-                sb.Append(_char);
-                NextChar();
-            }
-
-            Register = sb.ToString();
-            Token = Tokens.Register;
         }
 
         /// <summary>

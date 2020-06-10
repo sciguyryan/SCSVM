@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using VMCore.AsmParser;
 using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using VMCore.VM.Instructions;
 
 namespace UnitTests.AsmParser
 {
@@ -110,12 +112,14 @@ namespace UnitTests.AsmParser
                 new []
                 {
                     "jne R1, @GOOD",
+                    "@GOOD",
                 },
                 new []
                 {
                     // The label name will stop being read
                     // at the first non-alphanumeric character.
                     "jne R1, @GOOD-",
+                    "@GOOD",
                 },
                 new []
                 {
@@ -218,18 +222,39 @@ namespace UnitTests.AsmParser
 
                 new []
                 {
-                    "mov [$10+R1], R2",
+                    "mov [$10*$2], R2",
                 },
                 new []
                 {
-                    "mov R2, [$10+R1]",
+                    "mov &[$10*$2], R2",
                 },
                 new []
                 {
-                    "mov R2, [($10+R1)+1]",
+                    "mov R2, &[$10*$2]",
+                },
+                new []
+                {
+                    "mov R2, &[($10*$2)+$1]",
                 },
 
                 #endregion // EXPRESSION TESTS
+
+                #region TYPE HINT TESTS
+
+                new []
+                {
+                    "mov BYTE &R1, R2",
+                },
+                new []
+                {
+                    "mov WORD &R1, R2",
+                },
+                new []
+                {
+                    "mov DWORD &R1, R2",
+                },
+
+                #endregion // TYPE HINT TESTS
 
                 #region TEXT CASE
 
@@ -351,24 +376,28 @@ namespace UnitTests.AsmParser
                 new []
                 {
                     new CompilerIns(OpCode.JNE_REG,
-                                 new object[] { Registers.R1, 0 },
-                                 new AsmLabel("GOOD", 1))
+                                    new object[] { Registers.R1, 0 },
+                                    new [] { null, new AsmLabel("GOOD", 1) }),
+                    new CompilerIns(OpCode.LABEL,
+                                    new object[] { "GOOD" })
                 },
                 new []
                 {
                     new CompilerIns(OpCode.JNE_REG,
-                                 new object[] { Registers.R1, 0 },
-                                 new AsmLabel("GOOD", 1))
+                                    new object[] { Registers.R1, 0 },
+                                    new [] { null, new AsmLabel("GOOD", 1) }),
+                    new CompilerIns(OpCode.LABEL,
+                                    new object[] { "GOOD" })
                 },
                 new []
                 {
                     new CompilerIns(OpCode.LABEL,
-                                 new object[] { "GOOD" })
+                                    new object[] { "GOOD" })
                 },
                 new []
                 {
                     new CompilerIns(OpCode.LABEL,
-                                 new object[] { "GOOD" })
+                                    new object[] { "GOOD" })
                 },
 
                 #endregion // LABEL TESTS
@@ -378,24 +407,25 @@ namespace UnitTests.AsmParser
                 new []
                 {
                     new CompilerIns(OpCode.CAL_LIT,
-                                 new object[] { 0x123 })
+                                    new object[] { 0x123 })
                 },
                 new []
                 {
                     new CompilerIns(OpCode.CAL_LIT,
-                                 new object[] { 0 },
-                                 new AsmLabel("GOOD", 0))
+                                    new object[] { 0 },
+                                    new AsmLabel("GOOD", 0))
                 },
                 new []
                 {
                     new CompilerIns(OpCode.CAL_LIT,
-                                 new object[] { 0 },
-                                 new AsmLabel("GOOD", 0))
+                                    new object[] { 0 },
+                                    new AsmLabel("GOOD", 0))
                 },
                 new []
                 {
                     new CompilerIns(OpCode.SUBROUTINE,
-                                 new object[] { "GOOD" })
+                                    new object[] { 0, "GOOD" },
+                                    new AsmLabel[2])
                 },
 
                 #endregion // SUBROUTINE TESTS
@@ -469,6 +499,66 @@ namespace UnitTests.AsmParser
 
                 #endregion // ARGUMENT TESTS
 
+                #region EXPRESSION TESTS
+
+                new []
+                {
+                    new CompilerIns(OpCode.MOV_LIT_REG,
+                                    new object[] { 20, Registers.R2 })
+                },
+                new []
+                {
+                    new CompilerIns(OpCode.MOV_MEM_REG,
+                                    new object[] { 20, Registers.R2 })
+                },
+                new []
+                {
+                    new CompilerIns(OpCode.MOV_REG_MEM,
+                                   new object[] { Registers.R2, 20 })
+                },
+                new []
+                {
+                    new CompilerIns(OpCode.MOV_REG_MEM,
+                                    new object[] { Registers.R2, 21 })
+                },
+
+                #endregion // EXPRESSION TESTS
+
+                #region TYPE HINT TESTS
+
+                new []
+                {
+                    new CompilerIns(OpCode.MOV_HREG_PTR_REG,
+                                    new object[]
+                                    {
+                                        InstructionSizeHint.BYTE,
+                                        Registers.R1,
+                                        Registers.R2
+                                    })
+                },
+                new []
+                {
+                    new CompilerIns(OpCode.MOV_HREG_PTR_REG,
+                                    new object[]
+                                    {
+                                        InstructionSizeHint.WORD,
+                                        Registers.R1,
+                                        Registers.R2
+                                    })
+                },
+                new []
+                {
+                    new CompilerIns(OpCode.MOV_HREG_PTR_REG,
+                                    new object[]
+                                    {
+                                        InstructionSizeHint.DWORD,
+                                        Registers.R1,
+                                        Registers.R2
+                                    })
+                },
+
+                #endregion // TYPE HINT TESTS
+
                 #region TEXT CASE
 
                 new []
@@ -490,25 +580,35 @@ namespace UnitTests.AsmParser
             var len = tests.Length;
             for (var i = 0; i < len; i++)
             {
-                var test = tests[i];
+                // We need to ensure that we add a section
+                // identifier to the start of every test.
+                var testLen = tests[i].Length;
+                var test = new string[testLen + 1];
+                test[0] = ".section text";
+
+                Array.Copy(tests[i],
+                           0,
+                           test,
+                           1,
+                           testLen);
+
                 try
                 {
                     var p1 =
                         _parser
                             .Parse(string.Join(_nl, test))
-                            .CodeSectionData;
+                            .CodeSectionData
+                            .ToArray();
 
                     var p2 = results[i];
 
-                    Assert.IsTrue(FastArrayEquals(p1, p2),
-                                  $"Test {i} failed.");
+                    Assert.IsTrue(FastArrayEquals(p1, p2));
                 }
                 catch
                 {
                     Assert.Fail
                     (
-                        $"Unexpected assertion for test {i}. " +
-                        $"First line = {test[0]}"
+                        $"Test {i} failed.\r\nFirst line = {test[1]}"
                     );
                 }
             }

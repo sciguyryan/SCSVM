@@ -1,4 +1,10 @@
-﻿using VMCore.VM.Core;
+﻿#nullable enable
+
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Reflection.Emit;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using OpCode = VMCore.VM.Core.OpCode;
 
@@ -8,7 +14,7 @@ namespace VMCore.Assembler
     /// A compiler instruction class primarily for use
     /// with the quick compiler.
     /// </summary>
-    public class CompilerIns
+    public class CompilerIns : IEquatable<CompilerIns>
     {
         public OpCode Op { get; }
 
@@ -28,7 +34,7 @@ namespace VMCore.Assembler
         {
             Op = aOpCode;
             Args = aArgs;
-            Labels = new AsmLabel[0];
+            Labels = new AsmLabel[Args.Length];
         }
 
         public CompilerIns(OpCode aOpCode,
@@ -67,6 +73,65 @@ namespace VMCore.Assembler
             }
 
             return ReflectionUtils.InstructionCache[Op].ToString(opIns);
+        }
+
+        public override bool Equals(object? aObj)
+        {
+            return Equals(aObj as CompilerIns);
+        }
+
+        public bool Equals([AllowNull] CompilerIns aOther)
+        {
+            // Check for null and compare run-time types.
+            if (aOther is null || GetType() != aOther.GetType())
+            {
+                return false;
+            }
+
+            var q = aOther;
+
+            return
+                Op == q.Op &&
+                Labels.SequenceEqual(q.Labels) &&
+                Args.SequenceEqual(q.Args);
+        }
+
+        public override int GetHashCode()
+        {
+            var hash = Op.GetHashCode();
+
+            hash = (hash * 17) + Labels.Length;
+            foreach (var l in Labels)
+            {
+                if (l is null)
+                {
+                    continue;
+                }
+
+                hash *= 17;
+                hash += l.GetHashCode();
+            }
+
+            hash = (hash * 17) + Args.Length;
+            foreach (var a in Args)
+            {
+                hash *= 17;
+                hash += a.GetHashCode();
+            }
+
+            return hash;
+        }
+
+        public static bool operator ==(CompilerIns aLeft,
+            CompilerIns aRight)
+        {
+            return Equals(aLeft, aRight);
+        }
+
+        public static bool operator !=(CompilerIns aLeft,
+            CompilerIns aRight)
+        {
+            return !(aLeft == aRight);
         }
     }
 }

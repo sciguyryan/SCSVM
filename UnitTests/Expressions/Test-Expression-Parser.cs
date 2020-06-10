@@ -164,7 +164,7 @@ namespace UnitTests.Expressions
                 #endregion
             };
 
-            ExpressionExTestResult.RunTests(Vm, table);
+            ExpressionExTestResult.RunTests(table);
         }
     }
 }

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using VMCore.Assembler;
-using VMCore.VM;
 using VMCore.AsmParser;
-using VMCore.VM.Core;
+using VMCore.VM;
 using VMCore.VM.Core.Breakpoints;
-using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
 using System.IO;
+using System.Reflection;
 
 namespace TestConsole
 {
@@ -15,87 +14,10 @@ namespace TestConsole
     {
         private static void Main()
         {
-            const int destOffset =
-                sizeof(OpCode) * 8 +
-                sizeof(int) * 7 +
-                sizeof(Registers) * 1;
+            var path =
+                Path.Join(GetProgramDirectory(), "code.asm");
 
-            var lines = new[]
-            {
-                /*"mov $0x10, R1",
-                "mov $0x11, R2",
-                "mov $0x21, R3",
-                "add R1, R2",
-                "jne R3, @GOOD",
-                "mov $0x3141, R4",
-                "hlt",
-                "@GOOD",
-                "mov $0x1413, R4",
-                "push R1",
-                "push R2",
-                "push R3",
-                "push R4",
-                "hlt"*/
-                ".section data",
-                "str db 'Hello, world!',$0xA",
-                "strLen equ $-str",
-                ".section text",
-                /*"push $0xAAA",
-                "hlt",*/
-                "mov str, R8",
-                "mov BYTE &R8, R7",
-                "mov strLen, R6",
-                "push $0xAAA",  // Should remain in place once the stack is restored
-                "push $0xC",    // TESTER Argument 3
-                "push $0xB",    // TESTER Argument 2
-                "push $0xA",    // TESTER Argument 1
-                "push $3",      // The number of arguments for the subroutine
-                "call !TESTER",
-                "mov $0x123, R1",
-                "hlt",
-
-                "TESTER:",
-                "mov $0x34, &FP, R3",
-                "mov $0x30, &FP, R2",
-                "mov $0x2C, &FP, R1",
-                "add R1, R2",
-                "add R3, AC",
-                "push $0xCC",    // TESTER2 Argument 3
-                "push $0xBB",    // TESTER2 Argument 2
-                "push $0xAA",    // TESTER2 Argument 1
-                "push $3",       // The number of arguments for the subroutine
-                "call !TESTER2",
-                "ret",
-
-                "TESTER2:",
-                "mov $0x34, &FP, R3",
-                "mov $0x30, &FP, R2",
-                "mov $0x2C, &FP, R1",
-                "add R1, R2",
-                "add R3, AC",
-                "ret"
-                
-                /*"push $0xAAA",  // Should remain in place once the stack is restored
-                "push $0xC",    // TESTER Argument 3
-                "push $0xB",    // TESTER Argument 2
-                "push $0xA",    // TESTER Argument 1
-                "push $3",      // The number of arguments for the subroutine
-                $"call &${destOffset}",
-                //"call !TESTER",
-                "mov $0x123, R1",
-                "hlt",
-
-                "TESTER:",
-                "mov $0x34, &FP, R3",
-                "mov $0x30, &FP, R2",
-                "mov $0x2C, &FP, R1",
-                "add R1, R2",
-                "add R3, AC",
-                "ret",*/
-            };
-
-            var progText =
-                string.Join(Environment.NewLine, lines);
+            var progText = File.ReadAllText(path);
 
             var p = new AsmParser();
 
@@ -199,6 +121,18 @@ namespace TestConsole
             vm.Disassembler.DisplayDisassembly(true, false, true);
 
             Console.ReadLine();
+        }
+
+        /// <summary>
+        /// Get the current path of this application.
+        /// </summary>
+        /// <returns>
+        /// A string giving the path to the directory of this application.
+        /// </returns>
+        public static string GetProgramDirectory()
+        {
+            var loc = Assembly.GetExecutingAssembly().Location;
+            return Path.GetDirectoryName(loc) ?? string.Empty;
         }
     }
 }

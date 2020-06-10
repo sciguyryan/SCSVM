@@ -12,9 +12,6 @@ namespace VMCore.VM.Instructions.Branching
         public override InsArgTypes[] ArgumentRefTypes =>
             new InsArgTypes[] { };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[] { };
-
         public override OpCode OpCode =>
             OpCode.RET;
 

@@ -1,6 +1,4 @@
-﻿using VMCore.VM;
-
-namespace VMCore.Expressions
+﻿namespace VMCore.Expressions
 {
     internal class NodeNumber
         : Node
@@ -12,7 +10,7 @@ namespace VMCore.Expressions
             _value = aValue;
         }
 
-        public override int Evaluate(Cpu aCpu)
+        public override int Evaluate()
         {
             return _value;
         }

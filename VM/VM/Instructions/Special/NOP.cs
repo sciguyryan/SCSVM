@@ -9,9 +9,6 @@ namespace VMCore.VM.Instructions.Special
         public override Type[] ArgumentTypes => 
             new Type[] { };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[] { };
-
         public override InsArgTypes[] ArgumentRefTypes =>
             new InsArgTypes[] { };
 

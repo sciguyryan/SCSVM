@@ -1,6 +1,5 @@
 ﻿using System;
 using VMCore.Expressions;
-using VMCore.VM;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.Expressions.Helpers
@@ -24,25 +23,21 @@ namespace UnitTests.Expressions.Helpers
         /// <summary>
         /// Run a set of tests for the expression parser.
         /// </summary>
-        /// <param name="aVm">
-        /// The virtual machine instance in which the tests should be run.
-        /// </param>
         /// <param name="aTests">
         /// An array of the tests to be executed.
         /// </param>
-        public static void RunTests(VirtualMachine aVm,
-                                    ExpressionExTestResult[] aTests)
+        public static void RunTests(ExpressionExTestResult[] aTests)
         {
             for (var i = 0; i < aTests.Length; i++)
             {
                 var entry = aTests[i];
-                bool triggeredException = false;
+                var triggeredException = false;
 
                 try
                 {
                     _ = new Parser(entry.Input)
                         .ParseExpression()
-                        .Evaluate(aVm.Cpu);
+                        .Evaluate();
                 }
                 catch (Exception ex)
                 {
@@ -67,7 +62,7 @@ namespace UnitTests.Expressions.Helpers
                     (
                         $"Result of test {i} is incorrect. " +
                         $"Expected exception of type '{entry.ExType}' " +
-                        $"to be thrown, however none was thrown."
+                        "to be thrown, however none was thrown."
                     );
                 }
             }

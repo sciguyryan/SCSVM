@@ -22,13 +22,6 @@ namespace VMCore.VM.Instructions.Logic
                 InsArgTypes.Register,
             };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[]
-            {
-                null,
-                null
-            };
-
         public override OpCode OpCode => 
             OpCode.BIT;
 

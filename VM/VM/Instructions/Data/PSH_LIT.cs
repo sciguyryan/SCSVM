@@ -19,12 +19,6 @@ namespace VMCore.VM.Instructions.Data
                 InsArgTypes.LiteralInteger,
             };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[]
-            {
-                null,
-            };
-
         public override OpCode OpCode => 
             OpCode.PSH_LIT;
 

@@ -62,7 +62,7 @@ namespace UnitTests.Expressions.Helpers
                     value = 
                         new Parser(entry.Input)
                             .ParseExpression()
-                            .Evaluate(aVm.Cpu);
+                            .Evaluate();
 
                     success = entry.Type switch
                     {

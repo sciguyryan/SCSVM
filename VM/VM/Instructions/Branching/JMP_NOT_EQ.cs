@@ -21,13 +21,6 @@ namespace VMCore.VM.Instructions.Branching
                 InsArgTypes.LiteralPointer,
             };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[]
-            {
-                null,
-                null
-            };
-
         public override OpCode OpCode =>
             OpCode.JMP_NOT_EQ;
 

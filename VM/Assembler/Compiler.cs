@@ -2,10 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using VMCore.Assembler.Optimizations;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
@@ -373,17 +373,21 @@ namespace VMCore.Assembler
                     // once during optimization otherwise it
                     // would likely cause things to break.
                     // In theory this should never happen.
-                    if (newOp != aOpCode &&
-                        hasOpCodeChanged)
+                    if (newOp != aOpCode)
                     {
-                        throw new NotSupportedException
-                        (
-                            "AddWithLabels: attempted to change " +
-                            $"the opcode from {aOpCode} to " +
-                            $"{newOp}, however the opcode has " +
-                            "already been changed. This operation " +
-                            "is not supported."
-                        );
+                        if (hasOpCodeChanged)
+                        {
+                            throw new NotSupportedException
+                            (
+                                "AddWithLabels: attempted to change " +
+                                $"the opcode from {aOpCode} to " +
+                                $"{newOp}, however the opcode has " +
+                                "already been changed. This operation " +
+                                "is not supported."
+                            );
+                        }
+
+                        hasOpCodeChanged = true;
                     }
 
                     op = newOp;
@@ -624,19 +628,7 @@ namespace VMCore.Assembler
                 return (aOp, argType, aArg);
             }
 
-            // If this argument is an expression then we can check to
-            // see if it is possible to fold it into a single value.
-            // This will increase performance later as running
-            // the expression parser within the CPU is more performance
-            // intensive.
-            if (aIns.ExpressionArgType(aArgIndex) != null)
-            {
-                return
-                    FoldExpressionArg.FoldExpression(aOp,
-                                                     aArgIndex,
-                                                     aIns,
-                                                     aArg);
-            }
+            // TODO - add optimisations.
 
             return (aOp, argType, aArg);
         }

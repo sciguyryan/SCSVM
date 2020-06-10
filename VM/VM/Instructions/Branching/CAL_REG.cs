@@ -19,12 +19,6 @@ namespace VMCore.VM.Instructions.Branching
                 InsArgTypes.RegisterPointer
             };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[]
-            {
-                null
-            };
-
         public override OpCode OpCode =>
             OpCode.CAL_REG;
 

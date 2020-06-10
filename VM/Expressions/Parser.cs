@@ -8,13 +8,6 @@
         // I will add it later.
 
         /// <summary>
-        /// If the expression has been determined to be simple
-        /// e.g. it can be flattened into a single value
-        /// without requiring external inputs to be resolved.
-        /// </summary>
-        public bool IsSimple { get; private set; } = true;
-
-        /// <summary>
         /// The tokenizer for the parser.
         /// </summary>
         private readonly Tokenizer _tokenizer;
@@ -27,14 +20,20 @@
         /// <summary>
         /// Initiate a full parse of the expression.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// A Node object containing the parsed data.
+        /// </returns>
         public Node ParseExpression()
         {
             var expr = ParseAddSubtract();
 
             if (_tokenizer.Token != Tokens.EOF)
             {
-                throw new ExprParserException("ParseExpression: unexpected characters at end of expression.");
+                throw new ExprParserException
+                (
+                    "ParseExpression: unexpected characters at " +
+                    "end of expression."
+                );
             }
 
             return expr;
@@ -116,7 +115,9 @@
 
                     case Tokens.Subtract:
                         _tokenizer.NextToken();
-                        return new NodeUnary(ParseUnary(), OpTypes.Negate);
+                        return 
+                            new NodeUnary(ParseUnary(),
+                                          OpTypes.Negate);
 
                     default:
                         return ParseLeaf();
@@ -146,17 +147,6 @@
                     var node = ParseAddSubtract();
                     _tokenizer.NextToken();
                     return node;
-                }
-
-                case Tokens.Register:
-                {
-                    // This is not a simple expression
-                    // so we cannot resolve it immediately.
-                    IsSimple = false;
-
-                    var name = _tokenizer.Register;
-                    _tokenizer.NextToken();
-                    return new NodeRegister(name);
                 }
 
                 default:

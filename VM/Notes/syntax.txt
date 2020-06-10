@@ -9,15 +9,13 @@ copies the value from R1 to R2.
 mov R1, &$0
 move the value from R1 into memory starting at address literal 0.
 
-mov [R1*R2], R3
-move the value from memory into R3.
-The memory address given by the expression:
-	value of R1 multiplied by the value of R2.
+mov [$1*$2], R3
+move the value 3 into R3.
 
-mov R1, [R2+R3]
+mov R1, &[$2+$3]
 move the value from R1 into memory.
 The memory address given by the expression:
-	value of R1 plus the value of R2.
+	2 + 3 = 5
 
 jne R1, &$100
 if the accumulator is not equal to the value

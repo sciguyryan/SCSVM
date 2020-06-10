@@ -11,4 +11,10 @@
     <ProjectReference Include="..\VM\VMCore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="code.asm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -21,13 +21,6 @@ namespace VMCore.VM.Instructions.Bit
                 InsArgTypes.LiteralInteger,
             };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[]
-            {
-                null,
-                null
-            };
-
         public override OpCode OpCode => 
             OpCode.RSF_REG_LIT;
 

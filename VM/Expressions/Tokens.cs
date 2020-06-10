@@ -9,7 +9,6 @@
         Divide,
         OpenBracket,
         CloseBracket,
-        Register,
         Number,
     }
 }

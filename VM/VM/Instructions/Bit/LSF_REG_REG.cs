@@ -21,13 +21,6 @@ namespace VMCore.VM.Instructions.Bit
                 InsArgTypes.Register,
             };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[]
-            {
-                null,
-                null
-            };
-
         public override OpCode OpCode =>
             OpCode.LSF_REG_REG;
 

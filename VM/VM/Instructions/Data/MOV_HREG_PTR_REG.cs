@@ -23,14 +23,6 @@ namespace VMCore.VM.Instructions.Data
                 InsArgTypes.Register,
             };
 
-        public override Type[] ExpressionArgumentTypes =>
-            new Type[]
-            {
-                null,
-                null,
-                null
-            };
-
         public override OpCode OpCode => 
             OpCode.MOV_HREG_PTR_REG;
 

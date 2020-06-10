@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using VMCore.Assembler;
+using VMCore.Expressions;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
 using VMCore.VM.Core.Utilities;
@@ -59,7 +60,8 @@ namespace VMCore.AsmParser
             InvalidRegisterIdentifier,
             InvalidArgumentType,
             InvalidInstruction,
-            InvalidSectionIdentifier
+            InvalidSectionIdentifier,
+            InvalidExpression
         };
 
         /// <summary>
@@ -123,6 +125,10 @@ namespace VMCore.AsmParser
                 "Attempted to parse a line without a valid section " +
                 "identifier.\nLine = '{0}'."
             },
+            {
+                ExIDs.InvalidExpression,
+                "The specified expression was invalid. Expression = '{0}'."
+            }
         };
 
         #endregion // EXCEPTIONS
@@ -266,12 +272,21 @@ namespace VMCore.AsmParser
         /// For example instructions will always be found
         /// within the Text section.
         /// </param>
-        /// <param name="aLine"></param>
-        /// <param name="aCompSec"></param>
+        /// <param name="aLine">The string to be parsed.</param>
+        /// <param name="aCompSec">
+        /// The binary section in which this line resides.
+        /// </param>
         private void ParseLineByType(BinSections? aSec,
                                      ReadOnlySpan<char> aLine,
                                      ref CompilerSections aCompSec)
         {
+            // If the line is empty then we have nothing to do
+            // here.
+            if (aLine.Length == 0)
+            {
+                return;
+            }
+
             // Without a valid section indicator we
             // cannot be sure how to parse the line.
             if (aSec is null)
@@ -853,12 +868,22 @@ namespace VMCore.AsmParser
                 switch (arg[0])
                 {
                     case '[':
-                        // This is an expression, these are always left
-                        // as strings. The compiler will need to check
-                        // them to see if they are valid or can be 
-                        // simplified.
-                        values[i] = arg[1..^1];
-                        refTypes[i] = InsArgTypes.Expression;
+                        // This is a literal expression.
+                        // We need to evaluate it here.
+                        try
+                        {
+                            values[i] =
+                                new Parser(arg[1..^1])
+                                    .ParseExpression()
+                                    .Evaluate();
+                            refTypes[i] = InsArgTypes.LiteralInteger;
+                        }
+                        catch (ExprParserException)
+                        {
+                            Assert(true,
+                                   ExIDs.InvalidExpression,
+                                   arg[1..^1]);
+                        }
                         continue;
 
                     case '$':
@@ -870,6 +895,25 @@ namespace VMCore.AsmParser
                         // * or a decimal (anything else).
                         values[i] = ParseIntegerLiteral(arg[1..]);
                         refTypes[i] = InsArgTypes.LiteralInteger;
+                        continue;
+
+                    case '&' when arg[1] == '[':
+                        // This is an expression pointer.
+                        // We need to evaluate it here.
+                        try
+                        {
+                            values[i] =
+                                new Parser(arg[2..^1])
+                                    .ParseExpression()
+                                    .Evaluate();
+                            refTypes[i] = InsArgTypes.LiteralPointer;
+                        }
+                        catch (ExprParserException)
+                        {
+                            Assert(true,
+                                   ExIDs.InvalidExpression,
+                                   arg[2..^1]);
+                        }
                         continue;
 
                     case '&' when arg[1] == '$':

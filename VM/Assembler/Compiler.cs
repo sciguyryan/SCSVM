@@ -431,7 +431,8 @@ namespace VMCore.Assembler
                     else
                     {
                         // Yes, we can replace it immediately.
-                        arg = (int)address;
+                        arg = 
+                            CalculateAbsoluteAddress(address);
                     }
                 }
 
@@ -701,6 +702,20 @@ namespace VMCore.Assembler
         }
 
         /// <summary>
+        /// Convert a relative address into an absolute address.
+        /// </summary>
+        /// <param name="aAddress">
+        /// The address to be converted.
+        /// </param>
+        /// <returns>
+        /// An integer containing the resolved address.
+        /// </returns>
+        private int CalculateAbsoluteAddress(long aAddress)
+        {
+            return (int)(aAddress - _metaSectionEnd) + InitialAddress;
+        }
+
+        /// <summary>
         /// Get the bytes representing the destination address of
         /// an address-type label.
         /// </summary>
@@ -722,8 +737,7 @@ namespace VMCore.Assembler
             // have when loaded into memory. This will give us an
             // absolute address.
             var newAddress =
-                ((int)_labelDestinations[aLabelName] - _metaSectionEnd) +
-                InitialAddress;
+                CalculateAbsoluteAddress(_labelDestinations[aLabelName]);
 
             // TODO - check if this is Endian variable compatible.
             var union = new IntegerByteUnion()

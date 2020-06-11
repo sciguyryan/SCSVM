@@ -1,4 +1,5 @@
-﻿using VMCore.VM.Core;
+﻿using VMCore.Assembler;
+using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UnitTests.Instructions.Helpers;
@@ -31,15 +32,21 @@ namespace UnitTests.Instructions.Branching
             // arguments to be skipped.
             // sizeof(Registers) * 3 for the number of
             // register arguments to be skipped.
+            // Finally we add the position at which
+            // the program will be loaded in memory.
+            // This will give us an absolute
+            // address to work with.
             const int destOffset =
                 sizeof(OpCode) * 8 +
                 sizeof(int) * 6 +
-                sizeof(Registers) * 3;
+                sizeof(Registers) * 3 +
+                Compiler.InitialAddress;
 
             #region Program
 
             var lines = new[]
             {
+                ".section text",
                 $"mov ${destOffset}, R8",
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2
@@ -109,10 +116,15 @@ namespace UnitTests.Instructions.Branching
             // arguments to be skipped.
             // sizeof(Registers) * 3 for the number of
             // register arguments to be skipped.
+            // Finally we add the position at which
+            // the program will be loaded in memory.
+            // This will give us an absolute
+            // address to work with.
             const int destOffset1 =
                 sizeof(OpCode) * 8 +
                 sizeof(int) * 6 +
-                sizeof(Registers) * 3;
+                sizeof(Registers) * 3 +
+                Compiler.InitialAddress;
 
             // This is calculated as follows.
             // Start with the destination offset
@@ -137,6 +149,7 @@ namespace UnitTests.Instructions.Branching
 
             var lines = new[]
             {
+                ".section text",
                 $"mov ${destOffset1}, R8",
                 "push $0xC",    // TESTER Argument 3
                 "push $0xB",    // TESTER Argument 2

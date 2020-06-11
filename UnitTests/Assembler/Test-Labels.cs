@@ -4,7 +4,6 @@ using VMCore.Assembler;
 using VMCore.VM;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
-using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.Assembler
@@ -25,18 +24,23 @@ namespace UnitTests.Assembler
         [TestMethod]
         public void TestJumpAfterInstruction()
         {
-            const int addr = 
+            // We need to add the position at which
+            // the program will be loaded in memory.
+            // This will give us an absolute
+            // address to work with.
+            const int address = 
             (
                 sizeof(OpCode) * 2 +
                 sizeof(Registers) +
-                sizeof(int)
+                sizeof(int) +
+                Compiler.InitialAddress
             );
 
             var program = new []
             {
                 new CompilerIns(OpCode.JNE_REG,
-                             new object[] { Registers.R1, 0 },
-                             new AsmLabel("A", 1)),
+                                new object[] { Registers.R1, 0 },
+                                new AsmLabel("A", 1)),
                 new CompilerIns(OpCode.NOP),
                 new CompilerIns(OpCode.LABEL, new object[] { "A" }),
                 new CompilerIns(OpCode.NOP),
@@ -50,7 +54,7 @@ namespace UnitTests.Assembler
                 Assert.Fail();
             }
 
-            Assert.IsTrue(addr == (int)ins.Args[1].Value);
+            Assert.IsTrue(address == (int)ins.Args[1].Value);
         }
 
         /// <summary>
@@ -59,24 +63,29 @@ namespace UnitTests.Assembler
         [TestMethod]
         public void TestJumpBeforeInstruction()
         {
-            const int addr =
+            // We need to add the position at which
+            // the program will be loaded in memory.
+            // This will give us an absolute
+            // address to work with.
+            const int address =
             (
                 sizeof(OpCode) * 2 +
                 sizeof(Registers) +
-                sizeof(int)
+                sizeof(int) +
+                Compiler.InitialAddress
             );
 
             var program = new []
             {
                 new CompilerIns(OpCode.MOV_LIT_REG,
-                             new object[] { 1, Registers.R1 }),
+                                new object[] { 0, Registers.R1 }),
                 new CompilerIns(OpCode.NOP),
-                new CompilerIns(OpCode.LABEL, new object[] { "A" }),
+                new CompilerIns(OpCode.LABEL, new object[] { "AAA" }),
                 new CompilerIns(OpCode.NOP),
 
                 new CompilerIns(OpCode.JNE_REG,
-                             new object[] { Registers.R1, 0 },
-                             new AsmLabel("A", 1)),
+                                new object[] { Registers.R1, 0 },
+                                new [] { new AsmLabel("AAA", 1) }),
             };
 
             Vm.LoadAndInitialize(QuickCompile.RawCompile(program));
@@ -95,10 +104,10 @@ namespace UnitTests.Assembler
 
             if (ins is null)
             {
-                Assert.Fail();
+                Assert.Fail("Expected an instruction but none was returned.");
             }
-
-            Assert.IsTrue(addr == (int)ins.Args[1].Value);
+            
+            Assert.IsTrue(address == (int)ins.Args[1].Value);
         }
 
         /// <summary>
@@ -112,8 +121,8 @@ namespace UnitTests.Assembler
             var program = new []
             {
                 new CompilerIns(OpCode.JNE_REG,
-                             new object[] { Registers.R1, 0 },
-                             new AsmLabel("A", 1)),
+                                new object[] { Registers.R1, 0 },
+                                new AsmLabel("A", 1)),
             };
 
             Vm.LoadAndInitialize(QuickCompile.RawCompile(program));
@@ -149,8 +158,8 @@ namespace UnitTests.Assembler
             {
                 new CompilerIns(OpCode.LABEL, new object[] { "A" }),
                 new CompilerIns(OpCode.JNE_REG,
-                             new object[] { Registers.R1, 0 },
-                             new AsmLabel("A", 0)),
+                                new object[] { Registers.R1, 0 },
+                                new AsmLabel("A", 0)),
             };
 
             Vm.LoadAndInitialize(QuickCompile.RawCompile(program));

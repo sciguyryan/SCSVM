@@ -89,27 +89,6 @@ namespace UnitTests.Expressions
                                          11),
                 #endregion // MIXED BASE
 
-                #region REGISTER TESTS
-                new ExpressionTestResult("R1 + $1",
-                                         11,
-                                         new [] { 10 }),
-                new ExpressionTestResult("R1 + $0xA",
-                                         20,
-                                         new [] { 10 }),
-                new ExpressionTestResult("-R1 + $0xA",
-                                         0,
-                                         new [] { 10 }),
-                new ExpressionTestResult("R1 + R2",
-                                         -5,
-                                         new [] { 10, -15 }),
-                new ExpressionTestResult("R1 * R2",
-                                         70,
-                                         new [] { 10, 7 }),
-                new ExpressionTestResult("R1 / R2 - R3 + R4 * R5",
-                                         200, 
-                                         new [] { 100, 2, 50, 10, 20 }),
-                #endregion // REGISTER TESTS
-
                 #region SILLY TESTS
                 new ExpressionTestResult("+++++++$10",
                                          10),
@@ -154,7 +133,8 @@ namespace UnitTests.Expressions
                  // and will therefore throw a ArgumentException
                  // when attempting to convert this value
                  // into a register name.
-                new ExpressionExTestResult("AA", typeof(ArgumentException)),
+                new ExpressionExTestResult("AA",
+                                           typeof(ExprParserException)),
 
                 // This should throw a division by zero
                 // exception after the expression is

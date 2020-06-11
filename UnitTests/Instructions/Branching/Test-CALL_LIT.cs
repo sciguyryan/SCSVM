@@ -33,10 +33,15 @@ namespace UnitTests.Instructions.Branching
             // arguments to be skipped.
             // sizeof(Registers) * 1 for the number of
             // register arguments to be skipped.
+            // Finally we add the position at which
+            // the program will be loaded in memory.
+            // This will give us an absolute
+            // address to work with.
             const int destOffset =
                 sizeof(OpCode) * 7 +
                 sizeof(int) * 6 +
-                sizeof(Registers) * 1;
+                sizeof(Registers) * 1 +
+                Compiler.InitialAddress;
 
             #region Program
 
@@ -276,10 +281,15 @@ namespace UnitTests.Instructions.Branching
             // arguments to be skipped.
             // sizeof(Registers) * 1 for the number of
             // register arguments to be skipped.
+            // Finally we add the position at which
+            // the program will be loaded in memory.
+            // This will give us an absolute
+            // address to work with.
             const int destOffset1 =
                 sizeof(OpCode) * 7 +
                 sizeof(int) * 6 +
-                sizeof(Registers) * 1;
+                sizeof(Registers) * 1 +
+                Compiler.InitialAddress;
 
             // This is calculated as follows.
             // Start with the destination offset

@@ -221,7 +221,7 @@ namespace UnitTests.Core.Memory
             // a private write region.
             // This should not be permitted with a user
             // security context.
-            var pos = StackStart - 2;
+            var pos = PrivateRegionStart - 2;
 
             Vm.Memory.SetInt(pos, 1, SecurityContext.User, false);
         }
@@ -249,7 +249,7 @@ namespace UnitTests.Core.Memory
             // access to be granted.
             // As are using a system level context, those higher
             // permissions will be met.
-            var pos = StackStart - 2;
+            var pos = PrivateRegionStart - 2;
 
             Vm.Memory.SetInt(pos, 1, SecurityContext.System, false);
         }
@@ -264,7 +264,7 @@ namespace UnitTests.Core.Memory
             // access to be granted.
             // As are using a system level context, those higher
             // permissions will be met.
-            var pos = StackStart - 2;
+            var pos = PrivateRegionStart - 2;
 
             _ = Vm.Memory.GetInt(pos, SecurityContext.System, false);
         }

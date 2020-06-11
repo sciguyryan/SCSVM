@@ -1,6 +1,5 @@
 using VMCore.Assembler;
 using VMCore.VM.Core;
-using VMCore.VM.Core.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UnitTests.Instructions.Helpers;
 using VMCore.VM.Core.Register;
@@ -29,7 +28,7 @@ namespace UnitTests.Instructions.Data
             {
                 program[i] =
                     new CompilerIns(OpCode.PSH_LIT,
-                            new object[] { i + 1 });
+                                    new object[] { i + 1 });
             }
 
             // Push the values to the registers in
@@ -38,7 +37,7 @@ namespace UnitTests.Instructions.Data
             {
                 program[j + 5] =
                     new CompilerIns(OpCode.POP,
-                            new object[] { (Registers)r });
+                                    new object[] { (Registers)r });
             }
 
             Vm.Run(QuickCompile.RawCompile(program));

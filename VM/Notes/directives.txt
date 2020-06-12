@@ -1,0 +1,22 @@
+Directives direct the compiler to perform an action while compiling the binary file. The current directives are outlined below. These must be placed within the data section.
+
+----- [ DB and Friends - Declaring Initialized Data ]  -----
+
+DB, DW, DD, DQ, DT, DO, DY and DZ are used to declare initialized data in the output file. They can be invoked in a wide range of ways:
+
+db    $0x55					; Define a single byte with the value of 0x55. 
+db    $0x55, $0x56, $0x57	; Define three bytes in sequence.
+db    'a', $0x55			; Define a character (a single character string) and a byte literal in sequence.
+db    'abcdefgh'			; Define a string, this will be converted into a byte sequence.
+
+----- [ EQU - Define Constants ] -----
+
+
+The EQU directive defines a constant by evaluating an expression.
+
+Within these expressions a special variable ('#') is assigned to the current position within the output file while the binary is being compiled.
+
+The following directive, for example, will set the strLen to the constant 13. This is value is obtained by: the current position within the output file minus the starting position of the "str" directive.
+
+str db 'Hello, world!',$0xA
+strLen equ #-str

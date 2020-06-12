@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using VMCore.Expressions;
 using VMCore.VM;
-using VMCore.VM.Core.Register;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.Expressions.Helpers
@@ -10,18 +10,18 @@ namespace UnitTests.Expressions.Helpers
     {
         public string Input;
         public int Result;
-        public int[] RegisterValues;
         public ResultTypes Type;
+        public Dictionary<string, int> Variables;
 
         public ExpressionTestResult(string aInput,
                                     int aResult,
-                                    int[] aRegisterValues = null,
-                                    ResultTypes aType = ResultTypes.EQUAL)
+                                    ResultTypes aType = ResultTypes.EQUAL,
+                                    Dictionary<string, int> aVariables = null)
         {
             Input = aInput;
             Result = aResult;
-            RegisterValues = aRegisterValues;
             Type = aType;
+            Variables = aVariables ?? new Dictionary<string, int>();
         }
 
         public override string ToString()
@@ -45,22 +45,13 @@ namespace UnitTests.Expressions.Helpers
             for (var i = 0; i < len; i++)
             {
                 var entry = aTests[i];
-                if (entry.RegisterValues != null)
-                {
-                    var regLen = entry.RegisterValues.Length;
-                    for (var j = 0; j < regLen; j++)
-                    {
-                        aVm.Cpu.Registers[(Registers)j] =
-                            entry.RegisterValues[j];
-                    }
-                }
 
                 var value = 0;
                 var success = false;
                 try
                 {
                     value = 
-                        new Parser(entry.Input)
+                        new Parser(entry.Input, entry.Variables)
                             .ParseExpression()
                             .Evaluate();
 
@@ -74,7 +65,7 @@ namespace UnitTests.Expressions.Helpers
                 {
                     Debug.WriteLine
                     (
-                        $"An exception occurred when running " +
+                        "An exception occurred when running " +
                         $"test {i}. Test string = {entry.Input}."
                     );
                 }

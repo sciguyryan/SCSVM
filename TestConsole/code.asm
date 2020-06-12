@@ -1,6 +1,6 @@
 ﻿.section data
-str db 'Hello, world!',$0xA
-strLen equ $-str
+str		db	'Hello, world!',$0xA
+strLen	equ	#-str
 
 .section text
 mov str, R8

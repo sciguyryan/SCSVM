@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using VMCore.Expressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -8,16 +9,20 @@ namespace UnitTests.Expressions.Helpers
     {
         public string Input;
         public Type ExType;
+        public bool UseVariables;
 
-        public ExpressionExTestResult(string aInput, Type aExType)
+        public ExpressionExTestResult(string aInput,
+                                      Type aExType,
+                                      bool aUseVariables = false)
         {
             Input = aInput;
             ExType = aExType;
+            UseVariables = aUseVariables;
         }
 
         public override string ToString()
         {
-            return $"ExpressionExceptionTestResult({Input}, {ExType})";
+            return $"ExpressionExceptionTestResult({Input}, {ExType}, {UseVariables})";
         }
 
         /// <summary>
@@ -31,11 +36,17 @@ namespace UnitTests.Expressions.Helpers
             for (var i = 0; i < aTests.Length; i++)
             {
                 var entry = aTests[i];
+                var variables = new Dictionary<string, int>();
+                if (entry.UseVariables)
+                {
+                    variables.Add("ABCDEFG", 0);
+                }
+
                 var triggeredException = false;
 
                 try
                 {
-                    _ = new Parser(entry.Input)
+                    _ = new Parser(entry.Input, variables)
                         .ParseExpression()
                         .Evaluate();
                 }

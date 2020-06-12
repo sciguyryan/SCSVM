@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <Folder Include="Assembler\Optimizations\" />
-    <Folder Include="Notes\" />
   </ItemGroup>
 
 </Project>

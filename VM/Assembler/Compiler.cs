@@ -2,10 +2,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
+using VMCore.Expressions;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using VMCore.VM.Instructions;
@@ -213,20 +216,27 @@ namespace VMCore.Assembler
                 ++sectionCount;
             }
 
+
+            var knownLabels = new Dictionary<string, int>();
+
             var dirStart = (int)_ms.Position;
             foreach (var dir in directives)
             {
                 switch (dir.DirCode)
                 {
-                    // Defined byte code sequences.
+                    // Defined byte sequences.
                     case DirectiveCodes.DB:
+                        // Add this label to the list of known
+                        // variables.
+                        knownLabels.Add(dir.DirLabel,
+                                        (int)_ms.Position);
                         AddAddressRefLabel(dir.DirLabel);
                         _bw.Write(dir.ByteData);
                         break;
 
-                    // Constants.
+                    // Expressions / constants.
                     case DirectiveCodes.EQU:
-                        HandleEquDirective(dir);
+                        HandleEquDirective(dir, knownLabels);
                         break;
 
                     default:
@@ -501,7 +511,7 @@ namespace VMCore.Assembler
                 InsArgTypes.LiteralFloat   => true,
                 InsArgTypes.LiteralPointer => true,
                 _                          => false
-            }; ;
+            };
         }
 
         /// <summary>
@@ -510,56 +520,30 @@ namespace VMCore.Assembler
         /// <param name="aDir">
         /// The CompilerDir object holding the data.
         /// </param>
-        private void HandleEquDirective(CompilerDir aDir)
+        /// <param name="aVariables">
+        /// A list of the currently known variables and values.
+        /// </param>
+        private void HandleEquDirective(CompilerDir aDir,
+                                        Dictionary<string, int> aVariables)
         {
-            if (aDir.StringData == "$")
+            // We always want to make sure that we
+            // bind the current stream position (#) before
+            // parsing.
+            var variables = aVariables;
+            if (!variables.TryAdd("#", (int)_ms.Position))
             {
-                // This simply points to the current
-                // address.
-                AddAddressRefLabel(aDir.DirLabel);
-                return;
+                variables["#"] = (int)_ms.Position;
             }
 
-            if (aDir.StringData.Length > 3 &&
-                aDir.StringData[..2] == "$-")
-            {
-                // This is a label offset address.
-                CompilerDir? refDir = null;
-                foreach (var dir in _sectionData.DataSectionData)
-                {
-                    if (dir.DirLabel != aDir.StringData[2..])
-                    {
-                        continue;
-                    }
+            // Create a new instance of the expression parser.
+            var value = 
+                new Parser(aDir.StringData, variables)
+                    .ParseExpression()
+                    .Evaluate();
 
-                    refDir = dir;
-                    break;
-                }
-
-                // We did not find a matching compiler directive
-                // label.
-                if (refDir is null)
-                {
-                    throw new InvalidDataException();
-                }
-
-                // Set the constant to be the value of the
-                // length of the destination labels data.
-                AddConstantLabel(aDir.DirLabel,
-                                 refDir.ByteData.Length);
-                return;
-            }
-
-            // TODO - hook up the expression parser for
-            // use here?
-
-            // If all else fails, is this a valid integer?
-            if (!int.TryParse(aDir.StringData, out var result))
-            {
-                throw new InvalidDataException();
-            }
-
-            AddConstantLabel(aDir.DirLabel, result);
+            // Set the constant to be the value of the
+            // length of the destination labels data.
+            AddConstantLabel(aDir.DirLabel, value);
         }
 
         /// <summary>

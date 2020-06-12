@@ -10,5 +10,6 @@
         OpenBracket,
         CloseBracket,
         Number,
+        Variable
     }
 }

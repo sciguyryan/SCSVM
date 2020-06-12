@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using VMCore.Expressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UnitTests.Expressions.Helpers;
@@ -22,6 +23,7 @@ namespace UnitTests.Expressions
             var table = new []
             {
                 #region BASIC TESTS
+
                 new ExpressionTestResult("+$10", 10),
                 new ExpressionTestResult("+$10", 10),
                 new ExpressionTestResult("-$10", -10),
@@ -37,9 +39,11 @@ namespace UnitTests.Expressions
                 new ExpressionTestResult("$-20 / $-10", 2),
                 new ExpressionTestResult("($100 + $20)", 120),
                 new ExpressionTestResult("(($100) + ($20))", 120),
+
                 #endregion // BASIC TESTS
 
                 #region ORDER OF OPERATION TESTS
+
                 new ExpressionTestResult("$100 + $10 * $50",
                                          600),
                 new ExpressionTestResult("($100 + $10) * $50",
@@ -56,9 +60,11 @@ namespace UnitTests.Expressions
                                          5),
                 new ExpressionTestResult("$100 / $2 - $50 + $10 * $20",
                                          200),
+
                 #endregion // ORDER OF OPERATION TESTS
 
                 #region HEXADECIMAL TESTS
+
                 new ExpressionTestResult("$0x10", 16),
                 new ExpressionTestResult("$0xA", 10),
                 new ExpressionTestResult("$0x0A", 10),
@@ -68,15 +74,19 @@ namespace UnitTests.Expressions
                 new ExpressionTestResult("$0xA - $0xA", 0),
                 new ExpressionTestResult("$-0xA - $0xA", -20),
                 new ExpressionTestResult("$-0xA - -$0xA", 0),
+
                 #endregion // HEXADECIMAL TESTS
 
                 #region OCTAL TESTS
+
                 new ExpressionTestResult("$010", 8),
                 new ExpressionTestResult("$-010 - $011", -17),
                 new ExpressionTestResult("$-010 - -$010", 0),
+
                 #endregion // OCTAL TESTS
 
                 #region MIXED BASE
+
                 new ExpressionTestResult("$0xA + $10",
                                          20),
                 new ExpressionTestResult("$0xA - $10",
@@ -87,9 +97,11 @@ namespace UnitTests.Expressions
                                          0),
                 new ExpressionTestResult("$-0xA - $-10 + $0b11 + $010",
                                          11),
+
                 #endregion // MIXED BASE
 
                 #region SILLY TESTS
+
                 new ExpressionTestResult("+++++++$10",
                                          10),
                 new ExpressionTestResult("-------$10",
@@ -103,8 +115,21 @@ namespace UnitTests.Expressions
                 new ExpressionTestResult("+-+-+-+$0xA+-+++-+$10",
                                          0),
                 new ExpressionTestResult("(((((($5)))))+((((($6))))))",
-                                        11),
+                                        11)
+                ,
                 #endregion // SILLY TESTS
+
+                #region VARIABLE TESTS
+                new ExpressionTestResult("AAA+BBB-#",
+                                         25,
+                                         ResultTypes.EQUAL,
+                                         new Dictionary<string, int>
+                                         {
+                                             { "AAA", 10 },
+                                             { "BBB", 20 },
+                                             { "#", 5 }
+                                         }),
+                #endregion // VARIABLE TESTS
             };
 
             ExpressionTestResult.RunTests(Vm, table);
@@ -118,6 +143,7 @@ namespace UnitTests.Expressions
             var table = new []
             {
                 #region TESTS
+
                 new ExpressionExTestResult("(", parserEx),
                 new ExpressionExTestResult(")", parserEx),
                 new ExpressionExTestResult("(()", parserEx),
@@ -141,6 +167,16 @@ namespace UnitTests.Expressions
                 // parsed and executed.
                 new ExpressionExTestResult("($1-$1)/($1-$1)",
                                            typeof(DivideByZeroException)),
+
+                // These will throw an exception as we are not
+                // processing variables here.
+                new ExpressionExTestResult("#", parserEx),
+                new ExpressionExTestResult("AAA", parserEx),
+
+                // This will fail as the variable is not
+                // defined.
+                new ExpressionExTestResult("AAA", parserEx, true),
+
                 #endregion
             };
 

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 using VMCore.VM.Core.Utilities;
 
 namespace VMCore.Expressions
@@ -14,6 +15,11 @@ namespace VMCore.Expressions
         /// A number, if a numeric token type.
         /// </summary>
         public int Number { get; private set; }
+
+        /// <summary>
+        /// A variable, if a valid string.
+        /// </summary>
+        public string Variable { get; private set; }
 
         /// <summary>
         /// The current char within the 
@@ -42,9 +48,16 @@ namespace VMCore.Expressions
         /// </summary>
         private int _bracketDepth;
 
-        public Tokenizer(string aInput)
+        /// <summary>
+        /// A boolean, true indicating that variables should be permitted
+        /// while parsing, false otherwise.
+        /// </summary>
+        private readonly bool _allowVariables;
+
+        public Tokenizer(string aInput, bool aAllowVariables = false)
         {
             _str = aInput;
+            _allowVariables = aAllowVariables;
 
             NextChar();
             NextToken();
@@ -130,11 +143,34 @@ namespace VMCore.Expressions
                 return;
             }
 
+            // If we have been permitted to allow variables.
+            if (_allowVariables)
+            {
+                HandleVariableToken();
+                return;
+            }
+
             throw new ExprParserException
             (
                 "NextToken: failed to parse the string - invalid " +
                 $"character {_char} was present in the input string."
             );
+        }
+
+        private void HandleVariableToken()
+        {
+            var sb = new StringBuilder();
+
+            // A variable can be any letter, number
+            // or the special character '#'.
+            while (char.IsLetterOrDigit(_char) || _char == '#')
+            {
+                sb.Append(_char);
+                NextChar();
+            }
+
+            Variable = sb.ToString();
+            Token = Tokens.Variable;
         }
 
         /// <summary>

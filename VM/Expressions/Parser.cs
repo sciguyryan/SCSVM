@@ -1,4 +1,6 @@
-﻿namespace VMCore.Expressions
+﻿using System.Collections.Generic;
+
+namespace VMCore.Expressions
 {
     public class Parser
     {
@@ -8,13 +10,22 @@
         // I will add it later.
 
         /// <summary>
+        /// A list of the currently knows variable names and their
+        /// values.
+        /// </summary>
+        public Dictionary<string, int> Variables { get; }
+
+        /// <summary>
         /// The tokenizer for the parser.
         /// </summary>
         private readonly Tokenizer _tokenizer;
 
-        public Parser(string aInput)
+        public Parser(string aInput,
+                      Dictionary<string, int> aVariables = null)
         {
-            _tokenizer = new Tokenizer(aInput);
+            Variables = aVariables ?? new Dictionary<string, int>();
+            _tokenizer = 
+                new Tokenizer(aInput, Variables.Count > 0);
         }
 
         /// <summary>
@@ -136,6 +147,16 @@
                 case Tokens.Number:
                 {
                     var node = new NodeNumber(_tokenizer.Number);
+                    _tokenizer.NextToken();
+                    return node;
+                }
+
+                case Tokens.Variable:
+                {
+                    var node = new NodeVariable(_tokenizer.Variable)
+                    {
+                        Parent = this
+                    };
                     _tokenizer.NextToken();
                     return node;
                 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using VMCore.AsmParser;
 using VMCore.Assembler;
 using VMCore.VM.Core;
@@ -23,7 +22,7 @@ namespace UnitTests.AsmParser
         }
 
         [TestMethod]
-        public void ValidRoundTripTests()
+        public void ValidInstructionRoundTrips()
         {
             #region TESTS
 
@@ -256,7 +255,7 @@ namespace UnitTests.AsmParser
 
                 #endregion // TYPE HINT TESTS
 
-                #region TEXT CASE
+                #region TEXT CASE TESTS
 
                 new []
                 {
@@ -267,7 +266,18 @@ namespace UnitTests.AsmParser
                     "mOv $0b10, R1",
                 },
 
-                #endregion // TEXT CASE
+                #endregion // TEXT CASE TESTS
+
+                #region LINE CONTINUATION TESTS
+
+                new []
+                {
+                    "mov \\",
+                    "$0xFF, \\",
+                    "R1",
+                },
+
+                #endregion // LINE CONTINUATION TESTS
             };
 
             #endregion // TESTS
@@ -559,7 +569,7 @@ namespace UnitTests.AsmParser
 
                 #endregion // TYPE HINT TESTS
 
-                #region TEXT CASE
+                #region TEXT CASE TESTS
 
                 new []
                 {
@@ -572,7 +582,17 @@ namespace UnitTests.AsmParser
                                  new object[] { 0b10, Registers.R1 })
                 },
 
-                #endregion // TEXT CASE
+                #endregion // TEXT CASE TESTS
+
+                #region LINE CONTINUATION TESTS
+
+                new []
+                {
+                    new CompilerIns(OpCode.MOV_LIT_REG,
+                                    new object[] { 0xFF, Registers.R1 })
+                },
+
+                #endregion // LINE CONTINUATION TESTS
             };
 
             #endregion // RESULTS
@@ -580,23 +600,15 @@ namespace UnitTests.AsmParser
             var len = tests.Length;
             for (var i = 0; i < len; i++)
             {
-                // We need to ensure that we add a section
-                // identifier to the start of every test.
-                var testLen = tests[i].Length;
-                var test = new string[testLen + 1];
-                test[0] = ".section text";
-
-                Array.Copy(tests[i],
-                           0,
-                           test,
-                           1,
-                           testLen);
+                var test = tests[i];
+                var testStr =
+                    ".section text" + _nl + string.Join(_nl, test);
 
                 try
                 {
                     var p1 =
                         _parser
-                            .Parse(string.Join(_nl, test))
+                            .Parse(testStr)
                             .CodeSectionData
                             .ToArray();
 
@@ -615,7 +627,277 @@ namespace UnitTests.AsmParser
         }
 
         [TestMethod]
-        public void InvalidRoundTripTests()
+        public void ValidDirectiveRoundTrips()
+        {
+            #region TESTS
+
+            var tests = new string[][]
+            {
+                #region EQU DIRECTIVE TESTS
+
+                new []
+                {
+                    "strLen	equ	#-str",
+                },
+
+                #endregion // EQU DIRECTIVE TESTS
+
+                #region DB DIRECTIVE TESTS
+
+                new []
+                {
+                    // A string, single quotes.
+                    "str db 'Hello, world!'",
+                },
+                new []
+                {
+                    // A string, double quotes.
+                    "str db \"Hello, world!\"",
+                },
+                new []
+                {
+                    // A string plus a byte literal.
+                    "str db 'Hello, world!',$0xA",
+                },
+                new []
+                {
+                    // A sequence of byte literals.
+                    "raw db $0x1,$0x2,$0x3,$0x4,$0x5",
+                },
+
+                #endregion // DB DIRECTIVE TESTS
+
+                #region TIMES DIRECTIVE TESTS
+
+                new []
+                {
+                    "buffer times $5 db $0xA",
+                },
+                new []
+                {
+                    "buffer times $5 db 'A'",
+                },
+                new []
+                {
+                    "buffer times $5 db 'A',$0x31",
+                },
+
+                #endregion // TIMES DIRECTIVE TESTS
+
+                #region TIMES SUB DIRECTIVE TESTS
+
+                new []
+                {
+                    "buffer db 'A' times $10-#+buffer db $0",
+                },
+
+                #endregion // TIMES SUB DIRECTIVE TESTS
+
+                #region LINE CONTINUATION TESTS
+
+                new []
+                {
+                    "strLen \\",
+                    "equ #-str"
+                },
+                new []
+                {
+                    // There should be no line continuation here
+                    // as the continuation character is within a 
+                    // string.
+                    "str db 'Hello\\world!'",
+                },
+                new []
+                {
+                    // A sequence of byte literals.
+                    "raw db $0x1,$0x2,\\" +
+                    "$0x3,$0x4,$0x5",
+                },
+
+                #endregion // LINE CONTINUATION TESTS
+            };
+
+            #endregion // TESTS
+
+            #region RESULTS
+
+            var results = new CompilerDir[][]
+            {
+                #region EQU DIRECTIVE TESTS
+
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.EQU,
+                                    "strLen",
+                                    null,
+                                    "#-str",
+                                    null,
+                                    null), 
+                },
+
+                #endregion // EQU DIRECTIVE TESTS
+
+                #region DB DIRECTIVE TESTS
+
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.DB,
+                                    "str",
+                                    new byte[] { 72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33 },
+                                    null,
+                                    null,
+                                    null),
+                },
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.DB,
+                                    "str",
+                                    new byte[] { 72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33 },
+                                    null,
+                                    null,
+                                    null),
+                },
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.DB,
+                                    "str",
+                                    new byte[] { 72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33, 10 },
+                                    null,
+                                    null,
+                                    null),
+                },
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.DB,
+                                    "raw",
+                                    new byte[] { 1, 2, 3, 4, 5 },
+                                    null,
+                                    null,
+                                    null),
+                },
+
+                #endregion // DB DIRECTIVE TESTS
+
+                #region TIMES DIRECTIVE TESTS
+
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.DB,
+                                    "buffer",
+                                    new byte[] { 10 },
+                                    null,
+                                    "$5",
+                                    null),
+                },
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.DB,
+                                    "buffer",
+                                    new byte[] { 65 },
+                                    null,
+                                    "$5",
+                                    null),
+                },
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.DB,
+                                    "buffer",
+                                    new byte[] { 65, 49 },
+                                    null,
+                                    "$5",
+                                    null),
+                },
+
+                #endregion // TIMES DIRECTIVE TESTS
+
+                #region TIMES SUB DIRECTIVE TESTS
+
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.DB,
+                                    "buffer",
+                                    new byte[] { 65 },
+                                    null,
+                                    null,
+                                    new CompilerDir
+                                    (
+                                        DirectiveCodes.DB,
+                                        "",
+                                        new byte[] { 0 },
+                                        null,
+                                        "$10-#+buffer",
+                                        null
+                                    )),
+                },
+
+                #endregion // TIMES SUB DIRECTIVE TESTS
+
+                #region LINE CONTINUATION TESTS
+
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.EQU,
+                                    "strLen",
+                                    null,
+                                    "#-str",
+                                    null,
+                                    null),
+                },
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.DB,
+                                    "str",
+                                    new byte[] { 72, 101, 108, 108, 111, 92, 119, 111, 114, 108, 100, 33 },
+                                    null,
+                                    null,
+                                    null),
+                },
+                new []
+                {
+                    new CompilerDir(DirectiveCodes.DB,
+                                    "raw",
+                                    new byte[] { 1, 2, 3, 4, 5 },
+                                    null,
+                                    null,
+                                    null),
+                },
+
+                #endregion // LINE CONTINUATION TESTS
+            };
+
+            #endregion // RESULTS
+
+            var len = tests.Length;
+            for (var i = 0; i < len; i++)
+            {
+                var test = tests[i];
+                var testStr =
+                    ".section data" + _nl + string.Join(_nl, test);
+
+                try
+                {
+                    var p1 =
+                        _parser
+                            .Parse(testStr)
+                            .DataSectionData
+                            .ToArray();
+
+                    var p2 = results[i];
+
+                    Assert.IsTrue(FastArrayEquals(p1, p2));
+                }
+                catch
+                {
+                    Assert.Fail
+                    (
+                        $"Test {i} failed.\r\nFirst line = {test[1]}"
+                    );
+                }
+            }
+        }
+
+        [TestMethod]
+        public void InvalidInstructionRoundTrips()
         {
             #region TESTS
 
@@ -798,8 +1080,96 @@ namespace UnitTests.AsmParser
             for (var i = 0; i < len; i++)
             {
                 var test = tests[i];
+                var testStr =
+                    ".section text" + _nl + string.Join(_nl, test);
 
-                var testStr = string.Join(_nl, test);
+                Assert.ThrowsException<AsmParserException>
+                (
+                    () => _parser.Parse(testStr),
+                    "Expected exception of type" +
+                           $"ParserException for test {i}. " +
+                           $"First line of test = {test[0]}"
+                );
+            }
+        }
+
+        [TestMethod]
+        public void InvalidDirectiveRoundTrips()
+        {
+            #region TESTS
+
+            var tests = new string[][]
+            {
+                #region INVALID LABEL TESTS
+
+                new []
+                {
+                    "54 db 'A'",
+                },
+
+                #endregion // INVALID LABEL TESTS
+
+                #region INVALID DIRECTIVE TYPE TESTS
+
+                new []
+                {
+                    "str rr 'A'",
+                },
+
+                #endregion INVALID DIRECTIVE TYPE TESTS
+
+                #region INVALID DIRECTIVE ARGUMENT TESTS
+
+                new []
+                {
+                    "str db",
+                },
+                new []
+                {
+                    "str db db",
+                },
+                new []
+                {
+                    "str db 54",
+                },
+                new []
+                {
+                    "str db 'A",
+                },
+
+                #endregion INVALID DIRECTIVE ARGUMENT TESTS
+
+                #region INVALID TIMES DIRECTIVE TESTS
+
+                new []
+                {
+                    "buffer times",
+                },
+                new []
+                {
+                    "buffer times $1 times $0xF",
+                },
+                new []
+                {
+                    "buffer db 'A' times db",
+                },
+                new []
+                {
+                    // Nested times directives are not supported.
+                    "buffer db 'A' times $64-#+buffer times $1",
+                },
+
+                #endregion INVALID TIMES DIRECTIVE TESTS
+            };
+
+            #endregion // TESTS
+
+            var len = tests.Length;
+            for (var i = 0; i < len; i++)
+            {
+                var test = tests[i];
+                var testStr =
+                    ".section text" + _nl + string.Join(_nl, test);
 
                 Assert.ThrowsException<AsmParserException>
                 (
@@ -813,6 +1183,32 @@ namespace UnitTests.AsmParser
 
         private static bool FastArrayEquals(IReadOnlyList<CompilerIns> a1,
                                             IReadOnlyList<CompilerIns> a2)
+        {
+            if (a1 == null || a2 == null)
+            {
+                return (a1 == null && a2 == null);
+            }
+
+            var len1 = a1.Count;
+
+            if (len1 != a2.Count)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < len1; i++)
+            {
+                if (a1[i] != a2[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool FastArrayEquals(IReadOnlyList<CompilerDir> a1,
+                                            IReadOnlyList<CompilerDir> a2)
         {
             if (a1 == null || a2 == null)
             {

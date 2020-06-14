@@ -1,6 +1,12 @@
 ﻿.section data
 str		db	'Hello, world!',$0xA
 strLen	equ	#-str
+;zeroBuf	times $100 db $0xFF
+
+; A buffer with an A padded to a length of
+; 64 bytes with 0xFF bytes.
+buffer	db	'A' \
+		times $64-#+buffer db $0xFF
 
 .section text
 mov str, R8

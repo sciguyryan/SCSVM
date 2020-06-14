@@ -1,5 +1,18 @@
 Directives direct the compiler to perform an action while compiling the binary file. The current directives are outlined below. These must be placed within the data section.
 
+----- [ General Information ]  -----
+
+Each directive is bound to a label. This label can be an alpha-numeric string of any length. It cannot start with a number. The label cannot be redefined elsewhere and an exception will be thrown if an attempt to do so is made.
+
+When working with expressions each label will be treated as a variable but only those known at the current time of compilation. For example, the following will raise an exception as the label "waffle" does not exist at the time it is referenced within an expression.
+
+pineapple	db 'pineapple'
+len			equ #-waffle
+waffle		db 'pineapple'
+
+A spacial variable ('#') is assigned to the current position within the output file and can be used in any expression.
+
+
 ----- [ DB and Friends - Declaring Initialized Data ]  -----
 
 DB, DW, DD, DQ, DT, DO, DY and DZ are used to declare initialized data in the output file. They can be invoked in a wide range of ways:
@@ -9,14 +22,28 @@ db    $0x55, $0x56, $0x57	; Define three bytes in sequence.
 db    'a', $0x55			; Define a character (a single character string) and a byte literal in sequence.
 db    'abcdefgh'			; Define a string, this will be converted into a byte sequence.
 
+
 ----- [ EQU - Define Constants ] -----
 
 
 The EQU directive defines a constant by evaluating an expression.
 
-Within these expressions a special variable ('#') is assigned to the current position within the output file while the binary is being compiled.
-
 The following directive, for example, will set the strLen to the constant 13. This is value is obtained by: the current position within the output file minus the starting position of the "str" directive.
 
-str db 'Hello, world!',$0xA
-strLen equ #-str
+str		db 'Hello, world!',$0xA
+strLen	equ #-str
+
+
+----- [ TIMES - Repeating Yourself ]  -----
+
+The TIMES directive is not a directive unto it's self. It is actually a way of repeating directive multiple times without doing so manually.
+
+The following directive will allocate a region called buffer filled with 64 '0' characters:
+
+buffer times $64 db '0'
+
+That is however not the limit to the capabilities of this directive. It can be used as a postfix to another directive that can support it.
+
+In the following example it the region named buffer created with the contents "Hello, world.". The times directive will execute and calculate the length of the data (as explained above) and then pad the region to a length of 64 characters, filling the unused space with space characters ( ).
+
+buffer db 'Hello, world!' times $64-#+buffer db ' '

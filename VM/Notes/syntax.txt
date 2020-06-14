@@ -33,4 +33,10 @@ if the accumulator is not equal to the value
 of register R1 then jump to the address specified by
 the label "GOOD".
 
+jne R1,\
+@GOOD
+will produce the same results as above. The backslash (\) dictates
+that the line break following it should be disregarded.
+
 See subroutines.txt for information on the syntax for subroutines.
+See directives.txt for information on the syntax for directives.

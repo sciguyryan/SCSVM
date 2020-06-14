@@ -216,7 +216,6 @@ namespace VMCore.Assembler
                 ++sectionCount;
             }
 
-
             var knownLabels = new Dictionary<string, int>();
 
             var dirStart = (int)_ms.Position;
@@ -226,21 +225,22 @@ namespace VMCore.Assembler
                 {
                     // Defined byte sequences.
                     case DirectiveCodes.DB:
-                        // Add this label to the list of known
-                        // variables.
-                        knownLabels.Add(dir.DirLabel,
-                                        (int)_ms.Position);
-                        AddAddressRefLabel(dir.DirLabel);
-                        _bw.Write(dir.ByteData);
+                        HandleByteDirectives(dir, ref knownLabels);
                         break;
 
                     // Expressions / constants.
                     case DirectiveCodes.EQU:
-                        HandleEquDirective(dir, knownLabels);
+                        HandleEquDirective(dir,ref knownLabels);
                         break;
 
                     default:
                         throw new ArgumentOutOfRangeException();
+                }
+
+                // We also have a sub directive to handle.
+                if (!(dir.SubDirective is null))
+                {
+                    HandleByteDirectives(dir.SubDirective, ref knownLabels);
                 }
             }
             var dirEnd = (int)_ms.Position;
@@ -514,36 +514,86 @@ namespace VMCore.Assembler
             };
         }
 
+        private void HandleByteDirectives(CompilerDir aDir,
+                                          ref Dictionary<string, int> aVars)
+        {
+            // Add this label to the list of known
+            // variables.
+            // This can be an empty string in, for example, sub directives.
+            if (aDir.DirLabel != string.Empty)
+            {
+                aVars.Add(aDir.DirLabel, (int) _ms.Position);
+            }
+
+            // Do we have to handle a times prefix?
+            var data = aDir.ByteData;
+            if (aDir.TimesExprString != string.Empty)
+            {
+                // Update the special current position variable.
+                UpdateCurrentPositionVar(ref aVars);
+
+                // Parse the expression string.
+                var repeat =
+                    new Parser(aDir.TimesExprString, aVars)
+                        .ParseExpression()
+                        .Evaluate();
+
+                // There is nothing to be done if we need to repeat
+                // this less than one additional time.
+                if (repeat > 1)
+                {
+                    // Create a new array to hold our repeated
+                    // data.
+                    var dataLen = aDir.ByteData.Length;
+                    data = new byte[dataLen * repeat];
+
+                    for (var i = 0; i < repeat; i++)
+                    {
+                        Array.Copy(aDir.ByteData,
+                                   0,
+                                   data,
+                                   i * dataLen,
+                                   dataLen);
+                    }
+                }
+            }
+
+            AddAddressRefLabel(aDir.DirLabel);
+            _bw.Write(data);
+        }
+
         /// <summary>
         /// Handle the processing of an EQU compiler directive.
         /// </summary>
         /// <param name="aDir">
         /// The CompilerDir object holding the data.
         /// </param>
-        /// <param name="aVariables">
+        /// <param name="aVars">
         /// A list of the currently known variables and values.
         /// </param>
         private void HandleEquDirective(CompilerDir aDir,
-                                        Dictionary<string, int> aVariables)
+                                        ref Dictionary<string, int> aVars)
         {
-            // We always want to make sure that we
-            // bind the current stream position (#) before
-            // parsing.
-            var variables = aVariables;
-            if (!variables.TryAdd("#", (int)_ms.Position))
-            {
-                variables["#"] = (int)_ms.Position;
-            }
+            // Update the special current position variable.
+            UpdateCurrentPositionVar(ref aVars);
 
-            // Create a new instance of the expression parser.
+            // Parse the expression string.
             var value = 
-                new Parser(aDir.StringData, variables)
+                new Parser(aDir.StringData, aVars)
                     .ParseExpression()
                     .Evaluate();
 
             // Set the constant to be the value of the
             // length of the destination labels data.
             AddConstantLabel(aDir.DirLabel, value);
+        }
+
+        private void UpdateCurrentPositionVar(ref Dictionary<string, int> aVars)
+        {
+            if (!aVars.TryAdd("#", (int)_ms.Position))
+            {
+                aVars["#"] = (int)_ms.Position;
+            }
         }
 
         /// <summary>

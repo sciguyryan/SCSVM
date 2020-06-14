@@ -3,7 +3,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection.Emit;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Utilities;
 using OpCode = VMCore.VM.Core.OpCode;
@@ -123,13 +122,13 @@ namespace VMCore.Assembler
         }
 
         public static bool operator ==(CompilerIns aLeft,
-            CompilerIns aRight)
+                                       CompilerIns aRight)
         {
             return Equals(aLeft, aRight);
         }
 
         public static bool operator !=(CompilerIns aLeft,
-            CompilerIns aRight)
+                                       CompilerIns aRight)
         {
             return !(aLeft == aRight);
         }

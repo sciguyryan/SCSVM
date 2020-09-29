@@ -149,7 +149,7 @@ namespace UnitTests.Instructions.Branching
         /// be tested here.
         /// </summary>
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
+        [ExpectedException(typeof(InvalidOperationException))]
         public void TestUserAssemblyInvalidReturn()
         {
             var program = new []

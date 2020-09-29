@@ -145,33 +145,6 @@ namespace VMCore.VM
             Core.Register.Registers.R1,
         };
 
-        #region EXCEPTIONS
-
-        /// <summary>
-        /// A list of exception IDs used by this class.
-        /// </summary>
-        private enum ExIDs
-        {
-            MemoryOutOfRange,
-        };
-
-        /// <summary>
-        /// A list of the exception messages used by this class.
-        /// </summary>
-        private readonly Dictionary<ExIDs, string> _exMessages =
-            new Dictionary<ExIDs, string>()
-        {
-            {
-                ExIDs.MemoryOutOfRange,
-                "FetchExecuteNextInstruction: instruction " +
-                "at position {0} failed to access the specified " +
-                "memory address as it falls outside of the range " +
-                "of system memory."
-            },
-        };
-
-        #endregion // Exceptions
-
         #endregion // Private Properties
 
         /// <summary>
@@ -411,38 +384,10 @@ namespace VMCore.VM
             {
                 opCode = Vm.Memory.GetOpCode(pos, UserCtx, true);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 SetHaltedState(true);
-
-                throw ex switch
-                {
-                    MemoryAccessViolationException _
-                        => new MemoryAccessViolationException
-                        (
-                            "FetchExecuteNextInstruction: instruction " +
-                            $"at position {opCodeStartPos} attempted " +
-                            "to access memory with insufficient " +
-                            $"permissions. {ex.Message}"
-                        ),
-
-
-                    MemoryOutOfRangeException _
-                        => new MemoryOutOfRangeException
-                        (
-                            "FetchExecuteNextInstruction: instruction " +
-                            $"at position {opCodeStartPos} failed to " +
-                            "access the specified memory address " +
-                            "as it falls outside of the range of system " +
-                            "memory."
-                        ),
-
-                    _
-                        => new Exception
-                        (
-                            $"FetchExecuteNextInstruction: {ex.Message}"
-                        ),
-                };
+                throw;
             }
 
             if (!_instructionCache.TryGetValue(opCode,
@@ -482,36 +427,10 @@ namespace VMCore.VM
                     });
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 SetHaltedState(true);
-
-                throw ex switch
-                {
-                    EndOfStreamException _
-                        => new EndOfStreamException
-                        (
-                            "FetchExecuteNextInstruction: expected " +
-                            "number of arguments for opcode " +
-                            $"'{asmIns.OpCode}' is " +
-                            $"{argTypes.Length}, got {asmIns.Args.Count}."
-                        ),
-
-                    MemoryAccessViolationException _
-                        => new MemoryAccessViolationException
-                        (
-                            "FetchExecuteNextInstruction: instruction " +
-                            $"at position {opCodeStartPos} attempted " +
-                            "to access memory with insufficient " +
-                            $"permissions. {ex.Message}"
-                        ),
-
-                    _
-                        => new Exception
-                        (
-                            $"FetchExecuteNextInstruction: {ex.Message}"
-                        ),
-                };
+                throw;
             }
 
             // Advance the instruction pointer by the number of bytes
@@ -563,68 +482,15 @@ namespace VMCore.VM
 
                 return ret;
             }
-            catch (Exception ex)
+            catch (KeyNotFoundException)
             {
                 SetHaltedState(true);
-
-                var opCodeStartPos = Registers[_ipUserTuple];
-
-                throw ex switch
-                {
-                    MemoryAccessViolationException _
-                        => new MemoryAccessViolationException
-                        (
-                            "ExecuteInstruction: instruction at " +
-                            $"position {opCodeStartPos} attempted " +
-                            "to access memory with insufficient " +
-                            $"permissions. {ex.Message}"
-                        ),
-
-                    MemoryOutOfRangeException _
-                        => new MemoryOutOfRangeException
-                        (
-                            "ExecuteInstruction: instruction " +
-                            $"at position {opCodeStartPos} failed to " +
-                            "access the specified memory address " +
-                            "as it falls outside of the range of system " +
-                            "memory."
-                        ),
-
-                    RegisterAccessViolationException _
-                        => new RegisterAccessViolationException
-                        (
-                            "ExecuteInstruction: instruction at " +
-                            $"position {opCodeStartPos} encountered " +
-                            "a permission error when trying to " +
-                            $"operate on a register. {ex.Message}"
-                        ),
-
-                    KeyNotFoundException _
-                        => new InvalidRegisterException
-                        (
-                            "ExecuteInstruction: instruction at " +
-                            $"position {opCodeStartPos} failed " +
-                            "to access the register specified: " +
-                            "the specified register does not exist."
-                        ),
-
-                    DivideByZeroException _
-                        => new DivideByZeroException
-                        (
-                            "ExecuteInstruction: instruction " +
-                            $"at position {opCodeStartPos} " +
-                            "triggered a division by zero " +
-                            "exception."
-                        ),
-
-                    _
-                        => new Exception
-                        (
-                            "ExecuteInstruction: failed to execute " +
-                            "the CPU instruction at position " +
-                            $"{opCodeStartPos}. {ex.Message}"
-                        ),
-                };
+                throw new InvalidRegisterException();
+            }
+            catch (Exception)
+            {
+                SetHaltedState(true);
+                throw;
             }
         }
 

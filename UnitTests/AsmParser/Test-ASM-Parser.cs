@@ -4,8 +4,8 @@ using VMCore.AsmParser;
 using VMCore.Assembler;
 using VMCore.VM.Core;
 using VMCore.VM.Core.Register;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VMCore.VM.Instructions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.AsmParser
 {
